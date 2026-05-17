@@ -1,0 +1,342 @@
+import { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../store/authStore';
+import { api, type MitreTechnique } from '../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import MitreTechniqueModal from '../components/mitre/MitreTechniqueModal';
+
+interface TacticGroup {
+  tactic: string;
+  techniques: MitreTechnique[];
+  completed: number;
+  total: number;
+}
+
+export default function SkillMatrixPage() {
+  const { t, i18n } = useTranslation(['skillMatrix', 'common']);
+  const { user } = useAuthStore();
+  const [techniques, setTechniques] = useState<MitreTechnique[]>([]);
+  const [completedTechniques, setCompletedTechniques] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedTactics, setExpandedTactics] = useState<Set<string>>(new Set());
+  const [filterCompleted, setFilterCompleted] = useState<'all' | 'completed' | 'incomplete'>('all');
+  const [selectedTechnique, setSelectedTechnique] = useState<MitreTechnique | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, [user]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [allTechniques, stats] = await Promise.all([
+        api.getMitreTechniques(),
+        user?.id ? api.getUserStats(user.id).catch(() => null) : Promise.resolve(null),
+      ]);
+
+      setTechniques(allTechniques);
+      if (stats) {
+        setCompletedTechniques(stats.mitreTechniques || []);
+      }
+
+      const tactics = Array.from(new Set(allTechniques.map((t) => t.tactic))).slice(0, 3);
+      setExpandedTactics(new Set(tactics));
+    } catch (error) {
+      console.error('Failed to load MITRE data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isTechniqueCompleted = (techniqueId: string): boolean => {
+    return completedTechniques.includes(techniqueId);
+  };
+
+  const getCompletionPercentage = (): number => {
+    if (techniques.length === 0) return 0;
+    return Math.round((completedTechniques.length / techniques.length) * 100);
+  };
+
+  const tacticGroups = useMemo((): TacticGroup[] => {
+    let filtered = techniques;
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (tech) =>
+          tech.id.toLowerCase().includes(query) ||
+          tech.name.toLowerCase().includes(query) ||
+          tech.description?.toLowerCase().includes(query) ||
+          tech.tactic.toLowerCase().includes(query)
+      );
+    }
+
+    if (filterCompleted === 'completed') {
+      filtered = filtered.filter((tech) => isTechniqueCompleted(tech.id));
+    } else if (filterCompleted === 'incomplete') {
+      filtered = filtered.filter((tech) => !isTechniqueCompleted(tech.id));
+    }
+
+    const grouped: Record<string, MitreTechnique[]> = {};
+    filtered.forEach((tech) => {
+      if (!grouped[tech.tactic]) {
+        grouped[tech.tactic] = [];
+      }
+      grouped[tech.tactic].push(tech);
+    });
+
+    return Object.entries(grouped)
+      .map(([tactic, techs]) => ({
+        tactic,
+        techniques: techs.sort((a, b) => a.id.localeCompare(b.id)),
+        completed: techs.filter((t) => isTechniqueCompleted(t.id)).length,
+        total: techs.length,
+      }))
+      .sort((a, b) => a.tactic.localeCompare(b.tactic));
+  }, [techniques, searchQuery, filterCompleted, completedTechniques]);
+
+  const toggleTactic = (tactic: string) => {
+    setExpandedTactics((prev) => {
+      const next = new Set(prev);
+      if (next.has(tactic)) {
+        next.delete(tactic);
+      } else {
+        next.add(tactic);
+      }
+      return next;
+    });
+  };
+
+  const expandAll = () => {
+    setExpandedTactics(new Set(tacticGroups.map((g) => g.tactic)));
+  };
+
+  const collapseAll = () => {
+    setExpandedTactics(new Set());
+  };
+
+  const handleTechniqueClick = (technique: MitreTechnique) => {
+    setSelectedTechnique(technique);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTechnique(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-cyber-primary font-heading">{t('loading', { ns: 'skillMatrix' })}</div>
+      </div>
+    );
+  }
+
+  const completionPercentage = getCompletionPercentage();
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="flex-shrink-0 p-6 border-b border-cyber-border">
+        <h1 className="font-heading font-bold text-3xl text-cyber-primary mb-4">
+          {t('title', { ns: 'skillMatrix' })}
+        </h1>
+
+        <div className="mb-4">
+          <div className="cyber-panel px-6 py-4">
+            <div className="text-sm text-gray-400 mb-2">{t('progress', { ns: 'skillMatrix' })}</div>
+            <div className="flex items-center gap-4">
+              <div className="text-2xl font-bold text-cyber-primary">{completionPercentage}%</div>
+              <div className="flex-1 max-w-md">
+                <div className="h-3 bg-cyber-panel rounded-full overflow-hidden border border-cyber-border">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${completionPercentage}%` }}
+                    transition={{ duration: 0.5 }}
+                    className="h-full bg-cyber-success cyber-glow-green"
+                  />
+                </div>
+              </div>
+              <div className="text-sm text-gray-400">
+                {completedTechniques.length} / {techniques.length} {t('techniques', { ns: 'skillMatrix' })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex-1 min-w-[300px]">
+            <input
+              type="text"
+              placeholder={t('searchPlaceholder', { ns: 'skillMatrix' })}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full cyber-input"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={filterCompleted}
+              onChange={(e) => setFilterCompleted(e.target.value as 'all' | 'completed' | 'incomplete')}
+              className="cyber-input text-sm px-4 py-2 appearance-none cursor-pointer bg-cyber-panel border border-cyber-border rounded-lg text-white focus:border-cyber-primary focus:outline-none pr-8"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.75rem center',
+                paddingRight: '2.5rem'
+              }}
+            >
+              <option value="all">{t('filterAll', { ns: 'skillMatrix' })}</option>
+              <option value="completed">{t('filterCompleted', { ns: 'skillMatrix' })}</option>
+              <option value="incomplete">{t('filterIncomplete', { ns: 'skillMatrix' })}</option>
+            </select>
+            <button onClick={expandAll} className="cyber-button text-lg px-3 py-1" title={t('expandAll', { ns: 'skillMatrix' })}>
+              ↓
+            </button>
+            <button onClick={collapseAll} className="cyber-button text-lg px-3 py-1" title={t('collapseAll', { ns: 'skillMatrix' })}>
+              ↑
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto cyber-scrollbar min-h-0 p-6">
+        {tacticGroups.length === 0 ? (
+          <div className="cyber-panel p-8 text-center text-gray-400">
+            <p>{t('notFound', { ns: 'skillMatrix' })}</p>
+            {searchQuery && (
+              <p className="text-sm mt-2">{t('tryAnotherQuery', { ns: 'skillMatrix' })}</p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {tacticGroups.map((group) => {
+              const isExpanded = expandedTactics.has(group.tactic);
+              const completionRate = group.total > 0 ? Math.round((group.completed / group.total) * 100) : 0;
+
+              return (
+                <motion.div
+                  key={group.tactic}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="cyber-panel border border-cyber-border"
+                >
+                  <button
+                    onClick={() => toggleTactic(group.tactic)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-cyber-panel/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <motion.span
+                        animate={{ rotate: isExpanded ? 90 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-cyber-primary text-xl"
+                      >
+                        ▶
+                      </motion.span>
+                      <div className="flex-1 text-left">
+                        <h2 className="font-heading font-bold text-lg text-cyber-primary">
+                          {group.tactic}
+                        </h2>
+                        <div className="flex items-center gap-4 mt-1">
+                          <span className="text-xs text-gray-400">
+                            {group.techniques.length} {t('techniquesShort', { ns: 'skillMatrix' })}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400">{t('completed', { ns: 'skillMatrix' })}</span>
+                            <span className="text-xs font-medium text-cyber-success">
+                              {group.completed} / {group.total} ({completionRate}%)
+                            </span>
+                          </div>
+                          <div className="w-24 h-1.5 bg-cyber-panel rounded-full overflow-hidden border border-cyber-border">
+                            <div
+                              className="h-full bg-cyber-success transition-all duration-300"
+                              style={{ width: `${completionRate}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-4 pb-4 border-t border-cyber-border">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mt-4">
+                            {group.techniques.map((technique) => {
+                              const isCompleted = isTechniqueCompleted(technique.id);
+                              return (
+                                <motion.div
+                                  key={technique.id}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => handleTechniqueClick(technique)}
+                                  className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer ${
+                                    isCompleted
+                                      ? 'border-cyber-success bg-green-900/10 hover:bg-green-900/20'
+                                      : 'border-cyber-border bg-cyber-panel/50 hover:border-cyber-primary/50 hover:bg-cyber-panel'
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between gap-2 mb-2">
+                                    <span
+                                      className="font-mono text-xs font-bold text-cyber-primary flex-shrink-0"
+                                    >
+                                      {technique.id}
+                                    </span>
+                                    {isCompleted && (
+                                      <motion.span
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="text-cyber-success text-sm flex-shrink-0"
+                                      >
+                                        ✓
+                                      </motion.span>
+                                    )}
+                                  </div>
+                                  <h3 className="text-sm font-medium text-white mb-1 line-clamp-2">
+                                    {technique.name}
+                                  </h3>
+                                  {technique.description && (
+                                    <p className="text-xs text-gray-400 line-clamp-2 mb-2">
+                                      {technique.description}
+                                    </p>
+                                  )}
+                                </motion.div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {techniques.length === 0 && !loading && (
+        <div className="cyber-panel p-8 text-center text-gray-400 m-6">
+          <p>{t('notLoaded', { ns: 'skillMatrix' })}</p>
+          <p className="text-sm mt-2">{t('syncRequired', { ns: 'skillMatrix' })}</p>
+        </div>
+      )}
+
+      <MitreTechniqueModal
+        technique={selectedTechnique}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        isCompleted={selectedTechnique ? isTechniqueCompleted(selectedTechnique.id) : false}
+      />
+    </div>
+  );
+}

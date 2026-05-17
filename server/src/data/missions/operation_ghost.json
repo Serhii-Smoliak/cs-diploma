@@ -1,0 +1,252 @@
+{
+  "mission_id": "operation_ghost",
+  "name": "Operation Ghost",
+  "description": "Імітувати атаку на корпорацію Apex Dynamics. Пройдіть усі етапи Cyber Kill Chain — від дослідження до встановлення стійкості.",
+  "difficulty": "beginner",
+  "handler_group": "osint",
+  "mitre_techniques": ["T1593", "T1583.001", "T1566.001", "T1059.001", "T1547.001"],
+  "levels": [
+    {
+      "level_id": "ghost_recon_01",
+      "mission_id": "operation_ghost",
+      "mitre_id": "T1593",
+      "title": "Search Open Websites",
+      "order": 1,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Mission 'Operation Ghost' started."
+        },
+        {
+          "speaker": "system",
+          "text": "Target: Apex Dynamics."
+        },
+        {
+          "speaker": "handler",
+          "text": "We need their admin email. Check this HTML snippet from their dev server. Stay quiet."
+        }
+      ],
+      "task_type": "code_editor",
+      "work_area": {
+        "code_snippet": "<!-- OLD VERSION DO NOT PUBLISH -->\n<div class='contact-hidden' style='display:none'>\nEmergency contact: admin_backup [at] apexdynamics [dot] tech\n</div>\n<!-- TODO: Remove before prod -->",
+        "input_type": "regex",
+        "placeholder": "Enter regex pattern"
+      },
+      "validation": {
+        "type": "regex_match",
+        "correct_pattern": "[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z]{2,}",
+        "test_string": "admin_backup@apexdynamics.tech"
+      },
+      "rewards": {
+        "xp": 100,
+        "stealth_impact": 0
+      },
+      "hints": [
+        "Використовуйте regex для пошуку електронної пошти",
+        "Email формат: name@domain.com",
+        "Зверніть увагу на [at] і [dot] — це слід замінити на @ та ."
+      ]
+    },
+    {
+      "level_id": "ghost_resource_02",
+      "mission_id": "operation_ghost",
+      "mitre_id": "T1583.001",
+      "title": "Domain Typosquatting",
+      "order": 2,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Phase 1 - Reconnaissance completed. Email secured."
+        },
+        {
+          "speaker": "handler",
+          "text": "Good. Now we need a domain for phishing. Choose wisely - it should look legitimate but bypass their filters."
+        }
+      ],
+      "task_type": "tactical_choice",
+      "work_area": {
+        "choices": [
+          {
+            "id": "choice_1",
+            "text": "apex-dynamics.tech",
+            "correct": false,
+            "feedback": "Занадто очевидно. Фільтри будуть заблоковані."
+          },
+          {
+            "id": "choice_2",
+            "text": "apexdynamics.tech",
+            "correct": true,
+            "feedback": "Саме так! Вигляд легітимний, але ми контролюємо домен."
+          },
+          {
+            "id": "choice_3",
+            "text": "apexdynam1cs.tech",
+            "correct": false,
+            "feedback": "Занадто підозріло. Антифішинг спрацює."
+          }
+        ]
+      },
+      "validation": {
+        "type": "choice",
+        "correct_choice_id": "choice_2"
+      },
+      "rewards": {
+        "xp": 150,
+        "stealth_impact": 0
+      },
+      "hints": [
+        "Подумайте, який домен виглядає найлегітимнішим",
+        "Фільтри перевіряють на підозрілі символи"
+      ]
+    },
+    {
+      "level_id": "ghost_initial_03",
+      "mission_id": "operation_ghost",
+      "mitre_id": "T1566.001",
+      "title": "Phishing Email Construction",
+      "order": 3,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Phase 2 - Initial Access. Target email secured."
+        },
+        {
+          "speaker": "handler",
+          "text": "Okay, craft a phishing email to admin_backup. Their filters are strict. No .exe files. You need to trick them into running a payload."
+        }
+      ],
+      "task_type": "phishing_constructor",
+      "work_area": {
+        "email_fields": {
+          "to": "admin_backup@apexdynamics.tech",
+          "subject": "",
+          "body": ""
+        },
+        "attachments": [
+          {
+            "id": "att_1",
+            "name": "Q3_Report.docx",
+            "type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "allowed": true
+          },
+          {
+            "id": "att_2",
+            "name": "setup.exe",
+            "type": "application/x-msdownload",
+            "allowed": false
+          },
+          {
+            "id": "att_3",
+            "name": "Report_Folder.lnk",
+            "type": "application/x-ms-shortcut",
+            "allowed": true
+          }
+        ]
+      },
+      "validation": {
+        "type": "email_check",
+        "required_keywords": ["urgent", "report", "update"],
+        "blocked_extensions": [".exe"]
+      },
+      "rewards": {
+        "xp": 200,
+        "stealth_impact": 0
+      },
+      "hints": [
+        "Використовуйте ключові слова: терміново, звіт, оновлення",
+        "Не прикріплюйте .exe файли — вони заблоковані",
+        "Зробіть так, щоб ваш лист виглядав як корпоративний"
+      ]
+    },
+    {
+      "level_id": "ghost_execution_04",
+      "mission_id": "operation_ghost",
+      "mitre_id": "T1059.001",
+      "title": "PowerShell Payload Execution",
+      "order": 4,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Phase 3 - Execution. Target opened the attachment."
+        },
+        {
+          "speaker": "handler",
+          "text": "Perfect. Now write a PowerShell command to download our payload. Use Invoke-WebRequest. Keep it quiet - no verbose output."
+        }
+      ],
+      "task_type": "code_editor",
+      "work_area": {
+        "code_snippet": "# Write PowerShell command to download payload\n# URL: https://cdn.apexdynamics.tech/update.ps1\n# Save to: $env:TEMP\\update.ps1",
+        "input_type": "code",
+        "placeholder": "Enter PowerShell command"
+      },
+      "validation": {
+        "type": "ast_parse",
+        "correct_pattern": "invoke-webrequest"
+      },
+      "rewards": {
+        "xp": 250,
+        "stealth_impact": -5
+      },
+      "hints": [
+        "Використайте Invoke-WebRequest або його аліас IWR",
+        "Параметр -Uri для URL",
+        "Параметр -OutFile для збереження"
+      ]
+    },
+    {
+      "level_id": "ghost_persistence_05",
+      "mission_id": "operation_ghost",
+      "mitre_id": "T1547.001",
+      "title": "Registry Persistence",
+      "order": 5,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Phase 4 - Persistence. Payload executed."
+        },
+        {
+          "speaker": "handler",
+          "text": "Last step. Choose the registry key for autorun. We need it to survive reboots but not trigger UAC."
+        }
+      ],
+      "task_type": "tactical_choice",
+      "work_area": {
+        "choices": [
+          {
+            "id": "choice_1",
+            "text": "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+            "correct": false,
+            "feedback": "Потрібні права адміністратора та UAC. Занадто помітно."
+          },
+          {
+            "id": "choice_2",
+            "text": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+            "correct": true,
+            "feedback": "Чудово! Не потребує прав адміністратора, працює для поточного користувача."
+          },
+          {
+            "id": "choice_3",
+            "text": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+            "correct": false,
+            "feedback": "RunOnce запускається лише один раз. Не підходить для наполегливості."
+          }
+        ]
+      },
+      "validation": {
+        "type": "choice",
+        "correct_choice_id": "choice_2"
+      },
+      "rewards": {
+        "xp": 300,
+        "stealth_impact": 0
+      },
+      "hints": [
+        "HKEY_CURRENT_USER не потребує прав адміністратора",
+        "Run — для постійного автовідтворення",
+        "RunOnce — лише раз"
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  xp           Int      @default(0)
+  rank         String   @default("Script Kiddie")
+  stealth      Int      @default(100)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  progress        UserProgress[]
+  stats           UserStats?
+  mitreTechniques UserMitreTechnique[]
+
+  @@map("users")
+}
+
+model Mission {
+  id              String   @id
+  name            String
+  description     String?
+  difficulty      String
+  orderIndex      Int      @map("order_index")
+  mitreTechniques Json     @map("mitre_techniques")
+  handlerGroup    String?  @map("handler_group")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  levels                  Level[]
+  mitreTechniquesRelation MissionMitreTechnique[]
+
+  @@map("missions")
+}
+
+model Level {
+  id         String   @id
+  missionId  String   @map("mission_id")
+  levelId    String   @map("level_id")
+  mitreId    String?  @map("mitre_id")
+  title      String
+  orderIndex Int      @map("order_index")
+  taskType   String   @map("task_type")
+  dialogue   Json
+  workArea   Json     @map("work_area")
+  validation Json
+  rewards    Json
+  hints      Json
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  mission        Mission         @relation(fields: [missionId], references: [id])
+  mitreTechnique MitreTechnique? @relation(fields: [mitreId], references: [id])
+
+  @@index([mitreId])
+  @@map("levels")
+}
+
+model UserProgress {
+  id          Int       @id @default(autoincrement())
+  userId      String    @map("user_id")
+  levelId     String    @map("level_id")
+  completed   Boolean   @default(false)
+  attempts    Int       @default(0)
+  lastAttempt DateTime? @map("last_attempt")
+  lastAnswer  String?   @map("last_answer")
+  bestScore   Int?      @map("best_score")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, levelId])
+  @@index([userId])
+  @@index([levelId])
+  @@map("user_progress")
+}
+
+model UserStats {
+  userId          String   @id @map("user_id")
+  totalXp         Int      @default(0) @map("total_xp")
+  rank            String   @default("Script Kiddie")
+  stealth         Int      @default(100)
+  completedLevels Int      @default(0) @map("completed_levels")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}
+
+model UserMitreTechnique {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  mitreId     String   @map("mitre_id")
+  completedAt DateTime @default(now()) @map("completed_at")
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  technique MitreTechnique? @relation(fields: [mitreId], references: [id])
+
+  @@unique([userId, mitreId])
+  @@index([userId])
+  @@map("user_mitre_techniques")
+}
+
+model MitreTechnique {
+  id                  String   @id
+  name                String
+  description         String?
+  tactic              String
+  url                 String?
+  platforms           Json?    @default("[]")
+  dataSources         Json?    @default("[]")
+  defenseBypassed     Json?    @default("[]")
+  permissionsRequired Json?    @default("[]")
+  examples            Json?    @default("[]")
+  mitigation          Json?    @default("[]")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  userTechniques UserMitreTechnique[]
+  levels         Level[]
+  missions       MissionMitreTechnique[]
+
+  @@index([tactic])
+  @@map("mitre_techniques")
+}
+
+model MissionMitreTechnique {
+  id        Int      @id @default(autoincrement())
+  missionId String   @map("mission_id")
+  mitreId   String   @map("mitre_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  mission   Mission        @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  technique MitreTechnique @relation(fields: [mitreId], references: [id], onDelete: Cascade)
+
+  @@unique([missionId, mitreId])
+  @@index([missionId])
+  @@index([mitreId])
+  @@map("mission_mitre_techniques")
+}
+
+model Language {
+  code      String   @id
+  name      String
+  flag      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("languages")
+}
+
+model Translation {
+  id        Int      @id @default(autoincrement())
+  key       String
+  locale    String   @default("uk")
+  value     String   @db.Text
+  namespace String   @default("common")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([key, locale, namespace])
+  @@index([locale])
+  @@index([namespace])
+  @@map("translations")
+}
+
+model Handler {
+  id             String   @id @default(uuid())
+  codeName       String   @unique @map("code_name")
+  group          String
+  specialization String   @map("specialization")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([group])
+  @@map("handlers")
+}

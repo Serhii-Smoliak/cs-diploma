@@ -1,0 +1,7 @@
+{
+  "tasks": {
+    "successTitle": "Task completed",
+    "successBody": "Correct! The task was already completed earlier, points were credited.",
+    "nextLevel": "Go to next level →"
+  }
+}

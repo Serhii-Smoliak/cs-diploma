@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-cyber-border;
+  }
+  
+  body {
+    @apply bg-cyber-background text-white font-body antialiased;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer components {
+  .cyber-glow {
+    box-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+  }
+
+  .cyber-glow-green {
+    box-shadow: 0 0 10px rgba(0, 255, 133, 0.5);
+  }
+
+  .cyber-glow-pink {
+    box-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+  }
+
+  .cyber-border {
+    @apply border border-cyber-border;
+  }
+
+  .cyber-panel {
+    @apply bg-cyber-panel border-cyber-border rounded-lg p-4;
+  }
+
+  .cyber-button {
+    @apply px-6 py-3 bg-cyber-primary text-cyber-background font-heading font-bold rounded-lg 
+           transition-all duration-300 hover:cyber-glow active:scale-95
+           outline-none focus:outline-none no-underline hover:no-underline border-b-0 hover:border-b-0;
+  }
+
+  .cyber-button-success {
+    @apply px-6 py-3 bg-cyber-success text-cyber-background font-heading font-bold rounded-lg 
+           transition-all duration-300 hover:cyber-glow-green active:scale-95
+           outline-none focus:outline-none no-underline hover:no-underline border-b-0 hover:border-b-0;
+  }
+
+  .cyber-button-danger {
+    @apply px-6 py-3 bg-cyber-danger text-white font-heading font-bold rounded-lg 
+           transition-all duration-300 hover:cyber-glow-pink active:scale-95
+           outline-none focus:outline-none no-underline hover:no-underline border-b-0 hover:border-b-0;
+  }
+
+  .cyber-input {
+    @apply bg-cyber-panel border border-cyber-border text-white px-4 py-2 rounded-lg 
+           focus:outline-none focus:border-cyber-primary;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .cyber-scrollbar {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  .cyber-scrollbar:hover {
+    overflow-y: auto !important;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-track {
+    @apply bg-cyber-panel;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-cyber-primary rounded-full;
+  }
+
+  .cyber-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-cyber-success;
+  }
+}
+
