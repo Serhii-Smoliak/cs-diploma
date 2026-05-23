@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@cybertactics/shared';
 import { api } from '../services/api';
+import { applyLocale } from '../i18n/applyLocale';
 
 interface AuthState {
   user: User | null;
@@ -13,6 +14,12 @@ interface AuthState {
   refreshUser: () => Promise<void>;
 }
 
+async function syncUserLocale(user: User): Promise<void> {
+  if (user.preferredLocale) {
+    await applyLocale(user.preferredLocale);
+  }
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -22,11 +29,13 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         const { user } = await api.login(email, password);
         set({ user, isAuthenticated: true });
+        await syncUserLocale(user);
       },
 
       register: async (username: string, email: string, password: string) => {
         const { user } = await api.register(username, email, password);
         set({ user, isAuthenticated: true });
+        await syncUserLocale(user);
       },
 
       logout: () => {
@@ -44,15 +53,11 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (user?.id) {
           try {
-            const stats = await api.getUserStats(user.id);
-            set({
-              user: {
-                ...user,
-                xp: stats.totalXp,
-                rank: stats.rank,
-                stealth: stats.stealth,
-              },
-            });
+            const profile = await api.getCurrentUser();
+            set({ user: { ...user, ...profile } });
+            if (profile.preferredLocale) {
+              await applyLocale(profile.preferredLocale);
+            }
           } catch (error) {
             console.error('Failed to refresh user:', error);
           }

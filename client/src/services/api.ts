@@ -7,6 +7,7 @@ import type {
   UserProgress,
   UserStats,
 } from '@cybertactics/shared';
+import { getApiBase, getApiOrigin } from '../config/apiOrigin';
 
 export interface MitreTechnique {
   id: string;
@@ -23,7 +24,31 @@ export interface MitreTechnique {
   updatedAt: string;
 }
 
-const API_BASE = '/api';
+const API_BASE = getApiBase();
+
+/** Resolves relative asset paths (e.g. /uploads/...) against the API host in production. */
+export function resolveAssetUrl(url: string | null | undefined): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const origin = getApiOrigin();
+  return `${origin}${url.startsWith('/') ? url : `/${url}`}`;
+}
+
+export class ApiError extends Error {
+  status: number;
+  body: Record<string, unknown>;
+
+  constructor(message: string, status: number, body: Record<string, unknown> = {}) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.body = body;
+  }
+}
 
 class ApiClient {
   private token: string | null = null;
@@ -50,13 +75,11 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const token = this.getToken();
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
+    const headers = new Headers(options.headers);
+    headers.set('Content-Type', 'application/json');
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers.set('Authorization', `Bearer ${token}`);
     }
 
     const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -65,8 +88,12 @@ class ApiClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-      throw new Error(error.error || `HTTP ${response.status}`);
+      const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new ApiError(
+        (errorBody.error as string) || `HTTP ${response.status}`,
+        response.status,
+        errorBody,
+      );
     }
 
     return response.json();
@@ -116,6 +143,36 @@ class ApiClient {
 
   async getUserStats(userId: string): Promise<UserStats> {
     return this.request<UserStats>(`/users/${userId}/stats`);
+  }
+
+  async getCurrentUser(): Promise<User> {
+    return this.request<User>('/users/me');
+  }
+
+  async uploadAvatar(image: string): Promise<User> {
+    return this.request<User>('/users/me/avatar', {
+      method: 'PUT',
+      body: JSON.stringify({ image }),
+    });
+  }
+
+  async updatePreferredLocale(locale: string): Promise<User> {
+    return this.request<User>('/users/me/locale', {
+      method: 'PUT',
+      body: JSON.stringify({ locale }),
+    });
+  }
+
+  async purchaseStealthMasking(): Promise<{ stealth: number; message: string }> {
+    return this.request<{ stealth: number; message: string }>('/users/me/stealth/masking', {
+      method: 'POST',
+    });
+  }
+
+  async waitForStealthRecovery(): Promise<{ stealth: number; message: string }> {
+    return this.request<{ stealth: number; message: string }>('/users/me/stealth/wait', {
+      method: 'POST',
+    });
   }
 
   async getMitreTechniques(): Promise<MitreTechnique[]> {

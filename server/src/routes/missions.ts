@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import prisma from '../db/database.js';
-import type { Mission, Level } from '@cybertactics/shared';
+import type { Mission } from '@cybertactics/shared';
+import { mapPrismaLevelToLevel } from '../utils/levelMapper.js';
 
 const router = Router();
 
@@ -50,7 +51,7 @@ router.get('/', async (req, res) => {
         id: m.id,
         name: m.name,
         description: m.description || '',
-        difficulty: m.difficulty as 'beginner' | 'intermediate' | 'advanced',
+        difficulty: m.difficulty as Mission['difficulty'],
         mitreTechniques: allTechniques,
         order: m.orderIndex,
         handlerGroup: m.handlerGroup || null,
@@ -80,28 +81,7 @@ router.get('/:id/levels', async (req, res) => {
       return res.status(404).json({ error: 'Mission not found' });
     }
 
-    const formattedLevels: Level[] = levels.map((l) => ({
-      level_id: l.levelId,
-      mission_id: l.missionId,
-      mitre_id: l.mitreId || '',
-      mitre_technique: l.mitreTechnique ? {
-        id: l.mitreTechnique.id,
-        name: l.mitreTechnique.name,
-        description: l.mitreTechnique.description,
-        tactic: l.mitreTechnique.tactic,
-        url: l.mitreTechnique.url,
-      } : null,
-      title: l.title,
-      order: l.orderIndex,
-      dialogue: (l.dialogue as any[]) || [],
-      task_type: l.taskType as 'code_editor' | 'tactical_choice' | 'phishing_constructor',
-      work_area: (l.workArea as any) || {},
-      validation: (l.validation as any) || {},
-      rewards: (l.rewards as any) || { xp: 0, stealth_impact: 0 },
-      hints: (l.hints as string[]) || [],
-    }));
-
-    res.json(formattedLevels);
+    res.json(levels.map(mapPrismaLevelToLevel));
   } catch (error) {
     console.error('Error fetching mission levels:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -109,4 +89,3 @@ router.get('/:id/levels', async (req, res) => {
 });
 
 export default router;
-

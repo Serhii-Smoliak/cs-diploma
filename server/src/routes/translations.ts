@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
 router.get('/namespaces', async (req, res) => {
   try {
     const { locale = 'uk', namespaces } = req.query;
-    
+
     if (!namespaces || typeof namespaces !== 'string') {
       return res.status(400).json({ error: 'namespaces query parameter is required' });
     }
@@ -162,4 +162,3 @@ router.post('/bulk', async (req, res) => {
 });
 
 export default router;
-

@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import prisma from '../db/database.js';
+import { applyPassiveRegen } from '../services/stealthService.js';
+import { formatAuthUser } from '../utils/formatUser.js';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'cybertactics-secret-key-change-in-production';
@@ -61,14 +63,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        xp: user.xp,
-        rank: user.rank,
-        stealth: user.stealth,
-      },
+      user: formatAuthUser(user),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -102,16 +97,15 @@ router.post('/login', async (req, res) => {
     // Generate token
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
 
+    const stealth = await applyPassiveRegen(user.id);
+
     res.json({
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
+      user: formatAuthUser(user, {
         xp: user.stats?.totalXp || 0,
         rank: user.stats?.rank || 'Script Kiddie',
-        stealth: user.stats?.stealth || 100,
-      },
+        stealth,
+      }),
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -123,4 +117,3 @@ router.post('/login', async (req, res) => {
 });
 
 export default router;
-

@@ -10,6 +10,7 @@ export interface User {
   xp: number;
   rank: string;
   stealth: number;
+  avatarUrl?: string | null;
   createdAt: string;
 }
 
@@ -39,7 +40,7 @@ export interface Level {
   title: string;
   order: number;
   dialogue: DialogueMessage[];
-  task_type: 'code_editor' | 'tactical_choice' | 'phishing_constructor';
+  task_type: 'code_editor' | 'tactical_choice' | 'phishing_constructor' | 'sentence_constructor';
   work_area: WorkArea;
   validation: Validation;
   rewards: Rewards;
@@ -57,7 +58,21 @@ export interface WorkArea {
   placeholder?: string;
   choices?: Choice[];
   email_fields?: EmailFields;
+  email_to?: string;
+  fields?: SentenceField[];
   attachments?: Attachment[];
+}
+
+export interface SentenceField {
+  id: string;
+  label?: string;
+  slots: number;
+  tokens: SentenceToken[];
+}
+
+export interface SentenceToken {
+  id: string;
+  text: string;
 }
 
 export interface Choice {
@@ -81,12 +96,15 @@ export interface Attachment {
 }
 
 export interface Validation {
-  type: 'regex_match' | 'ast_parse' | 'choice' | 'email_check';
+  type: 'regex_match' | 'ast_parse' | 'choice' | 'email_check' | 'sentence_combination';
   correct_pattern?: string;
   test_string?: string;
   correct_choice_id?: string;
   required_keywords?: string[];
+  required_keyword_groups?: string[][];
   blocked_extensions?: string[];
+  correct_sequences?: Record<string, string[] | string[][]>;
+  required_attachments?: string[];
 }
 
 export interface Rewards {
@@ -114,7 +132,7 @@ export interface UserStats {
 
 export interface SubmitAnswerRequest {
   levelId: string;
-  answer: string | number | EmailSubmission;
+  answer: string | number | EmailSubmission | SentenceConstructorSubmission;
 }
 
 export interface EmailSubmission {
@@ -124,11 +142,20 @@ export interface EmailSubmission {
   attachments: string[];
 }
 
+export interface SentenceConstructorSubmission {
+  to?: string;
+  fields: Record<string, string[]>;
+  attachments: string[];
+}
+
 export interface SubmitAnswerResponse {
   success: boolean;
   message: string;
   xpGained?: number;
   stealthChange?: number;
+  stealth?: number;
   nextLevelId?: string;
+  userAnswer?: string | null;
+  stealthDepleted?: boolean;
 }
 

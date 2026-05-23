@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/services/api.ts';
+import { useAuthStore } from '../../store/authStore';
+import { applyLocale } from '../../i18n/applyLocale';
 
 interface Language {
   code: string;
@@ -11,6 +13,8 @@ interface Language {
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
+  const user = useAuthStore((state) => state.user);
+  const updateUser = useAuthStore((state) => state.updateUser);
   const [isOpen, setIsOpen] = useState(false);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +42,7 @@ export default function LanguageSwitcher() {
     if (!loading && languages.length > 0) {
       const currentLang = languages.find(lang => lang.code === i18n.language);
       if (!currentLang) {
-        i18n.changeLanguage(languages[0].code);
+        i18n.changeLanguage('uk');
       }
     }
   }, [i18n, languages, loading]);
@@ -62,13 +66,12 @@ export default function LanguageSwitcher() {
   const changeLanguage = async (lng: string) => {
     setIsOpen(false);
     try {
-      const { loadMultipleNamespaces } = await import('../../i18n/config');
-      const namespaces = ['common', 'mitre', 'tasks', 'missions', 'ui', 'skillMatrix', 'levels', 'dialogues'];
-      await loadMultipleNamespaces(lng, namespaces);
+      await applyLocale(lng);
 
-      await i18n.changeLanguage(lng);
-
-      i18n.emit('languageChanged', lng);
+      if (user?.id) {
+        const updated = await api.updatePreferredLocale(lng);
+        updateUser(updated);
+      }
     } catch (error) {
       console.error('Failed to change language:', error);
     }

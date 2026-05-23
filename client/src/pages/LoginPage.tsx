@@ -41,7 +41,7 @@ export default function LoginPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="cyber-panel p-8 w-full max-w-md"
+        className="cyber-panel p-5 sm:p-8 w-full max-w-md"
       >
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-cyber-primary rounded-lg flex items-center justify-center text-cyber-background font-heading font-bold text-2xl cyber-glow mx-auto mb-4">

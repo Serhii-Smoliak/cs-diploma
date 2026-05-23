@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from '../db/database.js';
 
 interface StixObject {
@@ -31,20 +32,20 @@ interface StixBundle {
 }
 
 const TACTIC_MAP: Record<string, string> = {
-  'reconnaissance': 'Reconnaissance',
+  reconnaissance: 'Reconnaissance',
   'resource-development': 'Resource Development',
   'initial-access': 'Initial Access',
-  'execution': 'Execution',
-  'persistence': 'Persistence',
+  execution: 'Execution',
+  persistence: 'Persistence',
   'privilege-escalation': 'Privilege Escalation',
   'defense-evasion': 'Defense Evasion',
   'credential-access': 'Credential Access',
-  'discovery': 'Discovery',
+  discovery: 'Discovery',
   'lateral-movement': 'Lateral Movement',
-  'collection': 'Collection',
+  collection: 'Collection',
   'command-and-control': 'Command and Control',
-  'exfiltration': 'Exfiltration',
-  'impact': 'Impact',
+  exfiltration: 'Exfiltration',
+  impact: 'Impact',
 };
 
 export async function syncMitreTechniques(): Promise<{ synced: number; errors: number }> {
@@ -59,7 +60,7 @@ export async function syncMitreTechniques(): Promise<{ synced: number; errors: n
       throw new Error(`Failed to fetch MITRE data: ${response.statusText}`);
     }
 
-    const bundle: StixBundle = await response.json();
+    const bundle = (await response.json()) as StixBundle;
 
     if (!bundle.objects || !Array.isArray(bundle.objects)) {
       throw new Error('Invalid MITRE data format');
@@ -93,10 +94,11 @@ export async function syncMitreTechniques(): Promise<{ synced: number; errors: n
         const url = findMitreUrl(technique);
 
         const platforms = technique.x_mitre_platforms || [];
-        const dataSources = technique.x_mitre_data_sources?.map(ds => ({
-          source: ds.data_source,
-          component: ds.data_component || null,
-        })) || [];
+        const dataSources =
+          technique.x_mitre_data_sources?.map((ds) => ({
+            source: ds.data_source,
+            component: ds.data_component || null,
+          })) || [];
         const defenseBypassed = technique.x_mitre_defense_bypassed || [];
         const permissionsRequired = technique.x_mitre_permissions_required || [];
 
@@ -104,32 +106,25 @@ export async function syncMitreTechniques(): Promise<{ synced: number; errors: n
 
         const mitigation = generateMitigationTips(technique, dataSources, defenseBypassed);
 
+        const techniqueData = {
+          name: technique.name || 'Unknown',
+          description: technique.description || null,
+          tactic,
+          url: url || null,
+          platforms: platforms as Prisma.InputJsonValue,
+          dataSources: dataSources as Prisma.InputJsonValue,
+          defenseBypassed: defenseBypassed as Prisma.InputJsonValue,
+          permissionsRequired: permissionsRequired as Prisma.InputJsonValue,
+          examples: examples as Prisma.InputJsonValue,
+          mitigation: mitigation as Prisma.InputJsonValue,
+        };
+
         await prisma.mitreTechnique.upsert({
           where: { id: mitreId },
-          update: {
-            name: technique.name || 'Unknown',
-            description: technique.description || null,
-            tactic: tactic,
-            url: url || null,
-            platforms: platforms as any,
-            dataSources: dataSources as any,
-            defenseBypassed: defenseBypassed as any,
-            permissionsRequired: permissionsRequired as any,
-            examples: examples as any,
-            mitigation: mitigation as any,
-          },
+          update: techniqueData,
           create: {
             id: mitreId,
-            name: technique.name || 'Unknown',
-            description: technique.description || null,
-            tactic: tactic,
-            url: url || null,
-            platforms: platforms as any,
-            dataSources: dataSources as any,
-            defenseBypassed: defenseBypassed as any,
-            permissionsRequired: permissionsRequired as any,
-            examples: examples as any,
-            mitigation: mitigation as any,
+            ...techniqueData,
           },
         });
 
@@ -186,11 +181,13 @@ function findMitreUrl(technique: StixObject): string | null {
 
 function extractExamples(technique: StixObject): string[] {
   const examples: string[] = [];
-  
+
   if (technique.description) {
-    const subTechniqueMatches = technique.description.match(/\[([^\]]+)\]\(https:\/\/attack\.mitre\.org\/[^\)]+\)/g);
+    const subTechniqueMatches = technique.description.match(
+      /\[([^\]]+)\]\(https:\/\/attack\.mitre\.org\/[^)]+\)/g
+    );
     if (subTechniqueMatches) {
-      subTechniqueMatches.forEach(match => {
+      subTechniqueMatches.forEach((match) => {
         const name = match.match(/\[([^\]]+)\]/)?.[1];
         if (name && !name.startsWith('T')) {
           examples.push(name);
@@ -214,7 +211,7 @@ function generateMitigationTips(
   const tips: string[] = [];
 
   if (dataSources.length > 0) {
-    dataSources.forEach(ds => {
+    dataSources.forEach((ds) => {
       if (ds.source === 'Process monitoring') {
         tips.push('Стежте за виконанням процесів і підозрілою активністю');
       } else if (ds.source === 'File monitoring') {
@@ -230,7 +227,7 @@ function generateMitigationTips(
   }
 
   if (defenseBypassed.length > 0) {
-    defenseBypassed.forEach(defense => {
+    defenseBypassed.forEach((defense) => {
       if (defense === 'Anti-virus') {
         tips.push('Використовуйте сучасні засоби антивірусного захисту з евристичним аналізом');
       } else if (defense === 'Behavioral analysis') {
@@ -265,4 +262,3 @@ function generateMitigationTips(
 
   return tips;
 }
-

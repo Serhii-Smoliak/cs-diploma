@@ -21,8 +21,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     req.userId = decoded.userId;
     req.userEmail = decoded.email;
     next();
-  } catch (error) {
+  } catch {
     res.status(401).json({ error: 'Invalid token' });
   }
 };
-

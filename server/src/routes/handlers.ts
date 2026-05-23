@@ -32,4 +32,3 @@ router.get('/random/:group', async (req, res) => {
 });
 
 export default router;
-

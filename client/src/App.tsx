@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from './store/authStore'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
@@ -7,8 +8,10 @@ import MissionsPage from './pages/MissionsPage'
 import MissionAssignmentsPage from './pages/MissionAssignmentsPage'
 import SkillMatrixPage from './pages/SkillMatrixPage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import ProfilePage from './pages/ProfilePage'
 import SettingsPage from './pages/SettingsPage'
 import GameLayout from './components/game/GameLayout'
+import LocaleSelectionGate from './components/auth/LocaleSelectionGate'
 import { useGameStore } from './store/gameStore'
 import { api } from './services/api'
 
@@ -18,6 +21,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function GameRoute() {
+  const { t } = useTranslation(['ui']);
   const { missionId, assignmentId } = useParams<{ missionId: string; assignmentId: string }>();
   const currentMission = useGameStore((state) => state.currentMission);
   const currentLevel = useGameStore((state) => state.currentLevel);
@@ -88,7 +92,9 @@ function GameRoute() {
   if (isRestoring) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-cyber-primary font-heading">Загрузка задания...</div>
+        <div className="text-cyber-primary font-heading">
+          {t('loadingAssignment', { ns: 'ui' })}
+        </div>
       </div>
     );
   }
@@ -110,17 +116,20 @@ function App() {
         path="/*"
         element={
           <ProtectedRoute>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Navigate to="/missions" replace />} />
-                <Route path="/missions" element={<MissionsPage />} />
-                <Route path="/missions/:missionId/assignments" element={<MissionAssignmentsPage />} />
-                <Route path="/missions/:missionId/assignments/:assignmentId" element={<GameRoute />} />
-                <Route path="/skill-matrix" element={<SkillMatrixPage />} />
-                <Route path="/leaderboard" element={<LeaderboardPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Routes>
-            </Layout>
+            <LocaleSelectionGate>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/missions" replace />} />
+                  <Route path="/missions" element={<MissionsPage />} />
+                  <Route path="/missions/:missionId/assignments" element={<MissionAssignmentsPage />} />
+                  <Route path="/missions/:missionId/assignments/:assignmentId" element={<GameRoute />} />
+                  <Route path="/skill-matrix" element={<SkillMatrixPage />} />
+                  <Route path="/leaderboard" element={<LeaderboardPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                </Routes>
+              </Layout>
+            </LocaleSelectionGate>
           </ProtectedRoute>
         }
       />

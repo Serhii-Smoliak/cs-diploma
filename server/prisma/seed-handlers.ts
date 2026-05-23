@@ -8,19 +8,19 @@ const handlers = [
   { codeName: 'Phantom', group: 'osint', specialization: 'OSINT Specialist' },
   { codeName: 'Ghost', group: 'osint', specialization: 'OSINT Specialist' },
   { codeName: 'Viper', group: 'osint', specialization: 'OSINT Specialist' },
-  
+
   { codeName: 'Cobra', group: 'pentest', specialization: 'Penetration Tester' },
   { codeName: 'Python', group: 'pentest', specialization: 'Penetration Tester' },
   { codeName: 'Mamba', group: 'pentest', specialization: 'Penetration Tester' },
   { codeName: 'Anaconda', group: 'pentest', specialization: 'Penetration Tester' },
   { codeName: 'Rattlesnake', group: 'pentest', specialization: 'Penetration Tester' },
-  
+
   { codeName: 'Nexus', group: 'malware', specialization: 'Malware Analyst' },
   { codeName: 'Zero', group: 'malware', specialization: 'Malware Analyst' },
   { codeName: 'Cipher', group: 'malware', specialization: 'Malware Analyst' },
   { codeName: 'Crypto', group: 'malware', specialization: 'Malware Analyst' },
   { codeName: 'Binary', group: 'malware', specialization: 'Malware Analyst' },
-  
+
   { codeName: 'Router', group: 'network', specialization: 'Network Security Expert' },
   { codeName: 'Switch', group: 'network', specialization: 'Network Security Expert' },
   { codeName: 'Firewall', group: 'network', specialization: 'Network Security Expert' },
@@ -50,4 +50,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

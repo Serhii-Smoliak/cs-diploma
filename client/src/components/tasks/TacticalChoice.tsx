@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../../store/gameStore';
 import type { Level } from '@cybertactics/shared';
 import { motion, AnimatePresence } from 'framer-motion';
+import TaskHints from './TaskHints';
 
 interface TacticalChoiceProps {
   level: Level;
@@ -181,16 +182,7 @@ export default function TacticalChoice({ level }: TacticalChoiceProps) {
         )}
       </AnimatePresence>
 
-      {level.hints && level.hints.length > 0 && (
-        <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/50 rounded-lg">
-          <p className="text-sm font-medium text-yellow-400 mb-2">{t('hints', { ns: 'tasks' })}</p>
-          <ul className="list-disc list-inside space-y-1 text-sm text-yellow-300">
-            {level.hints.map((hint, idx) => (
-              <li key={idx}>{hint}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <TaskHints hints={level.hints ?? []} />
     </div>
   );
 }

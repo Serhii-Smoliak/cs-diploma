@@ -9,7 +9,7 @@ const languages = [
 
 export async function seedLanguages() {
   console.log('🌱 Seeding languages...');
-  
+
   const operations = languages.map((lang) =>
     prisma.language.upsert({
       where: { code: lang.code },
@@ -26,7 +26,7 @@ export async function seedLanguages() {
       },
     })
   );
-  
+
   await prisma.$transaction(operations);
   console.log(`✅ Seeded ${operations.length} languages`);
 }
@@ -39,4 +39,3 @@ seedLanguages()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

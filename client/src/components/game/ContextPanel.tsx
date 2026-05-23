@@ -1,134 +1,167 @@
-import { useEffect, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { DialogueMessage, EmailSubmission, Level, SentenceConstructorSubmission } from '@cybertactics/shared';
 import { useGameStore } from '@/store/gameStore.ts';
-import { useAuthStore } from '@/store/authStore.ts';
-import { api } from '@/services/api.ts';
-import HandlerAvatar from './HandlerAvatar';
 import DialogueLog from './DialogueLog';
 import MitreTechniqueBadge from '../mitre/MitreTechniqueBadge';
+
+function wrapAnswerBlock(content: string): string {
+  const trimmed = content.trim();
+  if (!trimmed) return trimmed;
+  return `\`\`\`\n${trimmed}\n\`\`\``;
+}
+
+function formatLastAnswer(level: Level | null, lastAnswer: string): string {
+  if (level?.task_type === 'tactical_choice' && level?.work_area?.choices) {
+    const choice = level.work_area.choices.find((c) => c.id === lastAnswer);
+    if (choice) return wrapAnswerBlock(choice.text);
+  }
+
+  if (level?.task_type === 'phishing_constructor') {
+    try {
+      const parsed = JSON.parse(lastAnswer) as EmailSubmission;
+      const parts: string[] = [];
+
+      if (parsed.subject) {
+        parts.push(`Тема: ${parsed.subject}`);
+      }
+      if (parsed.body) {
+        parts.push(`Текст: ${parsed.body}`);
+      }
+      if (parsed.attachments?.length) {
+        const names = parsed.attachments
+          .map((id) => level.work_area.attachments?.find((att) => att.id === id)?.name || id)
+          .join(', ');
+        parts.push(`Вкладення: ${names}`);
+      }
+
+      if (parts.length > 0) {
+        return wrapAnswerBlock(parts.join('\n'));
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  if (level?.task_type === 'sentence_constructor') {
+    try {
+      const parsed = JSON.parse(lastAnswer) as SentenceConstructorSubmission;
+      const parts: string[] = [];
+      const fields = level.work_area.fields || [];
+
+      for (const field of fields) {
+        const tokenIds = parsed.fields?.[field.id] || [];
+        const text = tokenIds
+          .map((id) => field.tokens.find((token) => token.id === id)?.text || id)
+          .join(' ');
+        if (text) {
+          const label =
+            field.id === 'subject' ? 'Тема' : field.id === 'body' ? 'Текст' : field.label || field.id;
+          parts.push(`${label}: ${text}`);
+        }
+      }
+
+      if (parsed.attachments?.length) {
+        const names = parsed.attachments
+          .map((id) => level.work_area.attachments?.find((att) => att.id === id)?.name || id)
+          .join(', ');
+        parts.push(`Вкладення: ${names}`);
+      }
+
+      if (parts.length > 0) {
+        return wrapAnswerBlock(parts.join('\n'));
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  if (level?.task_type === 'code_editor') {
+    return wrapAnswerBlock(lastAnswer);
+  }
+
+  return wrapAnswerBlock(lastAnswer);
+}
+
+function enrichProgressDialogues(
+  dialogues: DialogueMessage[],
+  options: {
+    isCompleted: boolean;
+    lastAnswer: string | null;
+    notCompletedText: string;
+    handlerCompletedText?: string;
+  },
+): DialogueMessage[] {
+  const result = [...dialogues];
+
+  if (!options.isCompleted) {
+    let insertIndex = 0;
+    while (insertIndex < result.length && result[insertIndex].speaker === 'system') {
+      insertIndex++;
+    }
+    result.splice(insertIndex, 0, { speaker: 'system', text: options.notCompletedText });
+    return result;
+  }
+
+  if (!options.handlerCompletedText || !options.lastAnswer) {
+    return result;
+  }
+
+  let lastHandlerIndex = -1;
+  for (let i = 0; i < result.length; i++) {
+    if (result[i].speaker === 'handler') {
+      lastHandlerIndex = i;
+    }
+  }
+
+  const insertIndex = lastHandlerIndex >= 0 ? lastHandlerIndex + 1 : result.length;
+  result.splice(insertIndex, 0, { speaker: 'handler', text: options.handlerCompletedText });
+  return result;
+}
 
 export default function ContextPanel() {
   const { t } = useTranslation(['ui', 'common']);
   const currentLevel = useGameStore((state) => state.currentLevel);
-  const currentMission = useGameStore((state) => state.currentMission);
-  const user = useAuthStore((state) => state.user);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [lastAnswer, setLastAnswer] = useState<string | null>(null);
+  const levelProgress = useGameStore((state) => state.levelProgress);
 
-  useEffect(() => {
-    const checkCompletion = async () => {
-      if (!currentLevel || !user?.id) {
-        setIsCompleted(false);
-        setLastAnswer(null);
-        return;
-      }
+  const isCompleted = levelProgress?.completed ?? false;
+  const lastAnswer = levelProgress?.lastAnswer ?? null;
 
-      try {
-        const progress = await api.getUserProgress(user.id);
-        const levelProgress = progress.find(p => p.levelId === currentLevel.level_id);
-        setIsCompleted(levelProgress?.completed || false);
-        setLastAnswer(levelProgress?.lastAnswer || null);
-      } catch (error) {
-        console.error('Failed to check completion:', error);
-        setIsCompleted(false);
-        setLastAnswer(null);
-      }
-    };
+  const enrichedDialogues = useMemo(() => {
+    const base = currentLevel?.dialogue ?? [];
 
-    checkCompletion();
-  }, [currentLevel, user]);
+    const handlerCompletedText =
+      isCompleted && lastAnswer
+        ? t('handlerTaskCompleted', {
+            ns: 'ui',
+            answer: formatLastAnswer(currentLevel, lastAnswer),
+          })
+        : undefined;
+
+    return enrichProgressDialogues(base, {
+      isCompleted,
+      lastAnswer,
+      notCompletedText: t('taskStatusNotCompleted', { ns: 'ui' }),
+      handlerCompletedText,
+    });
+  }, [currentLevel, isCompleted, lastAnswer, t]);
 
   return (
     <div className="h-full cyber-panel flex flex-col">
-      <div className="border-b border-cyber-border pb-3 mb-4">
-        <h3 className="font-heading font-bold text-lg text-cyber-primary">{t('contextPanel', { ns: 'ui' })}</h3>
-      </div>
-
-      {isCompleted && (
-        <div className="mb-4 pb-4 border-b border-cyber-border">
-          <div className="px-3 py-2 bg-cyber-success/20 border border-cyber-success rounded-lg">
-            <div className="flex items-center gap-2">
-              <span className="text-cyber-success text-lg">✓</span>
-              <span className="text-cyber-success font-medium text-sm">{t('taskCompleted', { ns: 'ui' })}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {currentLevel?.mitre_technique && (
         <div className="mb-4 pb-4 border-b border-cyber-border">
           <div className="text-xs text-gray-500 mb-2">{t('currentMitreTechnique', { ns: 'ui' })}</div>
-          <MitreTechniqueBadge 
-            technique={currentLevel.mitre_technique} 
+          <MitreTechniqueBadge
+            technique={currentLevel.mitre_technique}
             size="sm"
             showDescription={false}
           />
         </div>
       )}
 
-      <HandlerAvatar />
-
-      {isCompleted && lastAnswer && (() => {
-        let displayAnswer = lastAnswer;
-        if (currentLevel?.task_type === 'tactical_choice' && currentLevel?.work_area?.choices) {
-          const choice = currentLevel.work_area.choices.find((c: any) => c.id === lastAnswer);
-          if (choice) {
-            displayAnswer = choice.text;
-          }
-        }
-        
-        return (
-          <div className="mb-4 pb-4 border-b border-cyber-border">
-            <div className="px-3 py-2 bg-cyber-primary/10 border border-cyber-primary rounded-lg">
-              <div className="text-cyber-primary font-medium text-sm mb-2">
-                {t('yourPreviousCorrectAnswer', { ns: 'ui' })}
-              </div>
-              <div className="text-cyber-primary text-sm whitespace-pre-wrap">
-                {displayAnswer}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
-      {!isCompleted && currentLevel?.validation && (() => {
-        const validation = currentLevel.validation as any;
-        let correctAnswer: string | null = null;
-        
-        if (validation?.type === 'regex_match') {
-          correctAnswer = validation.correct_pattern || null;
-        } else if (validation?.type === 'choice') {
-          correctAnswer = validation.correct_choice_id || null;
-          if (correctAnswer && currentLevel?.work_area?.choices) {
-            const choice = currentLevel.work_area.choices.find((c: any) => c.id === correctAnswer);
-            if (choice) {
-              correctAnswer = choice.text;
-            }
-          }
-        } else {
-          correctAnswer = validation?.expected_answer || 
-                          validation?.correct_answer || 
-                          validation?.answer || null;
-        }
-        
-        return correctAnswer ? (
-          <div className="mb-4 pb-4 border-b border-cyber-border">
-            <div className="px-3 py-2 bg-green-900/20 border border-green-500/50 rounded-lg">
-              <div className="text-green-400 font-medium text-sm mb-2">
-                {t('correctAnswerForTraining', { ns: 'ui' })}
-              </div>
-              <div className="text-green-300 text-sm whitespace-pre-wrap">
-                {correctAnswer}
-              </div>
-            </div>
-          </div>
-        ) : null;
-      })()}
-
       <div className="flex-1 mt-4 overflow-hidden">
-        <DialogueLog dialogues={currentLevel?.dialogue || []} />
+        <DialogueLog dialogues={enrichedDialogues} />
       </div>
     </div>
   );
 }
-

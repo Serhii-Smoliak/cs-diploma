@@ -1,0 +1,7 @@
+{
+  "name": "cs-diploma",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

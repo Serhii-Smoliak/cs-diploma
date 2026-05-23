@@ -49,18 +49,33 @@ export default function MitreTechniqueModal({
   const navigate = useNavigate();
   const { t } = useTranslation(['mitre', 'common']);
   const [relatedMissions, setRelatedMissions] = useState<RelatedMission[]>([]);
-  const [loadingMissions, setLoadingMissions] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number; width: number } | null>(null);
   const [selectedMitigationTip, setSelectedMitigationTip] = useState<number | null>(null);
   const [mitigationTooltipPosition, setMitigationTooltipPosition] = useState<{ x: number; y: number; width: number } | null>(null);
   const [selectedExample, setSelectedExample] = useState<number | null>(null);
   const [exampleTooltipPosition, setExampleTooltipPosition] = useState<{ x: number; y: number; width: number } | null>(null);
+  const [idCopied, setIdCopied] = useState(false);
+  const [idHovered, setIdHovered] = useState(false);
 
   useEffect(() => {
-    if (isOpen && technique) {
-      loadRelatedMissions();
-    }
+    if (!isOpen || !technique) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const detailed = await api.getMitreTechnique(technique.id);
+        if (!cancelled && detailed.relatedMissions) {
+          setRelatedMissions(detailed.relatedMissions);
+        }
+      } catch (error) {
+        console.error('Failed to load related missions:', error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, technique]);
 
   useEffect(() => {
@@ -71,6 +86,8 @@ export default function MitreTechniqueModal({
       setMitigationTooltipPosition(null);
       setSelectedExample(null);
       setExampleTooltipPosition(null);
+      setIdCopied(false);
+      setIdHovered(false);
     }
   }, [isOpen]);
 
@@ -98,21 +115,6 @@ export default function MitreTechniqueModal({
       window.removeEventListener('scroll', handleScroll, true);
     };
   }, [selectedStageId, selectedMitigationTip, selectedExample]);
-
-  const loadRelatedMissions = async () => {
-    if (!technique) return;
-    setLoadingMissions(true);
-    try {
-      const detailed = await api.getMitreTechnique(technique.id);
-      if (detailed.relatedMissions) {
-        setRelatedMissions(detailed.relatedMissions);
-      }
-    } catch (error) {
-      console.error('Failed to load related missions:', error);
-    } finally {
-      setLoadingMissions(false);
-    }
-  };
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -203,6 +205,16 @@ export default function MitreTechniqueModal({
     ? technique.mitigation
     : [t('mitigation.regular-updates', { ns: 'mitre' }), t('mitigation.monitoring', { ns: 'mitre' })];
 
+  const copyTechniqueId = async () => {
+    try {
+      await navigator.clipboard.writeText(technique.id);
+      setIdCopied(true);
+      window.setTimeout(() => setIdCopied(false), 1500);
+    } catch (error) {
+      console.error('Failed to copy technique id:', error);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -233,9 +245,28 @@ export default function MitreTechniqueModal({
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="font-mono text-2xl font-bold text-cyber-primary">
-                        {technique.id}
-                      </span>
+                      <button
+                        type="button"
+                        onClick={copyTechniqueId}
+                        onMouseEnter={() => setIdHovered(true)}
+                        onMouseLeave={() => setIdHovered(false)}
+                        className="group inline-flex items-center gap-2 font-mono text-2xl font-bold text-cyber-primary hover:text-cyber-success transition-colors cursor-copy"
+                        title={
+                          idCopied
+                            ? t('modal.idCopied', { ns: 'mitre' })
+                            : t('modal.copyId', { ns: 'mitre' })
+                        }
+                      >
+                        <span>{technique.id}</span>
+                        <span
+                          className={`text-base transition-all ${
+                            idCopied || idHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+                          }`}
+                          aria-hidden
+                        >
+                          {idCopied ? '✓' : '⎘'}
+                        </span>
+                      </button>
                       {isCompleted && (
                         <motion.span
                           initial={{ scale: 0 }}
@@ -482,7 +513,7 @@ export default function MitreTechniqueModal({
                               }}
                               className="mt-3 text-cyber-primary hover:text-blue-400 text-xs underline"
                             >
-                              {t('close', { ns: 'common', defaultValue: 'Close' })}
+                              {t('close', { ns: 'common' })}
                             </button>
                           </div>
                         </motion.div>
@@ -578,7 +609,7 @@ export default function MitreTechniqueModal({
                               }}
                               className="mt-3 text-cyber-success hover:text-green-400 text-xs underline"
                             >
-                              {t('close', { ns: 'common', defaultValue: 'Close' })}
+                              {t('close', { ns: 'common' })}
                             </button>
                           </div>
                         </motion.div>
@@ -653,7 +684,6 @@ export default function MitreTechniqueModal({
                         const isCurrent = stage.id === normalizedTactic;
                         const currentIndex = getKillChainStages().findIndex(s => s.id === normalizedTactic);
                         const isBefore = currentIndex > idx;
-                        const isAfter = currentIndex < idx;
                         
                         return (
                           <div key={stage.id} className="flex items-center">
@@ -797,7 +827,7 @@ export default function MitreTechniqueModal({
                               }}
                               className="mt-3 text-cyber-success hover:text-green-400 text-xs underline"
                             >
-                              {t('close', { ns: 'common', defaultValue: 'Close' })}
+                              {t('close', { ns: 'common' })}
                             </button>
                           </div>
                         </motion.div>
@@ -822,7 +852,7 @@ export default function MitreTechniqueModal({
 
               <div className="flex-shrink-0 p-6 border-t border-cyber-border flex items-center justify-end gap-4">
                 <button onClick={onClose} className="cyber-button px-6 py-2">
-                  {t('close', { ns: 'common', defaultValue: 'Close' })}
+                  {t('close', { ns: 'common' })}
                 </button>
                 <a
                   href={technique.url || `https://attack.mitre.org/techniques/${technique.id}`}

@@ -1,8 +1,150 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { authenticate, type AuthRequest } from '../middleware/auth.js';
 import prisma from '../db/database.js';
+import {
+  applyPassiveRegen,
+  applyWaitRecovery,
+  restoreMasking,
+} from '../services/stealthService.js';
+import { saveAvatarFromDataUrl } from '../services/avatarService.js';
+import { formatAuthUser } from '../utils/formatUser.js';
 
 const router = Router();
+
+const avatarSchema = z.object({
+  image: z.string().min(1),
+});
+
+const localeSchema = z.object({
+  locale: z.enum(['uk', 'en']),
+});
+
+router.get('/me', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { stats: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const stealth = await applyPassiveRegen(userId);
+
+    res.json(
+      formatAuthUser(user, {
+        xp: user.stats?.totalXp ?? user.xp,
+        rank: user.stats?.rank ?? user.rank,
+        stealth,
+      })
+    );
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.put('/me/locale', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { locale } = localeSchema.parse(req.body);
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { preferredLocale: locale },
+      include: { stats: true },
+    });
+
+    const stealth = await applyPassiveRegen(userId);
+
+    res.json(
+      formatAuthUser(user, {
+        xp: user.stats?.totalXp ?? user.xp,
+        rank: user.stats?.rank ?? user.rank,
+        stealth,
+      })
+    );
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    console.error('Locale update error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.put('/me/avatar', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const { image } = avatarSchema.parse(req.body);
+    const avatarUrl = await saveAvatarFromDataUrl(userId, image);
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+      include: { stats: true },
+    });
+
+    const stealth = await applyPassiveRegen(userId);
+
+    res.json(
+      formatAuthUser(user, {
+        xp: user.stats?.totalXp ?? user.xp,
+        rank: user.stats?.rank ?? user.rank,
+        stealth,
+      })
+    );
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors });
+    }
+    if (error instanceof Error && error.message === 'Invalid image data') {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error instanceof Error && error.message === 'Image too large') {
+      return res.status(413).json({ error: error.message });
+    }
+    console.error('Avatar upload error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/me/stealth/masking', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const stealth = await restoreMasking(userId);
+    res.json({ stealth, message: 'Masking purchased (mock).' });
+  } catch (error) {
+    console.error('Stealth masking error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/me/stealth/wait', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const result = await applyWaitRecovery(userId);
+
+    if (!result.applied) {
+      return res.status(429).json({
+        error: 'Stealth recovery is not ready yet.',
+        stealth: result.stealth,
+        retryAfterMs: result.retryAfterMs ?? 0,
+      });
+    }
+
+    res.json({
+      stealth: result.stealth,
+      message: 'Stealth partially restored after waiting.',
+    });
+  } catch (error) {
+    console.error('Stealth wait error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // Get user progress
 router.get('/:id/progress', authenticate, async (req: AuthRequest, res) => {
@@ -41,6 +183,8 @@ router.get('/:id/stats', authenticate, async (req: AuthRequest, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
+    const stealth = await applyPassiveRegen(id);
+
     const stats = await prisma.userStats.findUnique({
       where: { userId: id },
       include: {
@@ -55,7 +199,7 @@ router.get('/:id/stats', authenticate, async (req: AuthRequest, res) => {
         },
       },
     });
-    
+
     if (!stats) {
       return res.status(404).json({ error: 'User stats not found' });
     }
@@ -64,9 +208,9 @@ router.get('/:id/stats', authenticate, async (req: AuthRequest, res) => {
       userId: stats.userId,
       totalXp: stats.totalXp,
       rank: stats.rank,
-      stealth: stats.stealth,
+      stealth,
       completedLevels: stats.completedLevels,
-      mitreTechniques: stats.user.mitreTechniques.map(t => t.mitreId),
+      mitreTechniques: stats.user.mitreTechniques.map((t) => t.mitreId),
     });
   } catch (error) {
     console.error('Error fetching user stats:', error);
@@ -75,4 +219,3 @@ router.get('/:id/stats', authenticate, async (req: AuthRequest, res) => {
 });
 
 export default router;
-

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { DialogueMessage } from '@cybertactics/shared';
 
@@ -6,8 +6,29 @@ interface DialogueLogProps {
   dialogues: DialogueMessage[];
 }
 
+const CODE_BLOCK_PATTERN = /```([\s\S]*?)```/;
+
+function renderMessageContent(text: string): ReactNode {
+  const match = CODE_BLOCK_PATTERN.exec(text);
+  if (!match) {
+    return <span className="whitespace-pre-line">{text}</span>;
+  }
+
+  const intro = text.slice(0, match.index).trimEnd().replace(/\.$/, '');
+  const code = match[1].trim();
+  const rest = text.slice(match.index + match[0].length).trim().replace(/^\.$/, '');
+
+  return (
+    <>
+      {intro ? <span className="whitespace-pre-line">{intro}</span> : null}
+      <div className="dialogue-answer-block">{code}</div>
+      {rest ? <span className="whitespace-pre-line block mt-1">{rest}</span> : null}
+    </>
+  );
+}
+
 export default function DialogueLog({ dialogues }: DialogueLogProps) {
-  const { t, i18n } = useTranslation(['ui', 'dialogues']);
+  const { t } = useTranslation(['ui', 'dialogues']);
   const logRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,7 +93,7 @@ export default function DialogueLog({ dialogues }: DialogueLogProps) {
               className={`${getSpeakerColor(dialogue.speaker)} text-sm leading-relaxed`}
             >
               <span className="font-mono font-bold">{getSpeakerPrefix(dialogue.speaker)}:</span>{' '}
-              <span>{displayText}</span>
+              {renderMessageContent(displayText)}
             </div>
           );
         })

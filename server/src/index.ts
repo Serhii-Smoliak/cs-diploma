@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import prisma from './db/database.js';
 import authRoutes from './routes/auth.js';
 import missionsRoutes from './routes/missions.js';
@@ -9,13 +11,25 @@ import usersRoutes from './routes/users.js';
 import mitreRoutes from './routes/mitre.js';
 import translationsRoutes from './routes/translations.js';
 import handlersRoutes from './routes/handlers.js';
+import { ensureAvatarsDir } from './services/avatarService.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+const allowedOrigins = process.env.CLIENT_ORIGIN
+  ?.split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: allowedOrigins?.length ? allowedOrigins : true,
+  }),
+);
+app.use(express.json({ limit: '2mb' }));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -35,6 +49,7 @@ app.listen(PORT, async () => {
   // Test database connection
   try {
     await prisma.$connect();
+    await ensureAvatarsDir();
     console.log('✅ Database connected');
   } catch (error) {
     console.error('❌ Database connection failed:', error);
@@ -47,4 +62,3 @@ process.on('SIGINT', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
-

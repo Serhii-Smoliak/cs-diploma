@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { api, type MitreTechnique } from '../services/api';
@@ -12,23 +12,44 @@ interface TacticGroup {
   total: number;
 }
 
+const EXPANDED_TACTICS_STORAGE_KEY = 'cybertactics.skillMatrix.expandedTactics';
+
+function loadExpandedTactics(): Set<string> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_TACTICS_STORAGE_KEY);
+    if (!raw) return new Set();
+
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return new Set(parsed.filter((t): t is string => typeof t === 'string'));
+    }
+  } catch {
+    // ignore invalid storage
+  }
+  return new Set();
+}
+
+function saveExpandedTactics(tactics: Set<string>) {
+  try {
+    localStorage.setItem(EXPANDED_TACTICS_STORAGE_KEY, JSON.stringify(Array.from(tactics)));
+  } catch {
+    // ignore quota / private mode
+  }
+}
+
 export default function SkillMatrixPage() {
-  const { t, i18n } = useTranslation(['skillMatrix', 'common']);
+  const { t } = useTranslation(['skillMatrix', 'common']);
   const { user } = useAuthStore();
   const [techniques, setTechniques] = useState<MitreTechnique[]>([]);
   const [completedTechniques, setCompletedTechniques] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedTactics, setExpandedTactics] = useState<Set<string>>(new Set());
+  const [expandedTactics, setExpandedTactics] = useState<Set<string>>(loadExpandedTactics);
   const [filterCompleted, setFilterCompleted] = useState<'all' | 'completed' | 'incomplete'>('all');
   const [selectedTechnique, setSelectedTechnique] = useState<MitreTechnique | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [user]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [allTechniques, stats] = await Promise.all([
@@ -40,19 +61,24 @@ export default function SkillMatrixPage() {
       if (stats) {
         setCompletedTechniques(stats.mitreTechniques || []);
       }
-
-      const tactics = Array.from(new Set(allTechniques.map((t) => t.tactic))).slice(0, 3);
-      setExpandedTactics(new Set(tactics));
     } catch (error) {
       console.error('Failed to load MITRE data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
-  const isTechniqueCompleted = (techniqueId: string): boolean => {
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
+
+  const isTechniqueCompleted = useCallback((techniqueId: string): boolean => {
     return completedTechniques.includes(techniqueId);
-  };
+  }, [completedTechniques]);
+
+  useEffect(() => {
+    saveExpandedTactics(expandedTactics);
+  }, [expandedTactics]);
 
   const getCompletionPercentage = (): number => {
     if (techniques.length === 0) return 0;
@@ -95,7 +121,7 @@ export default function SkillMatrixPage() {
         total: techs.length,
       }))
       .sort((a, b) => a.tactic.localeCompare(b.tactic));
-  }, [techniques, searchQuery, filterCompleted, completedTechniques]);
+  }, [techniques, searchQuery, filterCompleted, isTechniqueCompleted]);
 
   const toggleTactic = (tactic: string) => {
     setExpandedTactics((prev) => {
@@ -139,17 +165,17 @@ export default function SkillMatrixPage() {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex-shrink-0 p-6 border-b border-cyber-border">
-        <h1 className="font-heading font-bold text-3xl text-cyber-primary mb-4">
+      <div className="flex-shrink-0 p-4 sm:p-6 border-b border-cyber-border">
+        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-4">
           {t('title', { ns: 'skillMatrix' })}
         </h1>
 
         <div className="mb-4">
-          <div className="cyber-panel px-6 py-4">
+          <div className="cyber-panel px-4 sm:px-6 py-4">
             <div className="text-sm text-gray-400 mb-2">{t('progress', { ns: 'skillMatrix' })}</div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <div className="text-2xl font-bold text-cyber-primary">{completionPercentage}%</div>
-              <div className="flex-1 max-w-md">
+              <div className="flex-1 w-full sm:max-w-md">
                 <div className="h-3 bg-cyber-panel rounded-full overflow-hidden border border-cyber-border">
                   <motion.div
                     initial={{ width: 0 }}
@@ -167,7 +193,7 @@ export default function SkillMatrixPage() {
         </div>
 
         <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex-1 min-w-[300px]">
+          <div className="flex-1 min-w-0 w-full sm:min-w-[240px]">
             <input
               type="text"
               placeholder={t('searchPlaceholder', { ns: 'skillMatrix' })}

@@ -16,9 +16,8 @@ i18n
     interpolation: {
       escapeValue: false,
     },
-    missingKeyHandler: (lngs, ns, key) => {
-      if (process.env.NODE_ENV === 'development') {
-        // eslint-disable-next-line no-console
+    missingKeyHandler: (lngs, _ns, key) => {
+      if (import.meta.env.DEV) {
         console.warn(`Відсутній ключ i18n: ${key} для мов: ${lngs}`);
       }
     },

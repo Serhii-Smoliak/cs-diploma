@@ -13,45 +13,67 @@ const __dirname = dirname(__filename);
 async function main() {
   console.log('🌱 Seeding database...\n');
 
-  const passwordHash = await bcrypt.hash('admin123', 10);
-  const userId = 'test-user-admin';
-
-  await prisma.user.deleteMany({
-    where: { email: 'admin@cybertactics.test' },
-  });
-
-  const user = await prisma.user.create({
-    data: {
-      id: userId,
+  const testUsers = [
+    {
+      id: 'test-user-admin',
       username: 'admin',
       email: 'admin@cybertactics.test',
-      passwordHash,
-      xp: 0,
-      rank: 'Script Kiddie',
-      stealth: 100,
+      password: 'admin123',
     },
-  });
-
-  await prisma.userStats.create({
-    data: {
-      userId: user.id,
-      totalXp: 0,
-      rank: 'Script Kiddie',
-      stealth: 100,
-      completedLevels: 0,
+    {
+      id: 'test-user-test1',
+      username: 'test1',
+      email: 'test1@cybertactics.test',
+      password: 'test1123',
     },
-  });
+    {
+      id: 'test-user-test2',
+      username: 'test2',
+      email: 'test2@cybertactics.test',
+      password: 'test2123',
+    },
+  ] as const;
 
-  console.log('✅ Test user created successfully!');
-  console.log('📧 Credentials:');
-  console.log('   Email: admin@cybertactics.test');
-  console.log('   Password: admin123');
-  console.log('');
+  for (const account of testUsers) {
+    await prisma.user.deleteMany({
+      where: { email: account.email },
+    });
+
+    const passwordHash = await bcrypt.hash(account.password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        id: account.id,
+        username: account.username,
+        email: account.email,
+        passwordHash,
+        xp: 0,
+        rank: 'Script Kiddie',
+        stealth: 100,
+      },
+    });
+
+    await prisma.userStats.create({
+      data: {
+        userId: user.id,
+        totalXp: 0,
+        rank: 'Script Kiddie',
+        stealth: 100,
+        completedLevels: 0,
+      },
+    });
+
+    console.log('✅ Test user created successfully!');
+    console.log('📧 Credentials:');
+    console.log(`   Email: ${account.email}`);
+    console.log(`   Password: ${account.password}`);
+    console.log('');
+  }
 
   console.log('🔄 Loading missions and levels from JSON files...\n');
 
   const missionsDir = join(__dirname, '../src/data/missions');
-  
+
   try {
     const missionFiles = readdirSync(missionsDir).filter((f) => f.endsWith('.json'));
 
@@ -100,8 +122,10 @@ async function main() {
                   mitreId: mitreId,
                 },
               });
-            } catch (error) {
-              console.warn(`⚠️  Skipping MITRE technique ${mitreId} for mission ${mission.id} (may not exist yet)`);
+            } catch {
+              console.warn(
+                `⚠️  Skipping MITRE technique ${mitreId} for mission ${mission.id} (may not exist yet)`
+              );
             }
           }
         }
@@ -160,19 +184,19 @@ async function main() {
     { codeName: 'Phantom', group: 'osint', specialization: 'OSINT Specialist' },
     { codeName: 'Ghost', group: 'osint', specialization: 'OSINT Specialist' },
     { codeName: 'Viper', group: 'osint', specialization: 'OSINT Specialist' },
-    
+
     { codeName: 'Cobra', group: 'pentest', specialization: 'Penetration Tester' },
     { codeName: 'Python', group: 'pentest', specialization: 'Penetration Tester' },
     { codeName: 'Mamba', group: 'pentest', specialization: 'Penetration Tester' },
     { codeName: 'Anaconda', group: 'pentest', specialization: 'Penetration Tester' },
     { codeName: 'Rattlesnake', group: 'pentest', specialization: 'Penetration Tester' },
-    
+
     { codeName: 'Nexus', group: 'malware', specialization: 'Malware Analyst' },
     { codeName: 'Zero', group: 'malware', specialization: 'Malware Analyst' },
     { codeName: 'Cipher', group: 'malware', specialization: 'Malware Analyst' },
     { codeName: 'Crypto', group: 'malware', specialization: 'Malware Analyst' },
     { codeName: 'Binary', group: 'malware', specialization: 'Malware Analyst' },
-    
+
     { codeName: 'Router', group: 'network', specialization: 'Network Security Expert' },
     { codeName: 'Switch', group: 'network', specialization: 'Network Security Expert' },
     { codeName: 'Firewall', group: 'network', specialization: 'Network Security Expert' },
@@ -204,4 +228,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

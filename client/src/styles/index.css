@@ -70,6 +70,7 @@
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
+    scrollbar-gutter: stable;
   }
   
   .cyber-scrollbar:hover {
@@ -90,6 +91,18 @@
 
   .cyber-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-cyber-success;
+  }
+
+  .dialogue-answer-block {
+    @apply mt-2 px-3 py-2.5 rounded-lg border border-cyber-primary/25 bg-black/70 text-cyber-success/90;
+    font-family: ui-monospace, 'Fira Code', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    box-shadow: inset 0 0 24px rgba(0, 217, 255, 0.04);
   }
 }
 

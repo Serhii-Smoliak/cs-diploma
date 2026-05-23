@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../../store/gameStore';
 import type { Level, EmailSubmission } from '@cybertactics/shared';
 import { motion, AnimatePresence } from 'framer-motion';
+import TaskHints from './TaskHints';
 
 interface PhishingConstructorProps {
   level: Level;
@@ -104,37 +105,46 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-gray-400 mb-4">Phishing Constructor</div>
+      <div className="text-sm text-gray-400 mb-4">
+        {t('phishingConstructorTitle', { ns: 'tasks' })}
+      </div>
 
       <div className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-cyber-primary mb-2">To:</label>
+          <label className="block text-sm font-medium text-cyber-primary mb-2">
+            {t('emailTo', { ns: 'tasks' })}
+          </label>
           <input
             type="email"
             value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="w-full cyber-input"
             readOnly
+            disabled
+            tabIndex={-1}
+            className="w-full cyber-input opacity-60 cursor-not-allowed bg-cyber-panel/40"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-cyber-primary mb-2">Subject:</label>
+          <label className="block text-sm font-medium text-cyber-primary mb-2">
+            {t('emailSubject', { ns: 'tasks' })}
+          </label>
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder="Enter email subject"
+            placeholder={t('emailSubjectPlaceholder', { ns: 'tasks' })}
             className="w-full cyber-input"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-cyber-primary mb-2">Body:</label>
+          <label className="block text-sm font-medium text-cyber-primary mb-2">
+            {t('emailBody', { ns: 'tasks' })}
+          </label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Enter email body"
+            placeholder={t('emailBodyPlaceholder', { ns: 'tasks' })}
             rows={8}
             className="w-full cyber-input font-body"
           />
@@ -142,22 +152,21 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-cyber-primary mb-2">Attachments:</label>
-        <div className="grid grid-cols-3 gap-3">
+        <label className="block text-sm font-medium text-cyber-primary mb-2">
+          {t('emailAttachments', { ns: 'tasks' })}
+        </label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {attachments.map((attachment) => {
             const isSelected = selectedAttachments.includes(attachment.id);
-            const isAllowed = attachment.allowed;
 
             return (
               <motion.div
                 key={attachment.id}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => isAllowed && toggleAttachment(attachment.id)}
+                onClick={() => toggleAttachment(attachment.id)}
                 className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                  !isAllowed
-                    ? 'bg-red-900/20 border-red-500 opacity-50 cursor-not-allowed'
-                    : isSelected
+                  isSelected
                     ? 'bg-cyber-success/20 border-cyber-success cyber-glow-green'
                     : 'bg-cyber-panel border-cyber-border hover:border-cyber-primary'
                 }`}
@@ -166,8 +175,7 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
                   <span className="text-2xl">
                     {attachment.type.includes('word') ? '📄' : attachment.type.includes('exe') ? '⚙️' : '📁'}
                   </span>
-                  {!isAllowed && <span className="text-red-500 text-xl">✗</span>}
-                  {isAllowed && isSelected && <span className="text-cyber-success text-xl">✓</span>}
+                  {isSelected && <span className="text-cyber-success text-xl">✓</span>}
                 </div>
                 <div className="text-xs text-gray-400 truncate">{attachment.name}</div>
               </motion.div>
@@ -188,7 +196,9 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
         disabled={isLoading || !subject || !body}
         className="w-full cyber-button-success py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading ? 'SENDING...' : 'SEND EMAIL'}
+        {isLoading
+          ? t('sendingEmail', { ns: 'tasks' })
+          : t('sendEmail', { ns: 'tasks' })}
       </motion.button>
 
       <AnimatePresence>
@@ -250,16 +260,7 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
         )}
       </AnimatePresence>
 
-      {level.hints && level.hints.length > 0 && (
-        <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/50 rounded-lg">
-          <p className="text-sm font-medium text-yellow-400 mb-2">{t('hints', { ns: 'tasks' })}</p>
-          <ul className="list-disc list-inside space-y-1 text-sm text-yellow-300">
-            {level.hints.map((hint, idx) => (
-              <li key={idx}>{hint}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <TaskHints hints={level.hints ?? []} />
     </div>
   );
 }

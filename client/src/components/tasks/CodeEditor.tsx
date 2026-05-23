@@ -4,6 +4,7 @@ import Editor from '@monaco-editor/react';
 import { useGameStore } from '../../store/gameStore';
 import type { Level } from '@cybertactics/shared';
 import { motion, AnimatePresence } from 'framer-motion';
+import TaskHints from './TaskHints';
 
 interface CodeEditorProps {
   level: Level;
@@ -18,7 +19,6 @@ const CodeEditor = memo(function CodeEditor({ level }: CodeEditorProps) {
   const [xpGained, setXpGained] = useState<number | null>(null);
   const [nextLevelId, setNextLevelId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
   const [userAnswer, setUserAnswer] = useState<string | null>(null);
   const submitAnswer = useGameStore((state) => state.submitAnswer);
   const loadLevel = useGameStore((state) => state.loadLevel);
@@ -41,9 +41,6 @@ const CodeEditor = memo(function CodeEditor({ level }: CodeEditorProps) {
       
       const response = await submitAnswer(answer);
       
-      if (response?.correctAnswer) {
-        setCorrectAnswer(response.correctAnswer);
-      }
       if (response?.userAnswer) {
         setUserAnswer(response.userAnswer);
       }
@@ -106,7 +103,7 @@ const CodeEditor = memo(function CodeEditor({ level }: CodeEditorProps) {
       {level.work_area.code_snippet && (
         <div className="bg-black rounded-lg p-4 border border-cyber-border">
           <Editor
-            height="200px"
+            height="180px"
             defaultLanguage="html"
             value={level.work_area.code_snippet}
             theme="vs-dark"
@@ -270,16 +267,7 @@ const CodeEditor = memo(function CodeEditor({ level }: CodeEditorProps) {
         )}
       </AnimatePresence>
 
-      {level.hints && level.hints.length > 0 && (
-        <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/50 rounded-lg">
-          <p className="text-sm font-medium text-yellow-400 mb-2">{t('hints', { ns: 'tasks' })}</p>
-          <ul className="list-disc list-inside space-y-1 text-sm text-yellow-300">
-            {level.hints.map((hint, idx) => (
-              <li key={idx}>{hint}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <TaskHints hints={level.hints ?? []} />
     </div>
   );
 }, (prevProps, nextProps) => {

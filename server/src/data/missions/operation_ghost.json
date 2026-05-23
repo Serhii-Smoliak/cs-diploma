@@ -115,13 +115,38 @@
           "text": "Okay, craft a phishing email to admin_backup. Their filters are strict. No .exe files. You need to trick them into running a payload."
         }
       ],
-      "task_type": "phishing_constructor",
+      "task_type": "sentence_constructor",
       "work_area": {
-        "email_fields": {
-          "to": "admin_backup@apexdynamics.tech",
-          "subject": "",
-          "body": ""
-        },
+        "email_to": "admin_backup@apexdynamics.tech",
+        "fields": [
+          {
+            "id": "subject",
+            "label": "Subject",
+            "slots": 2,
+            "tokens": [
+              { "id": "sub_1", "text": "Терміновий" },
+              { "id": "sub_2", "text": "звіт" },
+              { "id": "sub_d1", "text": "Q3" },
+              { "id": "sub_d2", "text": "Привіт" },
+              { "id": "sub_d3", "text": "Financial" }
+            ]
+          },
+          {
+            "id": "body",
+            "label": "Body",
+            "slots": 4,
+            "tokens": [
+              { "id": "body_1", "text": "Будь ласка," },
+              { "id": "body_2", "text": "перегляньте" },
+              { "id": "body_3", "text": "оновлення" },
+              { "id": "body_4", "text": "звіту." },
+              { "id": "body_d1", "text": "перевірте" },
+              { "id": "body_d2", "text": "файл" },
+              { "id": "body_d3", "text": "терміново" },
+              { "id": "body_d4", "text": "доступ" }
+            ]
+          }
+        ],
         "attachments": [
           {
             "id": "att_1",
@@ -133,7 +158,7 @@
             "id": "att_2",
             "name": "setup.exe",
             "type": "application/x-msdownload",
-            "allowed": false
+            "allowed": true
           },
           {
             "id": "att_3",
@@ -144,18 +169,26 @@
         ]
       },
       "validation": {
-        "type": "email_check",
-        "required_keywords": ["urgent", "report", "update"],
-        "blocked_extensions": [".exe"]
+        "type": "sentence_combination",
+        "correct_sequences": {
+          "subject": [["sub_1", "sub_2"]],
+          "body": [
+            ["body_1", "body_2", "body_3", "body_4"],
+            ["body_1", "body_2", "body_d2", "body_4"],
+            ["body_1", "body_d1", "body_3", "body_4"],
+            ["body_1", "body_d1", "body_d2", "body_4"]
+          ]
+        },
+        "required_attachments": ["att_3"]
       },
       "rewards": {
         "xp": 200,
         "stealth_impact": 0
       },
       "hints": [
-        "Використовуйте ключові слова: терміново, звіт, оновлення",
-        "Не прикріплюйте .exe файли — вони заблоковані",
-        "Зробіть так, щоб ваш лист виглядав як корпоративний"
+        "Збери тему: терміновий + звіт",
+        "Текст: будь ласка, перегляньте/перевірте + оновлення або файл + звіту",
+        "Додай вкладення Report_Folder.lnk"
       ]
     },
     {

@@ -7,10 +7,7 @@ const router = Router();
 router.get('/techniques', async (req, res) => {
   try {
     const techniques = await prisma.mitreTechnique.findMany({
-      orderBy: [
-        { tactic: 'asc' },
-        { id: 'asc' },
-      ],
+      orderBy: [{ tactic: 'asc' }, { id: 'asc' }],
     });
 
     res.json(techniques);
@@ -83,7 +80,7 @@ router.post('/sync', async (req, res) => {
   try {
     console.log('🔄 Manual MITRE sync requested');
     const result = await syncMitreTechniques();
-    
+
     res.json({
       success: true,
       message: `Synchronized ${result.synced} techniques`,
@@ -100,4 +97,3 @@ router.post('/sync', async (req, res) => {
 });
 
 export default router;
-

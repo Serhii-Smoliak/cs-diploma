@@ -29,9 +29,17 @@ i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    fallbackLng: 'uk',
+    lng: 'uk',
+    supportedLngs: ['uk', 'en'],
+    nonExplicitSupportedLngs: false,
+    fallbackLng: {
+      uk: ['uk'],
+      en: ['en'],
+      default: ['uk'],
+    },
     defaultNS: 'common',
-    ns: ['common', 'mitre', 'tasks', 'missions', 'ui', 'skillMatrix', 'levels', 'dialogues'],
+    ns: ['common', 'mitre', 'tasks', 'missions', 'ui', 'skillMatrix', 'levels', 'dialogues', 'profile'],
+    keySeparator: false,
     interpolation: {
       escapeValue: false,
     },
@@ -39,7 +47,7 @@ i18n
       useSuspense: false,
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['localStorage'],
       caches: ['localStorage'],
     },
   });
@@ -50,7 +58,7 @@ i18n.on('languageChanged', async (lng) => {
   isLanguageChanging = true;
   
   try {
-    const namespaces = ['common', 'mitre', 'tasks', 'missions', 'ui', 'skillMatrix', 'levels', 'dialogues'];
+    const namespaces = ['common', 'mitre', 'tasks', 'missions', 'ui', 'skillMatrix', 'levels', 'dialogues', 'profile'];
     await loadMultipleNamespaces(lng, namespaces);
     i18n.emit('loaded');
   } catch (error) {

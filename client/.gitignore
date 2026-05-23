@@ -18,8 +18,6 @@ build/
 
 # Environment (secrets, API URLs — do not commit)
 .env
-.env.*
-!.env.example
 
 # Logs
 logs/
