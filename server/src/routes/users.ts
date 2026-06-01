@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { authenticate, type AuthRequest } from '../middleware/auth.js';
+import { resolveOwnerUserId } from '../middleware/ownership.js';
 import prisma from '../db/database.js';
 import {
   applyPassiveRegen,
@@ -146,72 +147,114 @@ router.post('/me/stealth/wait', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
-// Get user progress
-router.get('/:id/progress', authenticate, async (req: AuthRequest, res) => {
-  try {
-    const { id } = req.params;
+async function loadUserProgress(userId: string) {
+  return prisma.userProgress.findMany({
+    where: { userId },
+    select: {
+      levelId: true,
+      completed: true,
+      attempts: true,
+      lastAttempt: true,
+      lastAnswer: true,
+      bestScore: true,
+    },
+  });
+}
 
-    if (req.userId !== id) {
-      return res.status(403).json({ error: 'Forbidden' });
+async function loadUserStats(userId: string) {
+  const stealth = await applyPassiveRegen(userId);
+
+  const stats = await prisma.userStats.findUnique({
+    where: { userId },
+    include: {
+      user: {
+        include: {
+          mitreTechniques: {
+            select: {
+              mitreId: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!stats) {
+    return null;
+  }
+
+  return {
+    userId: stats.userId,
+    totalXp: stats.totalXp,
+    rank: stats.rank,
+    stealth,
+    completedLevels: stats.completedLevels,
+    mitreTechniques: stats.user.mitreTechniques.map((t) => t.mitreId),
+  };
+}
+
+router.get('/me/progress', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = resolveOwnerUserId(req, res);
+    if (!userId) {
+      return;
     }
 
-    const progress = await prisma.userProgress.findMany({
-      where: { userId: id },
-      select: {
-        levelId: true,
-        completed: true,
-        attempts: true,
-        lastAttempt: true,
-        lastAnswer: true,
-        bestScore: true,
-      },
-    });
-
-    res.json(progress);
+    res.json(await loadUserProgress(userId));
   } catch (error) {
     console.error('Error fetching user progress:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get user stats
-router.get('/:id/stats', authenticate, async (req: AuthRequest, res) => {
+router.get('/me/stats', authenticate, async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
-
-    if (req.userId !== id) {
-      return res.status(403).json({ error: 'Forbidden' });
+    const userId = resolveOwnerUserId(req, res);
+    if (!userId) {
+      return;
     }
 
-    const stealth = await applyPassiveRegen(id);
-
-    const stats = await prisma.userStats.findUnique({
-      where: { userId: id },
-      include: {
-        user: {
-          include: {
-            mitreTechniques: {
-              select: {
-                mitreId: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
+    const stats = await loadUserStats(userId);
     if (!stats) {
       return res.status(404).json({ error: 'User stats not found' });
     }
 
-    res.json({
-      userId: stats.userId,
-      totalXp: stats.totalXp,
-      rank: stats.rank,
-      stealth,
-      completedLevels: stats.completedLevels,
-      mitreTechniques: stats.user.mitreTechniques.map((t) => t.mitreId),
-    });
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/** @deprecated Prefer GET /users/me/progress — param must match JWT subject. */
+router.get('/:id/progress', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = resolveOwnerUserId(req, res, req.params.id);
+    if (!userId) {
+      return;
+    }
+
+    res.json(await loadUserProgress(userId));
+  } catch (error) {
+    console.error('Error fetching user progress:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/** @deprecated Prefer GET /users/me/stats — param must match JWT subject. */
+router.get('/:id/stats', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = resolveOwnerUserId(req, res, req.params.id);
+    if (!userId) {
+      return;
+    }
+
+    const stats = await loadUserStats(userId);
+    if (!stats) {
+      return res.status(404).json({ error: 'User stats not found' });
+    }
+
+    res.json(stats);
   } catch (error) {
     console.error('Error fetching user stats:', error);
     res.status(500).json({ error: 'Internal server error' });

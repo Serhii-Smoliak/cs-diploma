@@ -19,7 +19,6 @@ export interface Mission {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   mitreTechniques: string[];
   order: number;
-  handlerGroup?: string | null;
 }
 
 export interface MitreTechniqueInfo {

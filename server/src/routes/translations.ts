@@ -1,5 +1,18 @@
 import { Router } from 'express';
 import prisma from '../db/database.js';
+import { authenticate } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/requireAdmin.js';
+import {
+  handleTranslationParamError,
+  parseTranslationBulkItems,
+  parseTranslationKey,
+  parseTranslationLocale,
+  parseTranslationNamespace,
+  parseTranslationNamespacesList,
+  parseTranslationValue,
+  translationNamespacesQuerySchema,
+  translationQuerySchema,
+} from '../validators/translationParams.js';
 
 const router = Router();
 
@@ -23,12 +36,14 @@ router.get('/languages', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const { locale = 'uk', namespace = 'common' } = req.query;
+    const query = translationQuerySchema.parse(req.query);
+    const locale = parseTranslationLocale(query.locale);
+    const namespace = parseTranslationNamespace(query.namespace);
 
     const translations = await prisma.translation.findMany({
       where: {
-        locale: locale as string,
-        namespace: namespace as string,
+        locale,
+        namespace,
       },
       select: {
         key: true,
@@ -43,6 +58,9 @@ router.get('/', async (req, res) => {
 
     res.json(translationsObj);
   } catch (error) {
+    if (handleTranslationParamError(error, res)) {
+      return;
+    }
     console.error('Error fetching translations:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -50,16 +68,13 @@ router.get('/', async (req, res) => {
 
 router.get('/namespaces', async (req, res) => {
   try {
-    const { locale = 'uk', namespaces } = req.query;
+    const query = translationNamespacesQuerySchema.parse(req.query);
+    const locale = parseTranslationLocale(query.locale);
+    const namespaceArray = parseTranslationNamespacesList(query.namespaces);
 
-    if (!namespaces || typeof namespaces !== 'string') {
-      return res.status(400).json({ error: 'namespaces query parameter is required' });
-    }
-
-    const namespaceArray = namespaces.split(',');
     const translations = await prisma.translation.findMany({
       where: {
-        locale: locale as string,
+        locale,
         namespace: {
           in: namespaceArray,
         },
@@ -85,18 +100,20 @@ router.get('/namespaces', async (req, res) => {
 
     res.json(result);
   } catch (error) {
+    if (handleTranslationParamError(error, res)) {
+      return;
+    }
     console.error('Error fetching translations by namespaces:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { key, locale = 'uk', value, namespace = 'common' } = req.body;
-
-    if (!key || !value) {
-      return res.status(400).json({ error: 'key and value are required' });
-    }
+    const locale = parseTranslationLocale(req.body?.locale);
+    const namespace = parseTranslationNamespace(req.body?.namespace);
+    const key = parseTranslationKey(req.body?.key);
+    const value = parseTranslationValue(req.body?.value);
 
     const translation = await prisma.translation.upsert({
       where: {
@@ -119,20 +136,21 @@ router.post('/', async (req, res) => {
 
     res.json(translation);
   } catch (error) {
+    if (handleTranslationParamError(error, res)) {
+      return;
+    }
     console.error('Error creating/updating translation:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.post('/bulk', async (req, res) => {
+router.post('/bulk', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { translations, locale = 'uk', namespace = 'common' } = req.body;
+    const locale = parseTranslationLocale(req.body?.locale);
+    const namespace = parseTranslationNamespace(req.body?.namespace);
+    const translations = parseTranslationBulkItems(req.body?.translations);
 
-    if (!translations || !Array.isArray(translations)) {
-      return res.status(400).json({ error: 'translations array is required' });
-    }
-
-    const operations = translations.map((t: { key: string; value: string }) =>
+    const operations = translations.map((t) =>
       prisma.translation.upsert({
         where: {
           key_locale_namespace: {
@@ -156,6 +174,9 @@ router.post('/bulk', async (req, res) => {
     const result = await prisma.$transaction(operations);
     res.json({ count: result.length, translations: result });
   } catch (error) {
+    if (handleTranslationParamError(error, res)) {
+      return;
+    }
     console.error('Error bulk creating/updating translations:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

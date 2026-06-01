@@ -132,7 +132,7 @@ export default function MissionAssignmentsPage() {
       const authStore = useAuthStore.getState();
       if (authStore.user?.id && currentMission) {
         try {
-          const progress = await api.getUserProgress(authStore.user.id);
+          const progress = await api.getUserProgress();
           const progressMap: Record<string, boolean> = {};
           progress.forEach(p => {
             progressMap[p.levelId] = p.completed;
@@ -184,7 +184,7 @@ export default function MissionAssignmentsPage() {
       const authStore = useAuthStore.getState();
       if (authStore.user?.id) {
         try {
-          const progress = await api.getUserProgress(authStore.user.id);
+          const progress = await api.getUserProgress();
           const progressMap: Record<string, boolean> = {};
           progress.forEach(p => {
             progressMap[p.levelId] = p.completed;

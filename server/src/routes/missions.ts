@@ -54,7 +54,6 @@ router.get('/', async (req, res) => {
         difficulty: m.difficulty as Mission['difficulty'],
         mitreTechniques: allTechniques,
         order: m.orderIndex,
-        handlerGroup: m.handlerGroup || null,
       };
     });
 

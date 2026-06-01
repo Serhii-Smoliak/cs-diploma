@@ -42,10 +42,7 @@ router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
     }
     console.error('Submit answer error:', error);
     console.error('Error details:', error instanceof Error ? error.stack : error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: error instanceof Error ? error.message : String(error),
-    });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

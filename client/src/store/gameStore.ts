@@ -51,7 +51,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     try {
-      const progress = await api.getUserProgress(user.id);
+      const progress = await api.getUserProgress();
       const levelProgress = progress.find((p) => p.levelId === currentLevel.level_id);
       set({
         levelProgress: {

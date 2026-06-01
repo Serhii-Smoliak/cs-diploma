@@ -3,11 +3,12 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import prisma from '../db/database.js';
+import { JWT_SECRET, JWT_SIGN_OPTIONS } from '../config/jwtConfig.js';
+import { authLoginLimiter, authRegisterLimiter } from '../middleware/authRateLimit.js';
 import { applyPassiveRegen } from '../services/stealthService.js';
 import { formatAuthUser } from '../utils/formatUser.js';
 
 const router = Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'cybertactics-secret-key-change-in-production';
 
 const registerSchema = z.object({
   username: z.string().min(3).max(30),
@@ -21,7 +22,7 @@ const loginSchema = z.object({
 });
 
 // Register
-router.post('/register', async (req, res) => {
+router.post('/register', authRegisterLimiter, async (req, res) => {
   try {
     const { username, email, password } = registerSchema.parse(req.body);
 
@@ -32,7 +33,7 @@ router.post('/register', async (req, res) => {
       },
     });
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ error: 'Unable to register with these credentials' });
     }
 
     // Hash password
@@ -59,7 +60,7 @@ router.post('/register', async (req, res) => {
     });
 
     // Generate token
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, JWT_SIGN_OPTIONS);
 
     res.status(201).json({
       token,
@@ -67,7 +68,7 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: 'Invalid request' });
     }
     console.error('Register error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -75,7 +76,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', authLoginLimiter, async (req, res) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
 
@@ -95,7 +96,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Generate token
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, JWT_SIGN_OPTIONS);
 
     const stealth = await applyPassiveRegen(user.id);
 
@@ -109,7 +110,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors });
+      return res.status(400).json({ error: 'Invalid request' });
     }
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });

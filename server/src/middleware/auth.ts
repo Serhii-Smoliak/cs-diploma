@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'cybertactics-secret-key-change-in-production';
+import { JWT_SECRET } from '../config/jwtConfig.js';
 
 export interface AuthRequest extends Request {
   userId?: string;

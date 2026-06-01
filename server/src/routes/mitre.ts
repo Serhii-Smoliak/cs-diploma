@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import prisma from '../db/database.js';
+import { authenticate } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/requireAdmin.js';
 import { syncMitreTechniques } from '../services/mitreSyncService.js';
 
 const router = Router();
@@ -76,7 +78,7 @@ router.get('/techniques/:id', async (req, res) => {
   }
 });
 
-router.post('/sync', async (req, res) => {
+router.post('/sync', authenticate, requireAdmin, async (req, res) => {
   try {
     console.log('🔄 Manual MITRE sync requested');
     const result = await syncMitreTechniques();
@@ -91,7 +93,7 @@ router.post('/sync', async (req, res) => {
     console.error('MITRE sync error:', error);
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Sync failed',
+      error: 'Sync failed',
     });
   }
 });

@@ -137,12 +137,12 @@ class ApiClient {
     });
   }
 
-  async getUserProgress(userId: string): Promise<UserProgress[]> {
-    return this.request<UserProgress[]>(`/users/${userId}/progress`);
+  async getUserProgress(): Promise<UserProgress[]> {
+    return this.request<UserProgress[]>('/users/me/progress');
   }
 
-  async getUserStats(userId: string): Promise<UserStats> {
-    return this.request<UserStats>(`/users/${userId}/stats`);
+  async getUserStats(): Promise<UserStats> {
+    return this.request<UserStats>('/users/me/stats');
   }
 
   async getCurrentUser(): Promise<User> {
@@ -194,10 +194,6 @@ class ApiClient {
   async getTranslationsByNamespaces(locale: string = 'uk', namespaces: string[]): Promise<Record<string, Record<string, string>>> {
     const namespacesStr = namespaces.join(',');
     return this.request<Record<string, Record<string, string>>>(`/translations/namespaces?locale=${locale}&namespaces=${namespacesStr}`);
-  }
-
-  async getRandomHandler(group: string): Promise<{ codeName: string; group: string; specialization: string }> {
-    return this.request<{ codeName: string; group: string; specialization: string }>(`/handlers/random/${group}`);
   }
 }
 

@@ -38,7 +38,7 @@
 | Місія Operation Ghost (5 рівнів), seed, MITRE sync | ✅ |
 | Типи завдань: `code_editor`, `tactical_choice`, `phishing_constructor` | ✅ (phishing — чернетка, див. тиждень 2) |
 | XP, Stealth (базова зміна при submit) | ✅ (без відновлення / paywall) |
-| Skill Matrix, i18n, handlers | ✅ |
+| Skill Matrix, i18n | ✅ |
 | Leaderboard, платний тариф, AI-перевірка | ❌ не в scope MVP |
 
 **Відомі проблеми MVP (переносимо в тиждень 2):**
@@ -75,7 +75,7 @@
 
 **Прибрати:** ✅ зроблено
 - заголовок **«Панель контексту»**;
-- блок **Handler** (`HandlerAvatar`: Shadow, «Спеціаліст з OSINT» тощо) — API `/handlers/random/:group` для UI не потрібен;
+- блок **Handler** (`HandlerAvatar`) — **видалено** разом з API `/handlers/random/:group`;
 - окремий блок **«Ваша попередня правильна відповідь»** / **«Надана відповідь»**;
 - окремий зелений badge **«Завдання виконано»** у панелі;
 - блок **«Правильна відповідь (для навчання)»** для незавершених рівнів (`validation`).
@@ -272,7 +272,7 @@
 - [x] **2.4** Схема JSON + validator для sentence constructor
 - [x] **2.4** UI конструктора + контент `ghost_initial_03`
 - [x] **2.4** Оновити DOCUMENTATION.md (структура JSON, тип завдання)
-- [ ] **2.6** Delta threat model у DOCUMENTATION.md (витік відповідей, межі offensive-контенту, Stealth/regen)
+- [x] **2.6** Delta threat model у DOCUMENTATION.md (витік відповідей, межі offensive-контенту, Stealth/regen)
 - [ ] Регресія: пройти Operation Ghost 1→5 після змін
 
 ---
@@ -293,14 +293,14 @@
 
 ### План
 
-- [ ] Додати **ролі користувачів** (напр. `user`, `admin`) — схема БД, JWT claims, middleware.
-- [ ] Реалізувати **admin-захист** для критичних endpointʼів.
-- [ ] Захистити:
-  - [ ] `POST /api/mitre/sync`;
-  - [ ] translations API (`POST` / `PUT` / `DELETE`);
-  - [ ] потенційні admin-операції (seed-тригери, bulk-оновлення контенту тощо).
-- [ ] Перевірити доступ до **progress / stats** лише для **власного** користувача (або admin); заборонити підміну `:id` у URL.
-- [ ] Оновити **threat model** після змін (документ або розділ у DOCUMENTATION.md).
+- [x] Додати **ролі користувачів** (напр. `user`, `admin`) — схема БД, middleware (`requireAdmin` читає роль з БД; JWT claims — backlog).
+- [x] Реалізувати **admin-захист** для критичних endpointʼів.
+- [x] Захистити:
+  - [x] `POST /api/mitre/sync`;
+  - [x] translations API (`POST` / `bulk`; PUT/DELETE немає в API);
+  - [ ] потенційні admin-операції (seed-тригери, bulk-оновлення контенту тощо) — **немає HTTP-маршрутів**, окрім translations bulk.
+- [x] Перевірити доступ до **progress / stats** лише для **власного** користувача; заборонити підміну `:id` у URL (`resolveOwnerUserId`, `/users/me/*`).
+- [x] Оновити **threat model** після змін (розділ у DOCUMENTATION.md §Threat model).
 
 **Критерій готовності:** неавторизований / звичайний user не може викликати admin API; користувач A не читає прогрес користувача B.
 

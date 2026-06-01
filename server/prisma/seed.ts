@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { readFileSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
@@ -19,18 +19,21 @@ async function main() {
       username: 'admin',
       email: 'admin@cybertactics.test',
       password: 'admin123',
+      role: UserRole.ADMIN,
     },
     {
       id: 'test-user-test1',
       username: 'test1',
       email: 'test1@cybertactics.test',
       password: 'test1123',
+      role: UserRole.USER,
     },
     {
       id: 'test-user-test2',
       username: 'test2',
       email: 'test2@cybertactics.test',
       password: 'test2123',
+      role: UserRole.USER,
     },
   ] as const;
 
@@ -47,6 +50,7 @@ async function main() {
         username: account.username,
         email: account.email,
         passwordHash,
+        role: account.role,
         xp: 0,
         rank: 'Script Kiddie',
         stealth: 100,
@@ -91,7 +95,6 @@ async function main() {
             description: missionData.description,
             difficulty: missionData.difficulty,
             mitreTechniques: missionData.mitre_techniques || [],
-            handlerGroup: missionData.handler_group || null,
           },
           create: {
             id: missionData.mission_id,
@@ -100,7 +103,6 @@ async function main() {
             difficulty: missionData.difficulty,
             orderIndex: 1,
             mitreTechniques: missionData.mitre_techniques || [],
-            handlerGroup: missionData.handler_group || null,
           },
         });
 
@@ -176,42 +178,6 @@ async function main() {
     console.error('❌ Error loading missions:', error);
     console.log('⚠️  Missions directory not found or empty. Skipping mission data.');
   }
-
-  console.log('🔄 Seeding handlers...\n');
-  const handlers = [
-    { codeName: 'Raven', group: 'osint', specialization: 'OSINT Specialist' },
-    { codeName: 'Shadow', group: 'osint', specialization: 'OSINT Specialist' },
-    { codeName: 'Phantom', group: 'osint', specialization: 'OSINT Specialist' },
-    { codeName: 'Ghost', group: 'osint', specialization: 'OSINT Specialist' },
-    { codeName: 'Viper', group: 'osint', specialization: 'OSINT Specialist' },
-
-    { codeName: 'Cobra', group: 'pentest', specialization: 'Penetration Tester' },
-    { codeName: 'Python', group: 'pentest', specialization: 'Penetration Tester' },
-    { codeName: 'Mamba', group: 'pentest', specialization: 'Penetration Tester' },
-    { codeName: 'Anaconda', group: 'pentest', specialization: 'Penetration Tester' },
-    { codeName: 'Rattlesnake', group: 'pentest', specialization: 'Penetration Tester' },
-
-    { codeName: 'Nexus', group: 'malware', specialization: 'Malware Analyst' },
-    { codeName: 'Zero', group: 'malware', specialization: 'Malware Analyst' },
-    { codeName: 'Cipher', group: 'malware', specialization: 'Malware Analyst' },
-    { codeName: 'Crypto', group: 'malware', specialization: 'Malware Analyst' },
-    { codeName: 'Binary', group: 'malware', specialization: 'Malware Analyst' },
-
-    { codeName: 'Router', group: 'network', specialization: 'Network Security Expert' },
-    { codeName: 'Switch', group: 'network', specialization: 'Network Security Expert' },
-    { codeName: 'Firewall', group: 'network', specialization: 'Network Security Expert' },
-    { codeName: 'Gateway', group: 'network', specialization: 'Network Security Expert' },
-    { codeName: 'Protocol', group: 'network', specialization: 'Network Security Expert' },
-  ];
-
-  for (const handler of handlers) {
-    await prisma.handler.upsert({
-      where: { codeName: handler.codeName },
-      update: handler,
-      create: handler,
-    });
-  }
-  console.log(`✅ Seeded ${handlers.length} handlers\n`);
 
   await seedLanguages();
 

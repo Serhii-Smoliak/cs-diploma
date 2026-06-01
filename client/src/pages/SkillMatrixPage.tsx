@@ -54,7 +54,7 @@ export default function SkillMatrixPage() {
     try {
       const [allTechniques, stats] = await Promise.all([
         api.getMitreTechniques(),
-        user?.id ? api.getUserStats(user.id).catch(() => null) : Promise.resolve(null),
+        user ? api.getUserStats().catch(() => null) : Promise.resolve(null),
       ]);
 
       setTechniques(allTechniques);
