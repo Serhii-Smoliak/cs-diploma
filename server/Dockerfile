@@ -24,9 +24,12 @@ COPY server/prisma ./prisma/
 COPY server/src ./src/
 
 RUN npm run db:generate && npm run build
+RUN npm prune --omit=dev
 
 # --- production ---
 FROM node:20-alpine AS production
+
+RUN apk upgrade --no-cache
 
 WORKDIR /app
 

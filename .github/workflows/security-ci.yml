@@ -99,6 +99,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=serhii-smoliak
+            -Dsonar.projectKey=Serhii-Smoliak_cs-diploma
+            -Dsonar.qualitygate.wait=true
 
   snyk-deps:
     name: Snyk dependencies
@@ -145,10 +150,12 @@ jobs:
         run: docker build -t cybertactics-server:ci -f server/Dockerfile .
 
       - name: Scan image with Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: cybertactics-server:ci
           format: table
           exit-code: 1
           severity: CRITICAL,HIGH
           ignore-unfixed: true
+          scanners: vuln
+          skip-dirs: usr/local/lib/node_modules/npm,usr/local/lib/node_modules/corepack,opt/yarn-v1.22.22
