@@ -66,7 +66,7 @@ export default function SkillMatrixPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user]);
 
   useEffect(() => {
     void loadData();
