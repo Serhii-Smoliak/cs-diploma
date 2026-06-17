@@ -13,26 +13,23 @@ const __dirname = dirname(__filename);
 async function main() {
   console.log('🌱 Seeding database...\n');
 
+  const legacyTestEmails = ['test1@cybertactics.test', 'test2@cybertactics.test'];
+
+  await prisma.user.deleteMany({
+    where: { email: { in: legacyTestEmails } },
+  });
+
   const testUsers = [
     {
-      id: 'test-user-admin',
       username: 'admin',
       email: 'admin@cybertactics.test',
       password: 'admin123',
       role: UserRole.ADMIN,
     },
     {
-      id: 'test-user-test1',
-      username: 'test1',
-      email: 'test1@cybertactics.test',
-      password: 'test1123',
-      role: UserRole.USER,
-    },
-    {
-      id: 'test-user-test2',
-      username: 'test2',
-      email: 'test2@cybertactics.test',
-      password: 'test2123',
+      username: 'user',
+      email: 'user@cybertactics.test',
+      password: 'user123',
       role: UserRole.USER,
     },
   ] as const;
@@ -46,7 +43,6 @@ async function main() {
 
     const user = await prisma.user.create({
       data: {
-        id: account.id,
         username: account.username,
         email: account.email,
         passwordHash,

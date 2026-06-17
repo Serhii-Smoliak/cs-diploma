@@ -1212,5 +1212,21 @@ GET /api/translations/namespaces?namespaces=...
 | Minimize Attack Surface | Admin/sync endpointʼи обмежені. MITRE sync доступний тільки admin. Legacy `/users/:id/*` замінюються на `/users/me/*`.      | Зменшує кількість точок атаки.                                                     |
 | Never Trust Client      | XP, Stealth, rank і completed levels не приймаються напряму з frontend. Усі значення рахуються backend-логікою.             | Знижує ризик накрутки прогресу та обходу навчальної логіки.                        |
 | Secure Admin Operations | `POST /api/mitre/sync`, `POST /api/translations`, `POST /api/translations/bulk` захищені JWT + ADMIN.                       | Захищає системні дані від несанкціонованої зміни.                                  |
+
+---
+
+## CI/CD Security Pipeline
+
+Автоматизовані перевірки перед деплоєм (тиждень 5). Workflow: `.github/workflows/security-ci.yml`.
+
+| Gate | Умова блокування merge/deploy |
+|------|-------------------------------|
+| Build & lint | `shared` / `server` / `client` — install, lint, build failed |
+| Dependency audit | critical CVE в npm-залежностях |
+| SonarCloud | Quality Gate failed |
+| Snyk | high/critical vulnerabilities в dependencies |
+| Trivy | CRITICAL/HIGH CVE в Docker image backend |
+
+Deploy: merge в `main` лише після green checks → Railway auto-deploy. Деталі: [diploma-docs/ci-cd-pipeline.md](./diploma-docs/ci-cd-pipeline.md).
 | Secure Error Handling   | API не повертає stack trace, Prisma details, SQL, env, debug/TODO-коментарі або внутрішні шляхи.                            | Знижує ризик information disclosure.                                               |
 | Security Validation     | OWASP ZAP використовується для перевірки реалізованих controls, але не як єдиний метод безпеки.                             | Підтверджує remediation і доповнює threat modeling, manual testing та code review. |

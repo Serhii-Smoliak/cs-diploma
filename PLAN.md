@@ -98,7 +98,7 @@
 
 **Файли:** `ContextPanel.tsx`, `DialogueLog.tsx`; i18n: `handlerTaskCompleted` (`{{answer}}`), `taskStatusNotCompleted` (для незавершеного) у namespace `ui` / seed.
 
-**Оновлення перекладів без скидання прогресу:** `npx tsx prisma/seed-translations.ts` (не повний `yarn seed` — він видаляє test user і `user_progress`).
+**Оновлення перекладів без скидання прогресу:** `npx tsx prisma/seed-translations.ts` (не повний `npm run seed` — він видаляє test user і `user_progress`).
 
 **Критерій готовності:** ліва колонка = MITRE badge + лог діалогу; підсумок успіху — **одне** повідомлення `[КООРДИНАТОР]` після брифінгу, без окремих карток і без дублювання в `[Система]`.
 
@@ -494,7 +494,7 @@ GET /api/missions/operation_ghost/levels   ← не опиратися на «н
 
 ### 6.3 Залежності та supply chain
 
-- [ ] `npm audit` / `yarn npm audit` у `client`, `server`, `shared` — виправити **critical/high** або задокументувати.
+- [ ] `npm audit` у `client`, `server`, `shared` — виправити **critical/high** або задокументувати.
 - [ ] Опційно: **Dependabot** / **Snyk** у CI для автоматичних PR на оновлення залежностей.
 - [ ] Переконатися, що `.env`, `JWT_SECRET`, паролі БД **не** потрапляють у git (перевірка Sonar secrets + `.gitignore`).
 
@@ -546,7 +546,7 @@ GET /api/missions/operation_ghost/levels   ← не опиратися на «н
 
 ### 6.7 Підготовка деплою
 
-- [ ] backend (build, `yarn start` / PM2);
+- [ ] backend (build, `npm start` / PM2);
 - [ ] frontend (static build, nginx / CDN);
 - [ ] PostgreSQL (managed або VPS);
 - [ ] env (production secrets, без commit `.env`);

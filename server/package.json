@@ -18,7 +18,6 @@
     "format": "prettier --write \"src/**/*.ts\" \"prisma/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"prisma/**/*.ts\""
   },
-  "packageManager": "yarn@1.22.22",
   "dependencies": {
     "@cybertactics/shared": "file:../shared",
     "@prisma/client": "^6.1.0",

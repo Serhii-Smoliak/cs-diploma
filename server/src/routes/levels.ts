@@ -26,7 +26,7 @@ const submitSchema = z.object({
 router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
-    const levelId = decodeURIComponent(id);
+    const levelId = decodeURIComponent(Array.isArray(id) ? id[0] : id);
     const { answer } = submitSchema.parse(req.body);
 
     if (!req.userId) {

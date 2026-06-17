@@ -1,23 +1,45 @@
-FROM node:20-alpine
+# Build context: repository root
+#   docker build -t cybertactics-server -f server/Dockerfile .
+
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-COPY tsconfig.json ./
+# --- shared ---
+COPY shared/package.json shared/package-lock.json ./shared/
+COPY shared/tsconfig.json ./shared/
+COPY shared/src ./shared/src/
 
-# Install dependencies
-RUN npm install
+WORKDIR /app/shared
+RUN npm ci && npm run build
 
-# Copy source code
-COPY . .
+# --- server ---
+WORKDIR /app/server
+COPY server/package.json server/package-lock.json ./
 
-# Build TypeScript
-RUN npm run build
+RUN npm ci
 
-# Expose port
+COPY server/tsconfig.json ./
+COPY server/prisma ./prisma/
+COPY server/src ./src/
+
+RUN npm run db:generate && npm run build
+
+# --- production ---
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=build /app/shared ./shared
+
+WORKDIR /app/server
+COPY --from=build /app/server/package.json /app/server/package-lock.json ./
+COPY --from=build /app/server/node_modules ./node_modules
+COPY --from=build /app/server/dist ./dist
+COPY --from=build /app/server/prisma ./prisma
+
 EXPOSE 3001
 
-# Start server
-CMD ["npm", "start"]
-
+CMD ["node", "dist/index.js"]

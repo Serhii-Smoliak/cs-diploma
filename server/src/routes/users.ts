@@ -229,7 +229,8 @@ router.get('/me/stats', authenticate, async (req: AuthRequest, res) => {
 /** @deprecated Prefer GET /users/me/progress — param must match JWT subject. */
 router.get('/:id/progress', authenticate, async (req: AuthRequest, res) => {
   try {
-    const userId = resolveOwnerUserId(req, res, req.params.id);
+    const paramId = req.params.id;
+    const userId = resolveOwnerUserId(req, res, Array.isArray(paramId) ? paramId[0] : paramId);
     if (!userId) {
       return;
     }
@@ -244,7 +245,8 @@ router.get('/:id/progress', authenticate, async (req: AuthRequest, res) => {
 /** @deprecated Prefer GET /users/me/stats — param must match JWT subject. */
 router.get('/:id/stats', authenticate, async (req: AuthRequest, res) => {
   try {
-    const userId = resolveOwnerUserId(req, res, req.params.id);
+    const paramId = req.params.id;
+    const userId = resolveOwnerUserId(req, res, Array.isArray(paramId) ? paramId[0] : paramId);
     if (!userId) {
       return;
     }

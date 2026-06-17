@@ -9,7 +9,6 @@
     "preview": "vite preview",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
   },
-  "packageManager": "yarn@1.22.22",
   "dependencies": {
     "@cybertactics/shared": "file:../shared",
     "@monaco-editor/react": "^4.6.0",

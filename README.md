@@ -40,7 +40,7 @@ ct_mvp/
 ### Вимоги
 
 - Node.js 20+ LTS
-- Yarn або npm
+- npm
 - Docker / Docker Compose (для PostgreSQL з `server/docker-compose.yml`)
 
 Кореневого `package.json` немає — залежності ставляться окремо в `shared`, `server` і `client`.
@@ -67,28 +67,28 @@ docker compose up -d
 
 ```bash
 cd shared
-yarn install
-yarn build
+npm install
+npm run build
 
 cd ../server
-yarn install
+npm install
 
 cd ../client
-yarn install
+npm install
 ```
 
 **4. Міграції БД**
 
 ```bash
 cd server
-yarn db:migrate
+npm run db:migrate
 ```
 
 **5. Backend (потрібен для синхронізації MITRE)**
 
 ```bash
 cd server
-yarn dev
+npm run dev
 ```
 
 **6. Синхронізація MITRE ATT&CK** (обов'язково **до** seed — рівні посилаються на техніки в БД)
@@ -105,14 +105,14 @@ curl -X POST http://localhost:3001/api/mitre/sync
 
 ```bash
 cd server
-yarn seed
+npm run seed
 ```
 
 **8. Frontend**
 
 ```bash
 cd client
-yarn dev
+npm run dev
 ```
 
 **9. Відкрийте застосунок**
@@ -127,22 +127,36 @@ yarn dev
 ```bash
 # Backend (порт 3001)
 cd server
-yarn dev
+npm run dev
 ```
 
 ```bash
 # Frontend (порт 5173, проксі /api → backend)
 cd client
-yarn dev
+npm run dev
 ```
 
 ### Збірка
 
 ```bash
-cd shared && yarn build && cd ..
-cd server && yarn build && cd ..
-cd client && yarn build && cd ..
+cd shared && npm run build && cd ..
+cd server && npm run build && cd ..
+cd client && npm run build && cd ..
 ```
+
+## CI/CD Security Pipeline
+
+Перед деплоєм на Railway код проходить автоматичні перевірки в **GitHub Actions** (workflow `.github/workflows/security-ci.yml`):
+
+- build / lint / typecheck для `shared`, `server`, `client`
+- dependency audit (`npm audit`)
+- SonarCloud SAST + Quality Gate
+- Snyk (npm dependencies)
+- Trivy (Docker image backend)
+
+Детальна схема, security gates і налаштування secrets — у [diploma-docs/ci-cd-pipeline.md](./diploma-docs/ci-cd-pipeline.md).
+
+**Deploy flow:** PR → green CI → merge в `main` → Railway deploy. Рекомендовано увімкнути branch protection на `main`.
 
 ## Використання
 
@@ -191,7 +205,7 @@ MIT
 
 ## Тестовий обліковий запис
 
-Після `yarn seed` у каталозі `server` (після `POST /api/mitre/sync`):
+Після `npm run seed` у каталозі `server` (після `POST /api/mitre/sync`):
 
 - **Email:** admin@cybertactics.test  
 - **Пароль:** admin123  
@@ -200,7 +214,7 @@ MIT
 
 ```bash
 curl -X POST http://localhost:3001/api/mitre/sync
-cd server && yarn seed
+cd server && npm run seed
 ```
 
 Користувач створюється з початковими значеннями: XP 0, ранг Script Kiddie, Stealth 100%. Увійдіть і проходьте місію **Operation Ghost**.

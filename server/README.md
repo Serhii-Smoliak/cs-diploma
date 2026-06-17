@@ -12,29 +12,29 @@ Backend API платформи CyberTactics.
 
 ## Перший запуск
 
-Перед запуском переконайтеся, що зібрано пакет **shared** (`cd ../shared && yarn install && yarn build`).
+Перед запуском переконайтеся, що зібрано пакет **shared** (`cd ../shared && npm install && npm run build`).
 
 1. **`.env`** — скопіюйте `.env.example` → `.env`
 2. **PostgreSQL** — `docker compose up -d`
-3. **Залежності** — `yarn install`
-4. **Міграції** — `yarn db:migrate`
-5. **Backend** — `yarn dev` (порт 3001)
+3. **Залежності** — `npm install`
+4. **Міграції** — `npm run db:migrate`
+5. **Backend** — `npm run dev` (порт 3001)
 6. **MITRE sync** — `POST http://localhost:3001/api/mitre/sync` (обов'язково **до** seed)
-7. **Seed** — `yarn seed` (у другому терміналі)
+7. **Seed** — `npm run seed` (у другому терміналі)
 
 Після seed: **admin@cybertactics.test** / **admin123**.
 
 ## Запуск (розробка)
 
 ```bash
-yarn dev
+npm run dev
 ```
 
 ## Production
 
 ```bash
-yarn build
-yarn start
+npm run build
+npm start
 ```
 
 ## Змінні середовища
@@ -64,10 +64,10 @@ PORT=3001
 
 ## Команди Prisma
 
-- `yarn db:migrate` — застосувати міграції
-- `yarn db:generate` — згенерувати Prisma Client
-- `yarn db:studio` — відкрити Prisma Studio
-- `yarn seed` — наповнити БД (після MITRE sync; див. `prisma/seed.ts`)
+- `npm run db:migrate` — застосувати міграції
+- `npm run db:generate` — згенерувати Prisma Client
+- `npm run db:studio` — відкрити Prisma Studio
+- `npm run seed` — наповнити БД (після MITRE sync; див. `prisma/seed.ts`)
 
 ## MITRE sync
 
