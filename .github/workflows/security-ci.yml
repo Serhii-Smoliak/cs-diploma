@@ -44,6 +44,7 @@ jobs:
           npm run db:generate
           npm run lint
           npm run format:check
+          npm run test:coverage
           npm run build
 
       - name: Client checks
@@ -51,6 +52,7 @@ jobs:
         run: |
           npm ci
           npm run lint
+          npm run test:coverage
           npm run build
 
   dependency-audit:
@@ -104,6 +106,7 @@ jobs:
             -Dsonar.organization=serhii-smoliak
             -Dsonar.projectKey=Serhii-Smoliak_cs-diploma
             -Dsonar.qualitygate.wait=true
+            -Dsonar.javascript.lcov.reportPaths=client/coverage/lcov.info,server/coverage/lcov.info
 
   snyk-deps:
     name: Snyk dependencies

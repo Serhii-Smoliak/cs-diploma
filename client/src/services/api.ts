@@ -186,9 +186,7 @@ class ApiClient {
     return this.request<MitreTechnique[]>('/mitre/techniques');
   }
 
-  async getMitreTechnique(
-    id: string
-  ): Promise<
+  async getMitreTechnique(id: string): Promise<
     MitreTechnique & {
       relatedMissions?: Array<{
         id: string;

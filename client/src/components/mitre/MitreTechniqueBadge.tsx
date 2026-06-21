@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { MitreTechniqueInfo } from '../../types/shared';
+import type { MitreTechniqueInfo } from '@cybertactics/shared';
 
 interface MitreTechniqueBadgeProps {
   technique: MitreTechniqueInfo;

@@ -3,15 +3,9 @@ import { useTranslation } from 'react-i18next';
 import type { LeaderboardEntry } from '@cybertactics/shared';
 import { api } from '../services/api';
 import { getRankLabel } from '../utils/rank';
+import { getPositionLabel } from '../utils/leaderboard';
 import UserAvatar from '../components/profile/UserAvatar';
 import { loadMultipleNamespaces } from '../i18n/config';
-
-function getPositionLabel(position: number): string {
-  if (position === 1) return '🥇';
-  if (position === 2) return '🥈';
-  if (position === 3) return '🥉';
-  return String(position);
-}
 
 export default function LeaderboardPage() {
   const { t, i18n: i18nInstance } = useTranslation(['ui']);

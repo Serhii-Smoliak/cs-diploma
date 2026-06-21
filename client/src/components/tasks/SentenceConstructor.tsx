@@ -2,15 +2,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGameStore } from '../../store/gameStore';
 import type { Level, SentenceConstructorSubmission, SentenceField } from '@cybertactics/shared';
-import { motion, AnimatePresence } from 'framer-motion';
 import TaskHints from './TaskHints';
 import TaskSubmitButton from './TaskSubmitButton';
+import AttachmentPicker from './AttachmentPicker';
+import { toggleAttachmentSelection } from './attachmentUtils';
+import TaskResultPanel from './TaskResultPanel';
+import { preventTaskMouseDefault, useTaskProgress } from './useTaskProgress';
+import type { TFunction } from 'i18next';
 
 interface SentenceConstructorProps {
   level: Level;
 }
-
-import type { TFunction } from 'i18next';
 
 function getFieldLabel(field: SentenceField, t: TFunction): string {
   if (field.label) return field.label;
@@ -95,11 +97,17 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
 
   const [fieldSlots, setFieldSlots] = useState<Record<string, (string | null)[]>>({});
   const [selectedAttachments, setSelectedAttachments] = useState<string[]>([]);
-  const [result, setResult] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [xpGained, setXpGained] = useState<number | null>(null);
-  const [nextLevelId, setNextLevelId] = useState<string | null>(null);
-  const { submitAnswer, isLoading, loadLevel, levels, currentLevel } = useGameStore();
+  const { submitAnswer, isLoading } = useGameStore();
+  const {
+    result,
+    isSuccess,
+    xpGained,
+    resetProgress,
+    applySubmitResponse,
+    applySubmitError,
+    hasNextLevel,
+    goToNextLevel,
+  } = useTaskProgress();
 
   const resetFields = () => {
     const initial: Record<string, (string | null)[]> = {};
@@ -109,24 +117,13 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
     setFieldSlots(initial);
   };
 
-  const toggleAttachment = (attachmentId: string) => {
-    setSelectedAttachments((prev) =>
-      prev.includes(attachmentId)
-        ? prev.filter((id) => id !== attachmentId)
-        : [...prev, attachmentId]
-    );
-  };
-
   const isComplete = fields.every((field) => {
     const slots = fieldSlots[field.id] || [];
     return slots.length === field.slots && slots.every(Boolean);
   });
 
-  const handleSubmit = async (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const handleSubmit = async (event?: React.MouseEvent) => {
+    preventTaskMouseDefault(event);
 
     const submission: SentenceConstructorSubmission = {
       to: emailTo,
@@ -138,57 +135,18 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
 
     try {
       const response = await submitAnswer(submission);
-
-      if (response?.success) {
-        setIsSuccess(true);
-        setXpGained(response.xpGained || null);
-        setNextLevelId(response.nextLevelId || null);
-        setResult(
-          `${t('success', { ns: 'tasks' })}\n${response.message || t('taskCompleted', { ns: 'tasks' })}`
-        );
+      applySubmitResponse(response, t, () => {
         resetFields();
         setSelectedAttachments([]);
-      } else if (response) {
-        setIsSuccess(false);
-        setResult(
-          `${t('failure', { ns: 'tasks' })}\n${response.message || t('wrongAnswer', { ns: 'tasks' })}`
-        );
-      }
+      });
     } catch (error) {
-      setIsSuccess(false);
-      setResult(
-        `${t('error', { ns: 'tasks' })}\n${error instanceof Error ? error.message : t('errorOccurred', { ns: 'tasks' })}`
-      );
+      applySubmitError(error, t);
     }
-  };
-
-  const handleNextLevel = () => {
-    if (nextLevelId) {
-      loadLevel(nextLevelId);
-    } else {
-      const currentIndex = levels.findIndex((l) => l.level_id === currentLevel?.level_id);
-      if (currentIndex >= 0 && currentIndex < levels.length - 1) {
-        loadLevel(levels[currentIndex + 1].level_id);
-      }
-    }
-    setIsSuccess(false);
-    setResult(null);
-    setXpGained(null);
-    setNextLevelId(null);
-  };
-
-  const hasNextLevel = () => {
-    if (nextLevelId) return true;
-    const currentIndex = levels.findIndex((l) => l.level_id === currentLevel?.level_id);
-    return currentIndex >= 0 && currentIndex < levels.length - 1;
   };
 
   /* eslint-disable react-hooks/exhaustive-deps -- reset when level changes */
   useEffect(() => {
-    setIsSuccess(false);
-    setResult(null);
-    setXpGained(null);
-    setNextLevelId(null);
+    resetProgress();
     setSelectedAttachments([]);
     resetFields();
   }, [level.level_id]);
@@ -224,43 +182,14 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
         />
       ))}
 
-      <div className="min-w-0 max-w-full">
-        <label className="block text-sm font-medium text-cyber-primary mb-2">
-          {t('emailAttachments', { ns: 'tasks' })}
-        </label>
-        <div className="grid gap-2 min-w-0 max-w-full [grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr))]">
-          {attachments.map((attachment) => {
-            const isSelected = selectedAttachments.includes(attachment.id);
-
-            return (
-              <button
-                key={attachment.id}
-                type="button"
-                onClick={() => toggleAttachment(attachment.id)}
-                className={`min-w-0 max-w-full p-3 rounded-lg border cursor-pointer text-left transition-colors ${
-                  isSelected
-                    ? 'bg-cyber-success/20 border-cyber-success'
-                    : 'bg-cyber-panel border-cyber-border hover:border-cyber-primary hover:bg-cyber-primary/5'
-                }`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xl shrink-0">
-                    {attachment.type.includes('word')
-                      ? '📄'
-                      : attachment.type.includes('exe')
-                        ? '⚙️'
-                        : '📁'}
-                  </span>
-                  <span className="text-xs text-gray-400 truncate min-w-0 flex-1">
-                    {attachment.name}
-                  </span>
-                  {isSelected && <span className="text-cyber-success text-lg shrink-0">✓</span>}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <AttachmentPicker
+        attachments={attachments}
+        selectedIds={selectedAttachments}
+        label={t('emailAttachments', { ns: 'tasks' })}
+        onToggle={(attachmentId) =>
+          setSelectedAttachments((prev) => toggleAttachmentSelection(prev, attachmentId))
+        }
+      />
 
       <TaskSubmitButton
         disabled={isLoading || !isComplete || selectedAttachments.length === 0}
@@ -269,34 +198,15 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
         {isLoading ? t('sendingEmail', { ns: 'tasks' }) : t('sendEmail', { ns: 'tasks' })}
       </TaskSubmitButton>
 
-      <AnimatePresence>
-        {result && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className={`p-4 rounded-lg ${
-              isSuccess
-                ? 'bg-green-900/30 text-cyber-success border-0'
-                : 'bg-red-900/20 text-cyber-danger border border-cyber-danger'
-            }`}
-          >
-            <pre className="whitespace-pre-wrap font-mono text-sm">{result}</pre>
-            {isSuccess && hasNextLevel() && (
-              <button
-                type="button"
-                onClick={handleNextLevel}
-                className="w-full cyber-button py-3 text-base mt-3"
-              >
-                {t('nextLevel', { ns: 'tasks' })} →
-              </button>
-            )}
-            {isSuccess && xpGained && (
-              <div className="text-cyber-success font-bold text-xl mt-2">+{xpGained} XP</div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <TaskResultPanel
+        result={result}
+        isSuccess={isSuccess}
+        xpGained={xpGained}
+        hasNextLevel={hasNextLevel()}
+        onNextLevel={goToNextLevel}
+        t={t}
+        layout="compact"
+      />
 
       <TaskHints hints={level.hints ?? []} />
     </div>

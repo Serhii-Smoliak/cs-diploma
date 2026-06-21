@@ -25,13 +25,7 @@ interface AssignmentPanelProps {
   readonly getTechniqueDescription: (techniqueId: string, fallback: string | null) => string;
 }
 
-function AssignmentPanelEmpty({
-  className = '',
-  isEn,
-}: {
-  className?: string;
-  isEn: boolean;
-}) {
+function AssignmentPanelEmpty({ className = '', isEn }: { className?: string; isEn: boolean }) {
   const { t } = useTranslation(['ui']);
 
   return (

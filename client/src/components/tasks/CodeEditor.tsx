@@ -6,6 +6,7 @@ import type { Level } from '@cybertactics/shared';
 import { motion, AnimatePresence } from 'framer-motion';
 import TaskHints from './TaskHints';
 import TaskSubmitButton from './TaskSubmitButton';
+import { useTaskProgress } from './useTaskProgress';
 
 interface CodeEditorProps {
   level: Level;
@@ -16,16 +17,18 @@ const CodeEditor = memo(
     const { t } = useTranslation(['tasks', 'common']);
     const [code, setCode] = useState('');
     const [regexInput, setRegexInput] = useState('');
-    const [result, setResult] = useState<string | null>(null);
-    const [isSuccess, setIsSuccess] = useState(false);
-    const [xpGained, setXpGained] = useState<number | null>(null);
-    const [nextLevelId, setNextLevelId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [userAnswer, setUserAnswer] = useState<string | null>(null);
     const submitAnswer = useGameStore((state) => state.submitAnswer);
-    const loadLevel = useGameStore((state) => state.loadLevel);
-    const levels = useGameStore((state) => state.levels);
-    const currentLevel = useGameStore((state) => state.currentLevel);
+    const {
+      result,
+      isSuccess,
+      xpGained,
+      applySubmitResponse,
+      applySubmitError,
+      hasNextLevel,
+      goToNextLevel,
+    } = useTaskProgress();
 
     const handleSubmit = async (e?: React.MouseEvent | React.KeyboardEvent) => {
       if (e) {
@@ -47,57 +50,21 @@ const CodeEditor = memo(
           setUserAnswer(response.userAnswer);
         }
 
-        if (response?.success) {
-          setIsSuccess(true);
-          setXpGained(response.xpGained || null);
-          setNextLevelId(response.nextLevelId || null);
-          setResult(
-            `${t('success', { ns: 'tasks' })}\n${response.message || t('taskCompleted', { ns: 'tasks' })}`
-          );
-
+        applySubmitResponse(response, t, () => {
           setCode('');
           setRegexInput('');
-        } else {
-          setIsSuccess(false);
-          setResult(
-            `${t('failure', { ns: 'tasks' })}\n${response?.message || t('wrongAnswer', { ns: 'tasks' })}`
-          );
-        }
+        });
       } catch (error) {
         console.error('Submit error:', error);
-        setIsSuccess(false);
-        setResult(
-          `${t('error', { ns: 'tasks' })}\n${error instanceof Error ? error.message : t('errorOccurred', { ns: 'tasks' })}`
-        );
+        applySubmitError(error, t);
       } finally {
         setIsSubmitting(false);
       }
     };
 
     const handleNextLevel = () => {
-      if (nextLevelId) {
-        loadLevel(nextLevelId);
-        setIsSuccess(false);
-        setResult(null);
-        setXpGained(null);
-        setNextLevelId(null);
-      } else {
-        const currentIndex = levels.findIndex((l) => l.level_id === currentLevel?.level_id);
-        if (currentIndex >= 0 && currentIndex < levels.length - 1) {
-          const nextLevel = levels[currentIndex + 1];
-          loadLevel(nextLevel.level_id);
-          setIsSuccess(false);
-          setResult(null);
-          setXpGained(null);
-          setNextLevelId(null);
-        }
-      }
-    };
-
-    const hasNextLevel = () => {
-      if (nextLevelId) return true;
-      const currentIndex = levels.findIndex((l) => l.level_id === currentLevel?.level_id);
-      return currentIndex >= 0 && currentIndex < levels.length - 1;
+      goToNextLevel();
+      setUserAnswer(null);
     };
 
     const isRegexTask = level.work_area.input_type === 'regex';

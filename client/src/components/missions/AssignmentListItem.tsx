@@ -115,18 +115,20 @@ export default function AssignmentListItem({
           className={`flex-1 min-w-0 text-left ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
         >
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span
-              className={`text-xs font-medium ${getStatusTextClass(isCompleted, isAvailable)}`}
-            >
+            <span className={`text-xs font-medium ${getStatusTextClass(isCompleted, isAvailable)}`}>
               {getStatusLabel(isCompleted, isAvailable, statusLabels)}
             </span>
           </div>
 
-          <h3 className="font-heading font-bold text-base text-cyber-primary leading-snug">{title}</h3>
+          <h3 className="font-heading font-bold text-base text-cyber-primary leading-snug">
+            {title}
+          </h3>
 
           <p className="mt-1 text-xs text-gray-500 truncate">
             {level.mitre_technique?.id && (
-              <span className="font-mono text-cyber-primary/80 mr-2">{level.mitre_technique.id}</span>
+              <span className="font-mono text-cyber-primary/80 mr-2">
+                {level.mitre_technique.id}
+              </span>
             )}
             {taskTypeLabel}
           </p>
@@ -143,7 +145,13 @@ export default function AssignmentListItem({
           )}`}
           aria-label={startLabel}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>

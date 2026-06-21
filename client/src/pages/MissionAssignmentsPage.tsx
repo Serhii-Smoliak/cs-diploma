@@ -344,9 +344,7 @@ export default function MissionAssignmentsPage() {
     : -1;
   const selectedKillChainStep =
     killChain && selectedLevelIndex >= 0 ? killChain.steps[selectedLevelIndex] : null;
-  const selectedIsCompleted = selectedLevel
-    ? userProgress[selectedLevel.level_id] || false
-    : false;
+  const selectedIsCompleted = selectedLevel ? userProgress[selectedLevel.level_id] || false : false;
 
   const assignmentPanel = (
     <AssignmentPanel
