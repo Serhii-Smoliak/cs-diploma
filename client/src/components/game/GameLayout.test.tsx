@@ -31,10 +31,7 @@ describe('GameLayout', () => {
     render(
       <MemoryRouter initialEntries={['/missions/operation_ghost/assignments/ghost_recon_01']}>
         <Routes>
-          <Route
-            path="/missions/:missionId/assignments/:assignmentId"
-            element={<GameLayout />}
-          />
+          <Route path="/missions/:missionId/assignments/:assignmentId" element={<GameLayout />} />
         </Routes>
       </MemoryRouter>
     );

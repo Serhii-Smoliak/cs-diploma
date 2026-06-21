@@ -18,9 +18,10 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('framer-motion', () => {
-  const motionComponent = ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
-    <div {...props}>{children}</div>
-  );
+  const motionComponent = ({
+    children,
+    ...props
+  }: React.PropsWithChildren<Record<string, unknown>>) => <div {...props}>{children}</div>;
 
   return {
     motion: new Proxy(

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import TacticalChoice from './TacticalChoice';
@@ -8,7 +8,9 @@ const submitAnswer = vi.fn();
 
 const { resetProgress, applySubmitResponse, applySubmitError, goToNextLevel } = vi.hoisted(() => ({
   resetProgress: vi.fn(),
-  applySubmitResponse: vi.fn((_response: unknown, _t: unknown, onSuccess?: () => void) => onSuccess?.()),
+  applySubmitResponse: vi.fn((_response: unknown, _t: unknown, onSuccess?: () => void) =>
+    onSuccess?.()
+  ),
   applySubmitError: vi.fn(),
   goToNextLevel: vi.fn(),
 }));

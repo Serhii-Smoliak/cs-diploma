@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-const { addResourceBundle, reloadResources, i18nMock } = vi.hoisted(() => {
+const { addResourceBundle, i18nMock } = vi.hoisted(() => {
   const mock = {
     addResourceBundle: vi.fn(),
     reloadResources: vi.fn().mockResolvedValue(undefined),
@@ -9,7 +9,7 @@ const { addResourceBundle, reloadResources, i18nMock } = vi.hoisted(() => {
   };
   mock.use.mockReturnValue(mock);
   mock.init.mockReturnValue(mock);
-  return { addResourceBundle: mock.addResourceBundle, reloadResources: mock.reloadResources, i18nMock: mock };
+  return { addResourceBundle: mock.addResourceBundle, i18nMock: mock };
 });
 
 vi.mock('../services/api', () => ({

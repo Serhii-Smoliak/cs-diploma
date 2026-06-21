@@ -96,7 +96,10 @@ export function createFetchMock(
   }> = {}
 ) {
   const missions = overrides.missions ?? [testMission];
-  const levels = overrides.levels ?? [createTestLevel(), createTestLevel({ level_id: 'ghost_02', order: 2 })];
+  const levels = overrides.levels ?? [
+    createTestLevel(),
+    createTestLevel({ level_id: 'ghost_02', order: 2 }),
+  ];
   const techniques = overrides.techniques ?? [testMitreTechnique];
   const progress = overrides.progress ?? [];
   const stats = overrides.stats ?? { mitreTechniques: ['T1593'] };
@@ -111,7 +114,7 @@ export function createFetchMock(
     if (url.includes('/levels/') && url.includes('/submit')) {
       return { ok: true, json: async () => submitResult };
     }
-    if (url.includes('/levels') || url.includes('/missions/') && url.includes('/levels')) {
+    if (url.includes('/levels') || (url.includes('/missions/') && url.includes('/levels'))) {
       return { ok: true, json: async () => levels };
     }
     if (url.includes('/mitre/techniques/')) {

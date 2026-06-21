@@ -128,9 +128,7 @@ describe('App', () => {
     apiSetToken();
 
     render(
-      <MemoryRouter
-        initialEntries={['/missions/operation_ghost/assignments/ghost_recon_01']}
-      >
+      <MemoryRouter initialEntries={['/missions/operation_ghost/assignments/ghost_recon_01']}>
         <Routes>
           <Route path="/*" element={<App />} />
         </Routes>

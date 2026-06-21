@@ -16,7 +16,10 @@ vi.mock('react-easy-crop', () => ({
     onCropComplete,
     onZoomChange,
   }: {
-    onCropComplete: (area: unknown, pixels: { x: number; y: number; width: number; height: number }) => void;
+    onCropComplete: (
+      area: unknown,
+      pixels: { x: number; y: number; width: number; height: number }
+    ) => void;
     onZoomChange: (value: number) => void;
   }) => (
     <div>

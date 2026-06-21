@@ -15,7 +15,7 @@ const mockUser = {
 };
 
 const { t, logout, updateUser, refreshUser, uploadAvatar } = vi.hoisted(() => ({
-  t: (key: string, options?: { ns?: string }) => key,
+  t: (key: string) => key,
   logout: vi.fn(),
   updateUser: vi.fn(),
   refreshUser: vi.fn().mockResolvedValue(undefined),

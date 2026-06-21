@@ -4,10 +4,23 @@ import React from 'react';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 vi.mock('framer-motion', () => {
+  const motionPropKeys = new Set([
+    'whileHover',
+    'whileTap',
+    'initial',
+    'animate',
+    'transition',
+    'exit',
+  ]);
+
   const motionComponent =
     (tag: keyof JSX.IntrinsicElements) =>
-    ({ children, whileHover, whileTap, initial, animate, transition, exit, ...props }: React.PropsWithChildren<Record<string, unknown>>) =>
-      React.createElement(tag, props, children);
+    ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
+      const domProps = Object.fromEntries(
+        Object.entries(props).filter(([key]) => !motionPropKeys.has(key))
+      );
+      return React.createElement(tag, domProps, children);
+    };
 
   return {
     motion: new Proxy(
@@ -21,13 +34,7 @@ vi.mock('framer-motion', () => {
 });
 
 vi.mock('@monaco-editor/react', () => ({
-  default: ({
-    onChange,
-    value,
-  }: {
-    onChange?: (value: string) => void;
-    value?: string;
-  }) =>
+  default: ({ onChange, value }: { onChange?: (value: string) => void; value?: string }) =>
     React.createElement('textarea', {
       'data-testid': 'monaco-editor',
       value: value ?? '',
