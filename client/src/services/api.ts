@@ -232,8 +232,8 @@ class ApiClient {
   }
 
   async getTranslationsByNamespaces(
-    locale: string = 'uk',
-    namespaces: string[]
+    namespaces: string[],
+    locale: string = 'uk'
   ): Promise<Record<string, Record<string, string>>> {
     const namespacesStr = namespaces.join(',');
     return this.request<Record<string, Record<string, string>>>(

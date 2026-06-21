@@ -21,7 +21,7 @@ export const loadMultipleNamespaces = async (
   namespaces: string[]
 ): Promise<void> => {
   try {
-    const translations = await api.getTranslationsByNamespaces(locale, namespaces);
+    const translations = await api.getTranslationsByNamespaces(namespaces, locale);
     Object.entries(translations).forEach(([ns, resources]) => {
       i18n.addResourceBundle(locale, ns, resources, true, true);
     });

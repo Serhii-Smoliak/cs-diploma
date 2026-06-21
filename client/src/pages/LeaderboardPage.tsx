@@ -22,7 +22,9 @@ export default function LeaderboardPage() {
 
   useEffect(() => {
     const locale = isEn ? 'en' : 'uk';
-    void loadMultipleNamespaces(locale, ['ui']);
+    loadMultipleNamespaces(locale, ['ui']).catch((error) => {
+      console.error('Failed to load leaderboard translations:', error);
+    });
   }, [isEn]);
 
   const loadLeaderboard = useCallback(async () => {
@@ -48,7 +50,9 @@ export default function LeaderboardPage() {
   }, [t, isEn]);
 
   useEffect(() => {
-    void loadLeaderboard();
+    loadLeaderboard().catch(() => {
+      // loadLeaderboard already sets error state
+    });
   }, [loadLeaderboard]);
 
   return (

@@ -164,7 +164,7 @@ function App() {
     <Routes>
       <Route
         path="/login"
-        element={!isAuthenticated ? <LoginPage /> : <Navigate to="/missions" replace />}
+        element={isAuthenticated ? <Navigate to="/missions" replace /> : <LoginPage />}
       />
       <Route path="/agreement" element={<AgreementPage />} />
       <Route

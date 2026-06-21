@@ -35,7 +35,7 @@ const RANK_DESCRIPTIONS = {
 export default function RanksPage() {
   const { t, i18n } = useTranslation(['ui']);
   const user = useAuthStore((state) => state.user);
-  const [, setTranslationsTick] = useState(0);
+  const [translationsRevision, setTranslationsRevision] = useState(0);
   const xp = user?.xp ?? 0;
   const currentRankId = getRankFromXp(xp);
   const isEn = i18n.resolvedLanguage?.startsWith('en') ?? false;
@@ -43,9 +43,11 @@ export default function RanksPage() {
 
   useEffect(() => {
     const code = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'uk';
-    void loadMultipleNamespaces(code, ['ui']).then(() => {
-      setTranslationsTick((tick) => tick + 1);
-    });
+    loadMultipleNamespaces(code, ['ui'])
+      .then(() => setTranslationsRevision((revision) => revision + 1))
+      .catch((error) => {
+        console.error('Failed to load ranks translations:', error);
+      });
   }, [i18n.resolvedLanguage, i18n.language]);
 
   const formatXpRange = (from: number, to: number | null): string => {
@@ -60,7 +62,7 @@ export default function RanksPage() {
       ns: 'ui',
       from,
       to: to - 1,
-      defaultValue: isEn ? `${from}–${to - 1} XP` : `${from}–${to - 1} XP`,
+      defaultValue: isEn ? `${from}–${to - 1} XP` : `${from}–${to - 1} досв`,
     });
   };
 
@@ -70,13 +72,13 @@ export default function RanksPage() {
       ns: 'ui',
       defaultValue: RANK_DESCRIPTIONS[locale][rankId as keyof (typeof RANK_DESCRIPTIONS)['uk']],
     });
-    return translated !== key
-      ? translated
-      : (RANK_DESCRIPTIONS[locale][rankId as keyof (typeof RANK_DESCRIPTIONS)['uk']] ?? '');
+    return translated === key
+      ? (RANK_DESCRIPTIONS[locale][rankId as keyof (typeof RANK_DESCRIPTIONS)['uk']] ?? '')
+      : translated;
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
+    <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto" key={translationsRevision}>
       <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-3">
         {t('ranks', {
           ns: 'ui',

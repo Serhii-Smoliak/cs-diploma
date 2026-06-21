@@ -22,5 +22,5 @@ export function handleSessionExpired(): void {
     handler();
   }
 
-  window.location.assign('/login');
+  globalThis.location.assign('/login');
 }
