@@ -168,4 +168,3 @@ export interface SubmitAnswerResponse {
   userAnswer?: string | null;
   stealthDepleted?: boolean;
 }
-

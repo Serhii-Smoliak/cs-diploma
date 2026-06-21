@@ -11,9 +11,17 @@ import MitreTechniqueChip from '../components/mitre/MitreTechniqueChip';
 
 const KILL_CHAIN_STEP_KEYS = ['step1', 'step2', 'step3', 'step4', 'step5'] as const;
 
+type KillChainLocaleCopy = {
+  title: string;
+  intro: string;
+  steps: string[];
+  expandLabel: string;
+  collapseLabel: string;
+};
+
 const KILL_CHAIN_MISSION_DEFAULTS: Record<
   string,
-  { en: (typeof KILL_CHAIN_COPY)['en']; uk: (typeof KILL_CHAIN_COPY)['uk'] }
+  { en: KillChainLocaleCopy; uk: KillChainLocaleCopy }
 > = {
   operation_ghost: {
     en: {
@@ -73,8 +81,6 @@ const KILL_CHAIN_MISSION_DEFAULTS: Record<
   },
 };
 
-const KILL_CHAIN_COPY = KILL_CHAIN_MISSION_DEFAULTS.operation_ghost;
-
 function getLocaleCode(): 'en' | 'uk' {
   const raw = i18n.resolvedLanguage || i18n.language || 'uk';
   return raw.startsWith('en') ? 'en' : 'uk';
@@ -104,7 +110,9 @@ export default function MissionAssignmentsPage() {
     return translated !== translationKey ? translated : fallbackDescription;
   };
 
-  const getMissionKillChain = (missionId: string): {
+  const getMissionKillChain = (
+    missionId: string
+  ): {
     title: string;
     intro: string;
     steps: string[];
@@ -127,7 +135,7 @@ export default function MissionAssignmentsPage() {
       title: translate('title', defaults.title),
       intro: translate('intro', defaults.intro),
       steps: KILL_CHAIN_STEP_KEYS.map((stepKey, index) =>
-        translate(stepKey, defaults.steps[index]),
+        translate(stepKey, defaults.steps[index])
       ),
       expandLabel: translate('expand', defaults.expandLabel),
       collapseLabel: translate('collapse', defaults.collapseLabel),
@@ -166,7 +174,7 @@ export default function MissionAssignmentsPage() {
   const getTechniqueDescription = (techniqueId: string, fallback: string | null): string => {
     const key = `technique.description.${techniqueId}`;
     const translated = t(key, { ns: 'mitre', defaultValue: fallback || '' });
-    return translated !== key ? translated : (fallback || '');
+    return translated !== key ? translated : fallback || '';
   };
 
   const getTacticLabel = (tactic: string): string => {
@@ -181,11 +189,9 @@ export default function MissionAssignmentsPage() {
     return translated !== key ? translated : '';
   };
 
-  /* eslint-disable react-hooks/exhaustive-deps -- load when missionId changes */
   useEffect(() => {
     setSelectedLevelId(null);
   }, [missionId]);
-  /* eslint-enable react-hooks/exhaustive-deps */
 
   /* eslint-disable react-hooks/exhaustive-deps -- load when missionId changes */
   useEffect(() => {
@@ -217,7 +223,7 @@ export default function MissionAssignmentsPage() {
         try {
           const progress = await api.getUserProgress();
           const progressMap: Record<string, boolean> = {};
-          progress.forEach(p => {
+          progress.forEach((p) => {
             progressMap[p.levelId] = p.completed;
           });
           setUserProgress(progressMap);
@@ -232,7 +238,7 @@ export default function MissionAssignmentsPage() {
       refreshProgress();
     };
     window.addEventListener('focus', handleFocus);
-    
+
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
@@ -241,20 +247,20 @@ export default function MissionAssignmentsPage() {
   const loadMissionData = async () => {
     try {
       setLoading(true);
-      
+
       // Завантажуємо місію та довідник MITRE
       const [missions, techniquesData] = await Promise.all([
         api.getMissions(),
         api.getMitreTechniques(),
       ]);
-      const mission = missions.find(m => m.id === missionId);
+      const mission = missions.find((m) => m.id === missionId);
 
       const techniquesMap: Record<string, MitreTechnique> = {};
       techniquesData.forEach((tech) => {
         techniquesMap[tech.id] = tech;
       });
       setMitreTechniques(techniquesMap);
-      
+
       if (!mission) {
         navigate('/missions');
         return;
@@ -269,7 +275,7 @@ export default function MissionAssignmentsPage() {
         try {
           const progress = await api.getUserProgress();
           const progressMap: Record<string, boolean> = {};
-          progress.forEach(p => {
+          progress.forEach((p) => {
             progressMap[p.levelId] = p.completed;
           });
           setUserProgress(progressMap);
@@ -298,19 +304,20 @@ export default function MissionAssignmentsPage() {
   const isAssignmentAvailable = (levelIndex: number): boolean => {
     // Перше завдання завжди доступне
     if (levelIndex === 0) return true;
-    
+
     // Чи виконано попереднє завдання
     const previousLevel = levels[levelIndex - 1];
     if (!previousLevel) return true;
-    
+
     return userProgress[previousLevel.level_id] || false;
   };
-
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-cyber-primary font-heading">{t('loadingAssignments', { ns: 'ui' })}</div>
+        <div className="text-cyber-primary font-heading">
+          {t('loadingAssignments', { ns: 'ui' })}
+        </div>
       </div>
     );
   }
@@ -327,7 +334,7 @@ export default function MissionAssignmentsPage() {
 
   const killChain = getMissionKillChain(currentMission.id);
   const selectedLevel = selectedLevelId
-    ? levels.find((level) => level.level_id === selectedLevelId) ?? null
+    ? (levels.find((level) => level.level_id === selectedLevelId) ?? null)
     : null;
   const selectedLevelIndex = selectedLevel
     ? levels.findIndex((level) => level.level_id === selectedLevel.level_id)
@@ -490,7 +497,13 @@ export default function MissionAssignmentsPage() {
               defaultValue: isEn ? 'Start assignment' : 'Почати завдання',
             })}
           </span>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -559,13 +572,7 @@ export default function MissionAssignmentsPage() {
             <div className="flex flex-wrap gap-2">
               {currentMission.mitreTechniques.map((techId) => {
                 const tech = mitreTechniques[techId];
-                return (
-                  <MitreTechniqueChip
-                    key={techId}
-                    techniqueId={techId}
-                    title={tech?.name}
-                  />
-                );
+                return <MitreTechniqueChip key={techId} techniqueId={techId} title={tech?.name} />;
               })}
             </div>
           </div>
@@ -579,119 +586,119 @@ export default function MissionAssignmentsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         <div className="min-w-0 space-y-2">
-            {levels.map((level, index) => {
-              const isCompleted = userProgress[level.level_id] || false;
-              const isAvailable = isAssignmentAvailable(index);
-              const isSelected = selectedLevelId === level.level_id;
+          {levels.map((level, index) => {
+            const isCompleted = userProgress[level.level_id] || false;
+            const isAvailable = isAssignmentAvailable(index);
+            const isSelected = selectedLevelId === level.level_id;
 
-              return (
-                <motion.div
-                  key={level.level_id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`w-full cyber-panel p-3 sm:p-4 border-2 transition-all duration-200 ${
-                    !isAvailable
-                      ? 'border-cyber-border/30 opacity-50'
-                      : isSelected
+            return (
+              <motion.div
+                key={level.level_id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className={`w-full cyber-panel p-3 sm:p-4 border-2 transition-all duration-200 ${
+                  !isAvailable
+                    ? 'border-cyber-border/30 opacity-50'
+                    : isSelected
                       ? 'border-cyber-success bg-green-900/10'
                       : isCompleted
-                      ? 'border-cyber-success hover:border-cyber-success hover:bg-green-900/10'
-                      : 'border-cyber-border hover:border-cyber-primary hover:bg-cyber-primary/5'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold ${
-                        isCompleted
-                          ? 'border-cyber-success text-cyber-success bg-green-900/20'
-                          : !isAvailable
+                        ? 'border-cyber-success hover:border-cyber-success hover:bg-green-900/10'
+                        : 'border-cyber-border hover:border-cyber-primary hover:bg-cyber-primary/5'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold ${
+                      isCompleted
+                        ? 'border-cyber-success text-cyber-success bg-green-900/20'
+                        : !isAvailable
                           ? 'border-gray-600 text-gray-500'
                           : 'border-cyber-primary text-cyber-primary bg-cyber-primary/10'
-                      }`}
-                    >
-                      {index + 1}
-                    </span>
+                    }`}
+                  >
+                    {index + 1}
+                  </span>
 
-                    <button
-                      type="button"
-                      disabled={!isAvailable}
-                      onClick={() => isAvailable && handleSelectAssignment(level)}
-                      className={`flex-1 min-w-0 text-left ${
-                        isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'
-                      }`}
-                    >
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span
-                          className={`text-xs font-medium ${
-                            isCompleted
-                              ? 'text-cyber-success'
-                              : !isAvailable
+                  <button
+                    type="button"
+                    disabled={!isAvailable}
+                    onClick={() => isAvailable && handleSelectAssignment(level)}
+                    className={`flex-1 min-w-0 text-left ${
+                      isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span
+                        className={`text-xs font-medium ${
+                          isCompleted
+                            ? 'text-cyber-success'
+                            : !isAvailable
                               ? 'text-red-400'
                               : 'text-yellow-400'
-                          }`}
-                        >
-                          {isCompleted
-                            ? t('assignmentStatusCompleted', { ns: 'ui' })
-                            : !isAvailable
+                        }`}
+                      >
+                        {isCompleted
+                          ? t('assignmentStatusCompleted', { ns: 'ui' })
+                          : !isAvailable
                             ? t('assignmentStatusLocked', { ns: 'ui' })
                             : t('assignmentStatusIncomplete', { ns: 'ui' })}
+                      </span>
+                    </div>
+
+                    <h3 className="font-heading font-bold text-base text-cyber-primary leading-snug">
+                      {getLevelTitle(level.level_id, level.title)}
+                    </h3>
+
+                    <p className="mt-1 text-xs text-gray-500 truncate">
+                      {level.mitre_technique?.id && (
+                        <span className="font-mono text-cyber-primary/80 mr-2">
+                          {level.mitre_technique.id}
                         </span>
-                      </div>
+                      )}
+                      {getTaskTypeLabel(level.task_type)}
+                    </p>
+                  </button>
 
-                      <h3 className="font-heading font-bold text-base text-cyber-primary leading-snug">
-                        {getLevelTitle(level.level_id, level.title)}
-                      </h3>
-
-                      <p className="mt-1 text-xs text-gray-500 truncate">
-                        {level.mitre_technique?.id && (
-                          <span className="font-mono text-cyber-primary/80 mr-2">
-                            {level.mitre_technique.id}
-                          </span>
-                        )}
-                        {getTaskTypeLabel(level.task_type)}
-                      </p>
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={!isAvailable}
-                      onClick={() => isAvailable && void handleStartAssignment(level)}
-                      title={t('assignmentStart', {
-                        ns: 'ui',
-                        defaultValue: isEn ? 'Start assignment' : 'Почати завдання',
-                      })}
-                      className={`flex-shrink-0 self-center p-1 rounded transition-colors ${
-                        !isAvailable
-                          ? 'text-gray-500 opacity-40 cursor-not-allowed'
-                          : isSelected
+                  <button
+                    type="button"
+                    disabled={!isAvailable}
+                    onClick={() => isAvailable && void handleStartAssignment(level)}
+                    title={t('assignmentStart', {
+                      ns: 'ui',
+                      defaultValue: isEn ? 'Start assignment' : 'Почати завдання',
+                    })}
+                    className={`flex-shrink-0 self-center p-1 rounded transition-colors ${
+                      !isAvailable
+                        ? 'text-gray-500 opacity-40 cursor-not-allowed'
+                        : isSelected
                           ? 'text-cyber-success hover:bg-cyber-success/10 cursor-pointer'
                           : 'text-white hover:text-cyber-primary hover:bg-cyber-primary/10 cursor-pointer'
-                      }`}
-                      aria-label={t('assignmentStart', {
-                        ns: 'ui',
-                        defaultValue: isEn ? 'Start assignment' : 'Почати завдання',
-                      })}
+                    }`}
+                    aria-label={t('assignmentStart', {
+                      ns: 'ui',
+                      defaultValue: isEn ? 'Start assignment' : 'Почати завдання',
+                    })}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden
                     >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        aria-hidden
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                </motion.div>
-              );
-            })}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
         {selectedLevel && (
@@ -707,4 +714,3 @@ export default function MissionAssignmentsPage() {
     </div>
   );
 }
-

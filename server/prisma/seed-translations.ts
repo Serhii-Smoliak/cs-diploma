@@ -452,7 +452,8 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       selectTopic: 'Select a topic on the left to read the thread.',
       noTopics: 'No topics in this category yet.',
       originalPost: 'Original post',
-      readOnlyNotice: 'This forum is read-only for now. New topics and replies will be available in a future update.',
+      readOnlyNotice:
+        'This forum is read-only for now. New topics and replies will be available in a future update.',
       metaReplies: '{{count}} replies',
       replyCount: '{{count}} replies',
       'categories.all': 'All',
@@ -562,7 +563,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
         'All scenarios, missions, and tasks on the platform are for educational purposes only. CyberTactics does not attack real systems, networks, or servers and does not provide tools for use outside the learning context. Any actions within the platform are simulations and do not cause real harm to third-party infrastructure.',
       'section3.title': '3. Lawful Use of Knowledge',
       'section3.body':
-        'Knowledge gained on the platform is intended solely for lawful activities: education, certification, and protecting your own or your organization\'s infrastructure in accordance with applicable law and professional ethics. Using this knowledge for unauthorized access, data damage, extortion, phishing, malware distribution, or other unlawful acts is strictly prohibited.',
+        "Knowledge gained on the platform is intended solely for lawful activities: education, certification, and protecting your own or your organization's infrastructure in accordance with applicable law and professional ethics. Using this knowledge for unauthorized access, data damage, extortion, phishing, malware distribution, or other unlawful acts is strictly prohibited.",
       'section4.title': '4. User Responsibility',
       'section4.body':
         'You are fully responsible for your actions outside the platform. Violations of applicable law regarding cybercrime—including unauthorized interference with computer systems, data theft, and fraud in electronic communications—may result in civil, administrative, and criminal liability as provided by law.',
@@ -588,9 +589,12 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'operation_iron_signal.description':
         'Penetrate NovaFin Insurance: from AD account discovery through password spraying, spearphishing links, RDP lateral movement, and cmd staging.',
       'operation_iron_signal.killChain.title': 'Attack progression',
-      'operation_iron_signal.killChain.intro': 'Intermediate mission — post-perimeter tactics in order:',
-      'operation_iron_signal.killChain.step1': 'Discovery — find service account in AD dump (task 1)',
-      'operation_iron_signal.killChain.step2': 'Credential Access — password spray strategy (task 2)',
+      'operation_iron_signal.killChain.intro':
+        'Intermediate mission — post-perimeter tactics in order:',
+      'operation_iron_signal.killChain.step1':
+        'Discovery — find service account in AD dump (task 1)',
+      'operation_iron_signal.killChain.step2':
+        'Credential Access — password spray strategy (task 2)',
       'operation_iron_signal.killChain.step3': 'Initial Access — spearphishing link email (task 3)',
       'operation_iron_signal.killChain.step4': 'Lateral Movement — RDP via jump host (task 4)',
       'operation_iron_signal.killChain.step5': 'Execution — certutil staging download (task 5)',
@@ -630,7 +634,8 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
         'Phase 4 - Persistence. Payload executed.',
       'Last step. Choose the registry key for autorun. We need it to survive reboots but not trigger UAC.':
         'Last step. Choose the registry key for autorun. We need it to survive reboots but not trigger UAC.',
-      "[System]: Mission 'Operation Iron Signal' started.": "Mission 'Operation Iron Signal' started.",
+      "[System]: Mission 'Operation Iron Signal' started.":
+        "Mission 'Operation Iron Signal' started.",
       'Target: NovaFin Insurance internal network.': 'Target: NovaFin Insurance internal network.',
       'We dumped a slice of LDAP from their DC. Find the service account we can spray — not a regular user mailbox.':
         'We dumped a slice of LDAP from their DC. Find the service account we can spray — not a regular user mailbox.',
@@ -851,8 +856,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
         'Зловмисник досліджує систему, щоб зрозуміти її структуру та знайти вразливості.',
       'tactic.explanation.Lateral Movement':
         'Зловмисник переміщується по мережі, отримуючи доступ до інших систем.',
-      'tactic.explanation.Collection':
-        'Зловмисник збирає цікаві дані (файли, бази даних).',
+      'tactic.explanation.Collection': 'Зловмисник збирає цікаві дані (файли, бази даних).',
       'tactic.explanation.Command and Control':
         "Зловмисник встановлює канал зв'язку з зараженою системою для управління.",
       'tactic.explanation.Exfiltration':
@@ -967,8 +971,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       stealthManageMessage: 'Поточний стелс: {{stealth}}%. Оберіть спосіб поповнення:',
       stealthOpenModal: 'Відкрити опції відновлення стелсу',
       stealthBuyMasking: 'Купити {{amount}}% маскування — відновити стелс',
-      stealthMaskingUnavailable:
-        'Маскування (+{{amount}}%) перевищить 100% (зараз: {{stealth}}%).',
+      stealthMaskingUnavailable: 'Маскування (+{{amount}}%) перевищить 100% (зараз: {{stealth}}%).',
       stealthUpgradePlan: 'Перейти на платний тариф',
       stealthWaitRecovery: 'Зачекати — часткове відновлення стелсу',
       stealthWaitNotReady: 'Stealth ще не відновився. Спробуйте через {{time}}.',
@@ -1141,8 +1144,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'topics.ghostStart.posts.r2.body':
         'Вибір домену (завдання 2) задає контекст фішингу — читай feedback на помилках, це аналог правил blue team.',
       'topics.ironSignal.title': 'Iron Signal: spray vs spearphish — де застрягають',
-      'topics.ironSignal.excerpt':
-        'Password spraying і вільний текст spearphish — типові помилки.',
+      'topics.ironSignal.excerpt': 'Password spraying і вільний текст spearphish — типові помилки.',
       'topics.ironSignal.lastActivity': 'Остання активність: 1 год тому',
       'topics.ironSignal.posts.op.author': 'SvcSprayFan',
       'topics.ironSignal.posts.op.time': '8 бер · 10:00',
@@ -1213,10 +1215,10 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
         'Знання, отримані на платформі, призначені виключно для законної діяльності: навчання, сертифікації, захисту власної або корпоративної інфраструктури в рамках чинного законодавства та етичних норм професії. Застосування знань для несанкціонованого доступу, пошкодження даних, шантажу, фішингу, розповсюдження шкідливого ПЗ чи інших протиправних дій суворо заборонено.',
       'section4.title': '4. Відповідальність користувача',
       'section4.body':
-        'Користувач несе повну особисту відповідальність за свої дії поза межами платформи. Порушення законодавства щодо кіберзлочинів — зокрема несанкціоноване втручання в роботу комп\'ютерів, крадіжка даних, шахрайство в сфері електронних комунікацій — тягне цивільну, адміністративну та кримінальну відповідальність відповідно до закону.',
+        "Користувач несе повну особисту відповідальність за свої дії поза межами платформи. Порушення законодавства щодо кіберзлочинів — зокрема несанкціоноване втручання в роботу комп'ютерів, крадіжка даних, шахрайство в сфері електронних комунікацій — тягне цивільну, адміністративну та кримінальну відповідальність відповідно до закону.",
       'section5.title': '5. Прийняття умов',
       'section5.body':
-        'Продовжуючи користування платформою, ви підтверджуєте, що розумієте навчальний характер симуляцій і зобов\'язуєтеся не використовувати отримані знання в протиправних цілях.',
+        "Продовжуючи користування платформою, ви підтверджуєте, що розумієте навчальний характер симуляцій і зобов'язуєтеся не використовувати отримані знання в протиправних цілях.",
       back: 'Назад',
     },
     missions: {
@@ -1237,12 +1239,18 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'operation_iron_signal.description':
         'Проникнення в NovaFin Insurance: від розвідки AD-обліковок до password spray, spearphish-посилання, RDP lateral movement і staging через cmd.',
       'operation_iron_signal.killChain.title': 'Етапи атаки',
-      'operation_iron_signal.killChain.intro': 'Місія intermediate — тактики після периметра по порядку:',
-      'operation_iron_signal.killChain.step1': 'Discovery — знайти service account у AD dump (завдання 1)',
-      'operation_iron_signal.killChain.step2': 'Credential Access — стратегія password spray (завдання 2)',
-      'operation_iron_signal.killChain.step3': 'Initial Access — spearphishing з посиланням (завдання 3)',
-      'operation_iron_signal.killChain.step4': 'Lateral Movement — RDP через jump host (завдання 4)',
-      'operation_iron_signal.killChain.step5': 'Execution — завантаження staging через certutil (завдання 5)',
+      'operation_iron_signal.killChain.intro':
+        'Місія intermediate — тактики після периметра по порядку:',
+      'operation_iron_signal.killChain.step1':
+        'Discovery — знайти service account у AD dump (завдання 1)',
+      'operation_iron_signal.killChain.step2':
+        'Credential Access — стратегія password spray (завдання 2)',
+      'operation_iron_signal.killChain.step3':
+        'Initial Access — spearphishing з посиланням (завдання 3)',
+      'operation_iron_signal.killChain.step4':
+        'Lateral Movement — RDP через jump host (завдання 4)',
+      'operation_iron_signal.killChain.step5':
+        'Execution — завантаження staging через certutil (завдання 5)',
       'operation_iron_signal.killChain.expand': 'Показати етапи атаки',
       'operation_iron_signal.killChain.collapse': 'Згорнути етапи атаки',
     },
@@ -1278,14 +1286,15 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       '[System]: Phase 4 - Persistence. Payload executed.': 'Фаза 4 - Стійкість. Payload виконано.',
       'Last step. Choose the registry key for autorun. We need it to survive reboots but not trigger UAC.':
         'Останній крок. Виберіть ключ реєстру для автозапуску. Нам потрібно, щоб він вижив після перезавантаження, але не викликав UAC.',
-      "[System]: Mission 'Operation Iron Signal' started.": "Місія 'Операція Залізний Сигнал' розпочата.",
+      "[System]: Mission 'Operation Iron Signal' started.":
+        "Місія 'Операція Залізний Сигнал' розпочата.",
       'Target: NovaFin Insurance internal network.': 'Ціль: внутрішня мережа NovaFin Insurance.',
       'We dumped a slice of LDAP from their DC. Find the service account we can spray — not a regular user mailbox.':
         'Ми зняли фрагмент LDAP з їхнього DC. Знайди service account для spray — не звичайний user mailbox.',
       '[System]: Phase 1 - Discovery complete. Service account identified.':
         'Фаза 1 - Discovery завершена. Service account ідентифіковано.',
       'NovaFin locks accounts after five failures. Pick a spray plan that avoids lockout and stays quiet.':
-        'NovaFin блокує акаунти після п\'яти невдалих спроб. Обери план spray без lockout і з мінімальним шумом.',
+        "NovaFin блокує акаунти після п'яти невдалих спроб. Обери план spray без lockout і з мінімальним шумом.",
       '[System]: Phase 2 - Credential Access. Valid creds for finance analyst obtained.':
         'Фаза 2 - Credential Access. Отримано валідні creds фінансового аналітика.',
       'Compose a spearphish to analyst@novafin.local. Drive them to our fake SSO page — no executables in attachments.':

@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint . --fix --report-unused-disable-directives --max-warnings 0",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"index.html\" \"vite.config.ts\" \"eslint.config.js\" \"postcss.config.js\" \"tailwind.config.js\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"index.html\" \"vite.config.ts\" \"eslint.config.js\" \"postcss.config.js\" \"tailwind.config.js\""
   },
   "dependencies": {
     "@cybertactics/shared": "file:../shared",
@@ -35,6 +38,7 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
+    "prettier": "^3.4.2",
     "typescript-eslint": "^8.18.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",

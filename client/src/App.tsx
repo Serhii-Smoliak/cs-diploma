@@ -1,24 +1,24 @@
-import { Routes, Route, Navigate, useParams } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useAuthStore } from './store/authStore'
-import Layout from './components/layout/Layout'
-import LoginPage from './pages/LoginPage'
-import MissionsPage from './pages/MissionsPage'
-import MissionAssignmentsPage from './pages/MissionAssignmentsPage'
-import SkillMatrixPage from './pages/SkillMatrixPage'
-import LeaderboardPage from './pages/LeaderboardPage'
-import RanksPage from './pages/RanksPage'
-import FaqPage from './pages/FaqPage'
-import CommunityPage from './pages/CommunityPage'
-import ProfilePage from './pages/ProfilePage'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAuthStore } from './store/authStore';
+import Layout from './components/layout/Layout';
+import LoginPage from './pages/LoginPage';
+import MissionsPage from './pages/MissionsPage';
+import MissionAssignmentsPage from './pages/MissionAssignmentsPage';
+import SkillMatrixPage from './pages/SkillMatrixPage';
+import LeaderboardPage from './pages/LeaderboardPage';
+import RanksPage from './pages/RanksPage';
+import FaqPage from './pages/FaqPage';
+import CommunityPage from './pages/CommunityPage';
+import ProfilePage from './pages/ProfilePage';
 // import SettingsPage from './pages/SettingsPage'
-import AgreementPage from './pages/AgreementPage'
-import GameLayout from './components/game/GameLayout'
-import LocaleSelectionGate from './components/auth/LocaleSelectionGate'
-import { useGameStore } from './store/gameStore'
-import { api } from './services/api'
-import { registerSessionExpiredHandler } from './auth/sessionExpired'
+import AgreementPage from './pages/AgreementPage';
+import GameLayout from './components/game/GameLayout';
+import LocaleSelectionGate from './components/auth/LocaleSelectionGate';
+import { useGameStore } from './store/gameStore';
+import { api } from './services/api';
+import { registerSessionExpiredHandler } from './auth/sessionExpired';
 
 registerSessionExpiredHandler(() => {
   useGameStore.getState().reset();
@@ -107,8 +107,8 @@ function GameRoute() {
         setError(null);
 
         const missions = await api.getMissions();
-        const mission = missions.find(m => m.id === missionId);
-        
+        const mission = missions.find((m) => m.id === missionId);
+
         if (!mission) {
           setError('Місія не знайдена');
           setIsRestoring(false);
@@ -118,8 +118,8 @@ function GameRoute() {
         await setMission(mission);
 
         const levels = await api.getMissionLevels(missionId);
-        const level = levels.find(l => l.level_id === assignmentId);
-        
+        const level = levels.find((l) => l.level_id === assignmentId);
+
         if (!level) {
           setError('Завдання не знайдено');
           setIsRestoring(false);
@@ -158,11 +158,14 @@ function GameRoute() {
 }
 
 function App() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated } = useAuthStore();
 
   return (
     <Routes>
-      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/missions" replace />} />
+      <Route
+        path="/login"
+        element={!isAuthenticated ? <LoginPage /> : <Navigate to="/missions" replace />}
+      />
       <Route path="/agreement" element={<AgreementPage />} />
       <Route
         path="/*"
@@ -173,8 +176,14 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Navigate to="/missions" replace />} />
                   <Route path="/missions" element={<MissionsPage />} />
-                  <Route path="/missions/:missionId/assignments" element={<MissionAssignmentsPage />} />
-                  <Route path="/missions/:missionId/assignments/:assignmentId" element={<GameRoute />} />
+                  <Route
+                    path="/missions/:missionId/assignments"
+                    element={<MissionAssignmentsPage />}
+                  />
+                  <Route
+                    path="/missions/:missionId/assignments/:assignmentId"
+                    element={<GameRoute />}
+                  />
                   <Route path="/skill-matrix" element={<SkillMatrixPage />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/ranks" element={<RanksPage />} />
@@ -189,8 +198,7 @@ function App() {
         }
       />
     </Routes>
-  )
+  );
 }
 
-export default App
-
+export default App;

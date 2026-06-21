@@ -52,7 +52,9 @@ export default function TopBar() {
               defaultValue: 'Open stealth recovery options',
             })}
           >
-            <span className="text-sm text-gray-300 shrink-0 font-medium">{t('stealth', { ns: 'ui' })}:</span>
+            <span className="text-sm text-gray-300 shrink-0 font-medium">
+              {t('stealth', { ns: 'ui' })}:
+            </span>
             <div className="w-16 sm:w-20 md:w-24 shrink-0">
               <div className="h-2 bg-cyber-panel/80 rounded-full overflow-hidden border border-cyber-border/80">
                 <div
@@ -61,7 +63,9 @@ export default function TopBar() {
                 />
               </div>
             </div>
-            <span className={`text-sm font-semibold shrink-0 w-9 text-right tabular-nums ${stealthTextClass}`}>
+            <span
+              className={`text-sm font-semibold shrink-0 w-9 text-right tabular-nums ${stealthTextClass}`}
+            >
               {stealth}%
             </span>
           </button>

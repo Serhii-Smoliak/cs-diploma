@@ -32,10 +32,16 @@ export default function LeaderboardPage() {
       const data = await api.getLeaderboard();
       setEntries(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('leaderboardLoadError', {
-        ns: 'ui',
-        defaultValue: isEn ? 'Failed to load leaderboard.' : 'Не вдалося завантажити таблицю лідерів.',
-      }));
+      setError(
+        err instanceof Error
+          ? err.message
+          : t('leaderboardLoadError', {
+              ns: 'ui',
+              defaultValue: isEn
+                ? 'Failed to load leaderboard.'
+                : 'Не вдалося завантажити таблицю лідерів.',
+            })
+      );
     } finally {
       setLoading(false);
     }
@@ -68,7 +74,9 @@ export default function LeaderboardPage() {
           <div className="cyber-panel p-6 text-center text-gray-400 text-sm">
             {t('leaderboardEmpty', {
               ns: 'ui',
-              defaultValue: isEn ? 'No players on the leaderboard yet.' : 'У таблиці лідерів поки немає гравців.',
+              defaultValue: isEn
+                ? 'No players on the leaderboard yet.'
+                : 'У таблиці лідерів поки немає гравців.',
             })}
           </div>
         )}
@@ -79,14 +87,26 @@ export default function LeaderboardPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-cyber-border bg-cyber-panel/80 text-left text-xs uppercase tracking-wide text-gray-500">
-                    <th className="px-3 py-2 w-12">{t('leaderboardPosition', { ns: 'ui', defaultValue: '#' })}</th>
-                    <th className="px-3 py-2">{t('leaderboardPlayer', { ns: 'ui', defaultValue: isEn ? 'Player' : 'Гравець' })}</th>
+                    <th className="px-3 py-2 w-12">
+                      {t('leaderboardPosition', { ns: 'ui', defaultValue: '#' })}
+                    </th>
+                    <th className="px-3 py-2">
+                      {t('leaderboardPlayer', {
+                        ns: 'ui',
+                        defaultValue: isEn ? 'Player' : 'Гравець',
+                      })}
+                    </th>
                     <th className="px-3 py-2">{t('rank', { ns: 'ui' })}</th>
                     <th className="px-3 py-2 text-right">{t('xp', { ns: 'ui' })}</th>
                     <th className="px-3 py-2 text-right whitespace-nowrap">
-                      {t('leaderboardLevels', { ns: 'ui', defaultValue: isEn ? 'Levels' : 'Рівні' })}
+                      {t('leaderboardLevels', {
+                        ns: 'ui',
+                        defaultValue: isEn ? 'Levels' : 'Рівні',
+                      })}
                     </th>
-                    <th className="px-3 py-2 text-right">{t('leaderboardTechniques', { ns: 'ui', defaultValue: 'MITRE' })}</th>
+                    <th className="px-3 py-2 text-right">
+                      {t('leaderboardTechniques', { ns: 'ui', defaultValue: 'MITRE' })}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -115,7 +135,12 @@ export default function LeaderboardPage() {
                             </span>
                             {entry.isCurrentUser && (
                               <span className="ml-1.5 text-xs text-cyber-primary">
-                                ({t('leaderboardYou', { ns: 'ui', defaultValue: isEn ? 'you' : 'ви' })})
+                                (
+                                {t('leaderboardYou', {
+                                  ns: 'ui',
+                                  defaultValue: isEn ? 'you' : 'ви',
+                                })}
+                                )
                               </span>
                             )}
                           </div>

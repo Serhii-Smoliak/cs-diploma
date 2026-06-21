@@ -104,73 +104,80 @@ export default function MissionsPage() {
           const status = missionStatus[mission.id] ?? 'none';
 
           return (
-          <motion.div
-            key={mission.id}
-            whileTap={{ scale: 0.99 }}
-            onClick={() => handleStartMission(mission)}
-            className="w-full min-w-[18rem] max-w-[28rem] sm:flex-1 sm:basis-[calc(50%-0.75rem)] sm:max-w-[28rem] cyber-panel p-6 cursor-pointer border-cyber-border hover:border-cyber-primary transition-colors duration-200 hover:cyber-glow"
-          >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <h2 className="font-heading font-bold text-lg sm:text-xl text-cyber-primary leading-snug">
-                {getMissionName(mission.id, mission.name)}
-              </h2>
-              {status === 'completed' && (
-                <span
-                  className="shrink-0 text-xl text-cyber-success leading-none"
-                  title={t('missionCompletedBadge', { ns: 'ui' })}
-                  aria-label={t('missionCompletedBadge', { ns: 'ui' })}
-                >
-                  ✓
-                </span>
-              )}
-              {status === 'in_progress' && (
-                <span
-                  className="shrink-0 text-xl text-yellow-400 leading-none"
-                  title={t('missionInProgressBadge', { ns: 'ui' })}
-                  aria-label={t('missionInProgressBadge', { ns: 'ui' })}
-                >
-                  ✓
-                </span>
-              )}
-            </div>
-            <p className="text-sm text-gray-400 mb-4 leading-relaxed">{getMissionDescription(mission.id, mission.description)}</p>
-            
-            {mission.mitreTechniques.length > 0 && (
-              <div className="mb-4">
-                <div className="text-xs text-gray-500 mb-2">{t('mitreTechniques', { ns: 'ui' })}</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {mission.mitreTechniques.slice(0, 3).map((techId) => {
-                    const tech = mitreTechniques[techId];
-                    return (
-                      <MitreTechniqueChip
-                        key={techId}
-                        techniqueId={techId}
-                        title={tech?.name}
-                      />
-                    );
-                  })}
-                  {mission.mitreTechniques.length > 3 && (
-                    <div className="text-xs px-2 py-1 text-gray-400">
-                      +{mission.mitreTechniques.length - 3} {t('more', { ns: 'ui' })}
-                    </div>
-                  )}
-                </div>
+            <motion.div
+              key={mission.id}
+              whileTap={{ scale: 0.99 }}
+              onClick={() => handleStartMission(mission)}
+              className="w-full min-w-[18rem] max-w-[28rem] sm:flex-1 sm:basis-[calc(50%-0.75rem)] sm:max-w-[28rem] cyber-panel p-6 cursor-pointer border-cyber-border hover:border-cyber-primary transition-colors duration-200 hover:cyber-glow"
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h2 className="font-heading font-bold text-lg sm:text-xl text-cyber-primary leading-snug">
+                  {getMissionName(mission.id, mission.name)}
+                </h2>
+                {status === 'completed' && (
+                  <span
+                    className="shrink-0 text-xl text-cyber-success leading-none"
+                    title={t('missionCompletedBadge', { ns: 'ui' })}
+                    aria-label={t('missionCompletedBadge', { ns: 'ui' })}
+                  >
+                    ✓
+                  </span>
+                )}
+                {status === 'in_progress' && (
+                  <span
+                    className="shrink-0 text-xl text-yellow-400 leading-none"
+                    title={t('missionInProgressBadge', { ns: 'ui' })}
+                    aria-label={t('missionInProgressBadge', { ns: 'ui' })}
+                  >
+                    ✓
+                  </span>
+                )}
               </div>
-            )}
-            
-            <div className="flex items-center justify-between">
-              <span className={`text-xs px-2 py-1 rounded ${
-                mission.difficulty === 'beginner' ? 'bg-green-900/30 text-green-400' :
-                mission.difficulty === 'intermediate' ? 'bg-yellow-900/30 text-yellow-400' :
-                'bg-red-900/30 text-red-400'
-              }`}>
-                {t(`difficulty.${mission.difficulty}`, { ns: 'ui', defaultValue: mission.difficulty })}
-              </span>
-              <span className="text-xs text-gray-400">
-                {mission.mitreTechniques.length} {t('techniques', { ns: 'ui' })}
-              </span>
-            </div>
-          </motion.div>
+              <p className="text-sm text-gray-400 mb-4 leading-relaxed">
+                {getMissionDescription(mission.id, mission.description)}
+              </p>
+
+              {mission.mitreTechniques.length > 0 && (
+                <div className="mb-4">
+                  <div className="text-xs text-gray-500 mb-2">
+                    {t('mitreTechniques', { ns: 'ui' })}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {mission.mitreTechniques.slice(0, 3).map((techId) => {
+                      const tech = mitreTechniques[techId];
+                      return (
+                        <MitreTechniqueChip key={techId} techniqueId={techId} title={tech?.name} />
+                      );
+                    })}
+                    {mission.mitreTechniques.length > 3 && (
+                      <div className="text-xs px-2 py-1 text-gray-400">
+                        +{mission.mitreTechniques.length - 3} {t('more', { ns: 'ui' })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <span
+                  className={`text-xs px-2 py-1 rounded ${
+                    mission.difficulty === 'beginner'
+                      ? 'bg-green-900/30 text-green-400'
+                      : mission.difficulty === 'intermediate'
+                        ? 'bg-yellow-900/30 text-yellow-400'
+                        : 'bg-red-900/30 text-red-400'
+                  }`}
+                >
+                  {t(`difficulty.${mission.difficulty}`, {
+                    ns: 'ui',
+                    defaultValue: mission.difficulty,
+                  })}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {mission.mitreTechniques.length} {t('techniques', { ns: 'ui' })}
+                </span>
+              </div>
+            </motion.div>
           );
         })}
       </div>
@@ -183,4 +190,3 @@ export default function MissionsPage() {
     </div>
   );
 }
-

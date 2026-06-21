@@ -72,10 +72,7 @@ class ApiClient {
     localStorage.removeItem('auth_token');
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = this.getToken();
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
@@ -92,18 +89,14 @@ class ApiClient {
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
 
-      if (
-        response.status === 401 &&
-        token &&
-        !endpoint.startsWith('/auth/')
-      ) {
+      if (response.status === 401 && token && !endpoint.startsWith('/auth/')) {
         handleSessionExpired();
       }
 
       throw new ApiError(
         (errorBody.error as string) || `HTTP ${response.status}`,
         response.status,
-        errorBody,
+        errorBody
       );
     }
 
@@ -140,7 +133,10 @@ class ApiClient {
     return this.request<Level[]>(`/missions/${missionId}/levels`);
   }
 
-  async submitAnswer(levelId: string, answer: SubmitAnswerRequest['answer']): Promise<SubmitAnswerResponse> {
+  async submitAnswer(
+    levelId: string,
+    answer: SubmitAnswerRequest['answer']
+  ): Promise<SubmitAnswerResponse> {
     const encodedLevelId = encodeURIComponent(levelId);
     return this.request<SubmitAnswerResponse>(`/levels/${encodedLevelId}/submit`, {
       method: 'POST',
@@ -190,27 +186,60 @@ class ApiClient {
     return this.request<MitreTechnique[]>('/mitre/techniques');
   }
 
-  async getMitreTechnique(id: string): Promise<MitreTechnique & { relatedMissions?: Array<{ id: string; name: string; description: string | null; difficulty: string }> }> {
-    return this.request<MitreTechnique & { relatedMissions?: Array<{ id: string; name: string; description: string | null; difficulty: string }> }>(`/mitre/techniques/${id}`);
+  async getMitreTechnique(
+    id: string
+  ): Promise<
+    MitreTechnique & {
+      relatedMissions?: Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        difficulty: string;
+      }>;
+    }
+  > {
+    return this.request<
+      MitreTechnique & {
+        relatedMissions?: Array<{
+          id: string;
+          name: string;
+          description: string | null;
+          difficulty: string;
+        }>;
+      }
+    >(`/mitre/techniques/${id}`);
   }
 
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     return this.request<LeaderboardEntry[]>('/users/leaderboard');
   }
 
-  async getLanguages(): Promise<Array<{ code: string; name: string; flag: string; isActive: boolean }>> {
-    return this.request<Array<{ code: string; name: string; flag: string; isActive: boolean }>>('/translations/languages');
+  async getLanguages(): Promise<
+    Array<{ code: string; name: string; flag: string; isActive: boolean }>
+  > {
+    return this.request<Array<{ code: string; name: string; flag: string; isActive: boolean }>>(
+      '/translations/languages'
+    );
   }
 
-  async getTranslations(locale: string = 'uk', namespace: string = 'common'): Promise<Record<string, string>> {
-    return this.request<Record<string, string>>(`/translations?locale=${locale}&namespace=${namespace}`);
+  async getTranslations(
+    locale: string = 'uk',
+    namespace: string = 'common'
+  ): Promise<Record<string, string>> {
+    return this.request<Record<string, string>>(
+      `/translations?locale=${locale}&namespace=${namespace}`
+    );
   }
 
-  async getTranslationsByNamespaces(locale: string = 'uk', namespaces: string[]): Promise<Record<string, Record<string, string>>> {
+  async getTranslationsByNamespaces(
+    locale: string = 'uk',
+    namespaces: string[]
+  ): Promise<Record<string, Record<string, string>>> {
     const namespacesStr = namespaces.join(',');
-    return this.request<Record<string, Record<string, string>>>(`/translations/namespaces?locale=${locale}&namespaces=${namespacesStr}`);
+    return this.request<Record<string, Record<string, string>>>(
+      `/translations/namespaces?locale=${locale}&namespaces=${namespacesStr}`
+    );
   }
 }
 
 export const api = new ApiClient();
-

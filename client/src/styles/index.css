@@ -6,7 +6,7 @@
   * {
     @apply border-cyber-border;
   }
-  
+
   body {
     @apply bg-cyber-background text-white font-body antialiased;
     margin: 0;
@@ -72,7 +72,7 @@
     scroll-behavior: smooth;
     scrollbar-gutter: stable;
   }
-  
+
   .cyber-scrollbar:hover {
     overflow-y: auto !important;
   }
@@ -105,4 +105,3 @@
     box-shadow: inset 0 0 24px rgba(0, 217, 255, 0.04);
   }
 }
-

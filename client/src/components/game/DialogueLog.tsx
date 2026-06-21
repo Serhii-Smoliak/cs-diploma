@@ -16,7 +16,10 @@ function renderMessageContent(text: string): ReactNode {
 
   const intro = text.slice(0, match.index).trimEnd().replace(/\.$/, '');
   const code = match[1].trim();
-  const rest = text.slice(match.index + match[0].length).trim().replace(/^\.$/, '');
+  const rest = text
+    .slice(match.index + match[0].length)
+    .trim()
+    .replace(/^\.$/, '');
 
   return (
     <>
@@ -64,10 +67,7 @@ export default function DialogueLog({ dialogues }: DialogueLogProps) {
   };
 
   return (
-    <div
-      ref={logRef}
-      className="h-full overflow-y-auto cyber-scrollbar space-y-2 pr-2"
-    >
+    <div ref={logRef} className="h-full overflow-y-auto cyber-scrollbar space-y-2 pr-2">
       {dialogues.length === 0 ? (
         <div className="text-gray-500 text-sm">{t('noDialogueAvailable', { ns: 'ui' })}</div>
       ) : (
@@ -86,7 +86,7 @@ export default function DialogueLog({ dialogues }: DialogueLogProps) {
           displayText = displayText.replace(/^\[КООРДИНАТОР\]:\s*/i, '');
           displayText = displayText.replace(/^\[HINT\]:\s*/i, '');
           displayText = displayText.replace(/^\[ПІДКАЗКА\]:\s*/i, '');
-          
+
           return (
             <div
               key={index}
@@ -101,4 +101,3 @@ export default function DialogueLog({ dialogues }: DialogueLogProps) {
     </div>
   );
 }
-

@@ -32,7 +32,7 @@ function FieldBuilder({
 }) {
   const tokenMap = useMemo(
     () => new Map(field.tokens.map((token) => [token.id, token.text])),
-    [field.tokens],
+    [field.tokens]
   );
 
   const usedIds = new Set(slots.filter(Boolean) as string[]);
@@ -113,7 +113,7 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
     setSelectedAttachments((prev) =>
       prev.includes(attachmentId)
         ? prev.filter((id) => id !== attachmentId)
-        : [...prev, attachmentId],
+        : [...prev, attachmentId]
     );
   };
 
@@ -131,10 +131,7 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
     const submission: SentenceConstructorSubmission = {
       to: emailTo,
       fields: Object.fromEntries(
-        fields.map((field) => [
-          field.id,
-          (fieldSlots[field.id] || []).filter(Boolean) as string[],
-        ]),
+        fields.map((field) => [field.id, (fieldSlots[field.id] || []).filter(Boolean) as string[]])
       ),
       attachments: selectedAttachments,
     };
@@ -146,16 +143,22 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
         setIsSuccess(true);
         setXpGained(response.xpGained || null);
         setNextLevelId(response.nextLevelId || null);
-        setResult(`${t('success', { ns: 'tasks' })}\n${response.message || t('taskCompleted', { ns: 'tasks' })}`);
+        setResult(
+          `${t('success', { ns: 'tasks' })}\n${response.message || t('taskCompleted', { ns: 'tasks' })}`
+        );
         resetFields();
         setSelectedAttachments([]);
       } else if (response) {
         setIsSuccess(false);
-        setResult(`${t('failure', { ns: 'tasks' })}\n${response.message || t('wrongAnswer', { ns: 'tasks' })}`);
+        setResult(
+          `${t('failure', { ns: 'tasks' })}\n${response.message || t('wrongAnswer', { ns: 'tasks' })}`
+        );
       }
     } catch (error) {
       setIsSuccess(false);
-      setResult(`${t('error', { ns: 'tasks' })}\n${error instanceof Error ? error.message : t('errorOccurred', { ns: 'tasks' })}`);
+      setResult(
+        `${t('error', { ns: 'tasks' })}\n${error instanceof Error ? error.message : t('errorOccurred', { ns: 'tasks' })}`
+      );
     }
   };
 
@@ -242,9 +245,15 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-xl shrink-0">
-                    {attachment.type.includes('word') ? '📄' : attachment.type.includes('exe') ? '⚙️' : '📁'}
+                    {attachment.type.includes('word')
+                      ? '📄'
+                      : attachment.type.includes('exe')
+                        ? '⚙️'
+                        : '📁'}
                   </span>
-                  <span className="text-xs text-gray-400 truncate min-w-0 flex-1">{attachment.name}</span>
+                  <span className="text-xs text-gray-400 truncate min-w-0 flex-1">
+                    {attachment.name}
+                  </span>
                   {isSelected && <span className="text-cyber-success text-lg shrink-0">✓</span>}
                 </div>
               </button>

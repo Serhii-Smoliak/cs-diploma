@@ -7,10 +7,10 @@ interface MitreTechniqueBadgeProps {
   showDescription?: boolean;
 }
 
-export default function MitreTechniqueBadge({ 
-  technique, 
+export default function MitreTechniqueBadge({
+  technique,
   size = 'md',
-  showDescription = false 
+  showDescription = false,
 }: MitreTechniqueBadgeProps) {
   const { t } = useTranslation(['mitre']);
 
@@ -39,19 +39,16 @@ export default function MitreTechniqueBadge({
           <span>{technique.id}</span>
           <span className="text-xs opacity-70">→</span>
         </a>
-        <span className={`${sizeClasses[size]} text-gray-300`}>
-          {displayName}
-        </span>
-        <span className={`text-xs px-2 py-0.5 rounded bg-cyber-panel border border-cyber-border text-gray-400`}>
+        <span className={`${sizeClasses[size]} text-gray-300`}>{displayName}</span>
+        <span
+          className={`text-xs px-2 py-0.5 rounded bg-cyber-panel border border-cyber-border text-gray-400`}
+        >
           {displayTactic}
         </span>
       </div>
       {showDescription && technique.description && (
-        <p className="text-xs text-gray-400 max-w-md line-clamp-2">
-          {technique.description}
-        </p>
+        <p className="text-xs text-gray-400 max-w-md line-clamp-2">{technique.description}</p>
       )}
     </div>
   );
 }
-

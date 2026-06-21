@@ -3,10 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { User } from '@cybertactics/shared';
 import { api } from '../services/api';
 import { applyLocale } from '../i18n/applyLocale';
-import {
-  registerSessionExpiredHandler,
-  resetSessionExpiredGuard,
-} from '../auth/sessionExpired';
+import { registerSessionExpiredHandler, resetSessionExpiredGuard } from '../auth/sessionExpired';
 
 interface AuthState {
   user: User | null;

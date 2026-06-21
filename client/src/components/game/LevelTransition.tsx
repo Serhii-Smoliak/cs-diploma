@@ -29,13 +29,9 @@ export default function LevelTransition({ show, message }: LevelTransitionProps)
               transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
               className="w-16 h-16 border-4 border-cyber-primary border-t-transparent rounded-full mx-auto mb-4"
             />
-            <h2 className="font-heading font-bold text-2xl text-cyber-primary mb-2">
-              {message}
-            </h2>
+            <h2 className="font-heading font-bold text-2xl text-cyber-primary mb-2">{message}</h2>
             {currentLevel && (
-              <p className="text-gray-400 text-sm mt-4">
-                Наступне завдання: {currentLevel.title}
-              </p>
+              <p className="text-gray-400 text-sm mt-4">Наступне завдання: {currentLevel.title}</p>
             )}
           </motion.div>
         </motion.div>
@@ -43,4 +39,3 @@ export default function LevelTransition({ show, message }: LevelTransitionProps)
     </AnimatePresence>
   );
 }
-

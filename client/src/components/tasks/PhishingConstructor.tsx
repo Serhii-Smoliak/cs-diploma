@@ -37,7 +37,7 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     const emailData: EmailSubmission = {
       to,
       subject,
@@ -47,23 +47,29 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
 
     try {
       const response = await submitAnswer(emailData);
-      
+
       if (response?.success) {
         setIsSuccess(true);
         setXpGained(response.xpGained || null);
         setNextLevelId(response.nextLevelId || null);
-        setResult(`${t('success', { ns: 'tasks' })}\n${response.message || t('taskCompleted', { ns: 'tasks' })}`);
-        
+        setResult(
+          `${t('success', { ns: 'tasks' })}\n${response.message || t('taskCompleted', { ns: 'tasks' })}`
+        );
+
         setSubject('');
         setBody('');
         setSelectedAttachments([]);
       } else {
         setIsSuccess(false);
-        setResult(`${t('failure', { ns: 'tasks' })}\n${response?.message || t('wrongAnswer', { ns: 'tasks' })}`);
+        setResult(
+          `${t('failure', { ns: 'tasks' })}\n${response?.message || t('wrongAnswer', { ns: 'tasks' })}`
+        );
       }
     } catch (error) {
       setIsSuccess(false);
-      setResult(`${t('error', { ns: 'tasks' })}\n${error instanceof Error ? error.message : t('errorOccurred', { ns: 'tasks' })}`);
+      setResult(
+        `${t('error', { ns: 'tasks' })}\n${error instanceof Error ? error.message : t('errorOccurred', { ns: 'tasks' })}`
+      );
     }
   };
 
@@ -173,9 +179,15 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-xl shrink-0">
-                    {attachment.type.includes('word') ? '📄' : attachment.type.includes('exe') ? '⚙️' : '📁'}
+                    {attachment.type.includes('word')
+                      ? '📄'
+                      : attachment.type.includes('exe')
+                        ? '⚙️'
+                        : '📁'}
                   </span>
-                  <span className="text-xs text-gray-400 truncate min-w-0 flex-1">{attachment.name}</span>
+                  <span className="text-xs text-gray-400 truncate min-w-0 flex-1">
+                    {attachment.name}
+                  </span>
                   {isSelected && <span className="text-cyber-success text-lg shrink-0">✓</span>}
                 </div>
               </button>
@@ -209,18 +221,16 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
           >
             <div className="flex items-start gap-3">
               {isSuccess && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="text-2xl"
-                >
+                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-2xl">
                   ✓
                 </motion.span>
               )}
               <div className="flex-1">
                 {isSuccess && (
                   <>
-                    <div className="text-cyber-success font-bold text-lg mb-2">{t('successTitle', { ns: 'tasks' })}</div>
+                    <div className="text-cyber-success font-bold text-lg mb-2">
+                      {t('successTitle', { ns: 'tasks' })}
+                    </div>
                     {xpGained && (
                       <div className="text-cyber-success font-bold text-xl mb-3">
                         +{xpGained} XP
@@ -255,4 +265,3 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
     </div>
   );
 }
-

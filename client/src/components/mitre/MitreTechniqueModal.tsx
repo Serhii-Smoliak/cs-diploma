@@ -146,10 +146,11 @@ export default function MitreTechniqueModal({
 
   if (!technique) return null;
 
-  const getKillChainStages = () => KILL_CHAIN_STAGES.map(stage => ({
-    ...stage,
-    name: t(`killChain.stage.${stage.id}`, { defaultValue: stage.id, ns: 'mitre' })
-  }));
+  const getKillChainStages = () =>
+    KILL_CHAIN_STAGES.map((stage) => ({
+      ...stage,
+      name: t(`killChain.stage.${stage.id}`, { defaultValue: stage.id, ns: 'mitre' }),
+    }));
 
   const getStageDescriptionTranslated = (tactic: string): string => {
     const normalized = normalizeTactic(tactic);
@@ -172,14 +173,34 @@ export default function MitreTechniqueModal({
 
   const getMitigationTipKey = (tip: string): string => {
     const tipLower = tip.toLowerCase();
-    
-    if (tipLower.includes('regular') || tipLower.includes('update') || tipLower.includes('оновл')) return 'regular-updates';
-    if (tipLower.includes('monitor') || tipLower.includes('log') || tipLower.includes('монітор')) return 'monitoring';
-    if (tipLower.includes('privilege') || tipLower.includes('least') || tipLower.includes('привіл')) return 'least-privilege';
-    if (tipLower.includes('mfa') || tipLower.includes('multi-factor') || tipLower.includes('багатофактор')) return 'mfa';
-    if (tipLower.includes('train') || tipLower.includes('employee') || tipLower.includes('навча') || tipLower.includes('співробіт')) return 'training';
-    if (tipLower.includes('segment') || tipLower.includes('network') || tipLower.includes('сегмент')) return 'segmentation';
-    if (tipLower.includes('backup') || tipLower.includes('резерв') || tipLower.includes('копі')) return 'backup';
+
+    if (tipLower.includes('regular') || tipLower.includes('update') || tipLower.includes('оновл'))
+      return 'regular-updates';
+    if (tipLower.includes('monitor') || tipLower.includes('log') || tipLower.includes('монітор'))
+      return 'monitoring';
+    if (tipLower.includes('privilege') || tipLower.includes('least') || tipLower.includes('привіл'))
+      return 'least-privilege';
+    if (
+      tipLower.includes('mfa') ||
+      tipLower.includes('multi-factor') ||
+      tipLower.includes('багатофактор')
+    )
+      return 'mfa';
+    if (
+      tipLower.includes('train') ||
+      tipLower.includes('employee') ||
+      tipLower.includes('навча') ||
+      tipLower.includes('співробіт')
+    )
+      return 'training';
+    if (
+      tipLower.includes('segment') ||
+      tipLower.includes('network') ||
+      tipLower.includes('сегмент')
+    )
+      return 'segmentation';
+    if (tipLower.includes('backup') || tipLower.includes('резерв') || tipLower.includes('копі'))
+      return 'backup';
 
     return tip.toLowerCase().replace(/[^\w-]/g, '-');
   };
@@ -201,9 +222,8 @@ export default function MitreTechniqueModal({
     return t('tactic.explanation.default', { tactic, defaultValue: '', ns: 'mitre' });
   };
 
-  const examples = technique.examples && technique.examples.length > 0
-    ? technique.examples
-    : [technique.name];
+  const examples =
+    technique.examples && technique.examples.length > 0 ? technique.examples : [technique.name];
 
   const getExampleTranslated = (example: string): string => {
     const exampleKey = example.toLowerCase().replace(/[^\w-]/g, '-');
@@ -227,9 +247,13 @@ export default function MitreTechniqueModal({
     });
   };
 
-  const mitigationTips = technique.mitigation && technique.mitigation.length > 0
-    ? technique.mitigation
-    : [t('mitigation.regular-updates', { ns: 'mitre' }), t('mitigation.monitoring', { ns: 'mitre' })];
+  const mitigationTips =
+    technique.mitigation && technique.mitigation.length > 0
+      ? technique.mitigation
+      : [
+          t('mitigation.regular-updates', { ns: 'mitre' }),
+          t('mitigation.monitoring', { ns: 'mitre' }),
+        ];
 
   const copyTechniqueId = async () => {
     try {
@@ -268,9 +292,11 @@ export default function MitreTechniqueModal({
                 isCompleted ? 'border-cyber-success' : 'border-cyber-primary'
               }`}
             >
-              <div className={`flex-shrink-0 p-6 border-b border-cyber-border ${
-                isCompleted ? 'bg-green-900/20' : 'bg-cyber-panel'
-              }`}>
+              <div
+                className={`flex-shrink-0 p-6 border-b border-cyber-border ${
+                  isCompleted ? 'bg-green-900/20' : 'bg-cyber-panel'
+                }`}
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -307,11 +333,16 @@ export default function MitreTechniqueModal({
                       )}
                     </div>
                     <h2 className="font-heading font-bold text-2xl text-white mb-2">
-                      {t(`technique.name.${technique.id}`, { defaultValue: technique.name, ns: 'mitre' })}
+                      {t(`technique.name.${technique.id}`, {
+                        defaultValue: technique.name,
+                        ns: 'mitre',
+                      })}
                     </h2>
                     <div className="flex items-center gap-3">
                       <span className="text-sm px-3 py-1 rounded bg-cyber-panel border border-cyber-border text-cyber-primary">
-                        {getKillChainStages().find(s => s.id === normalizeTactic(technique.tactic))?.name || technique.tactic}
+                        {getKillChainStages().find(
+                          (s) => s.id === normalizeTactic(technique.tactic)
+                        )?.name || technique.tactic}
                       </span>
                       {isCompleted && (
                         <span className="text-sm px-3 py-1 rounded bg-green-900/30 border border-cyber-success text-cyber-success">
@@ -340,16 +371,21 @@ export default function MitreTechniqueModal({
                   </h3>
                   <div className="cyber-panel p-4 border border-cyber-border bg-cyber-primary/5">
                     <p className="text-gray-200 leading-relaxed">
-                      {t(`technique.description.${technique.id}`, { 
+                      {t(`technique.description.${technique.id}`, {
                         defaultValue: getSimpleExplanation(technique.tactic),
-                        ns: 'mitre' 
+                        ns: 'mitre',
                       })}
                     </p>
                     {technique.platforms && technique.platforms.length > 0 && (
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-gray-500">{t('modal.platforms', { ns: 'mitre' })}</span>
+                        <span className="text-xs text-gray-500">
+                          {t('modal.platforms', { ns: 'mitre' })}
+                        </span>
                         {technique.platforms.map((platform, idx) => (
-                          <span key={idx} className="text-xs px-2 py-1 rounded bg-cyber-panel border border-cyber-border text-cyber-primary">
+                          <span
+                            key={idx}
+                            className="text-xs px-2 py-1 rounded bg-cyber-panel border border-cyber-border text-cyber-primary"
+                          >
                             {platform}
                           </span>
                         ))}
@@ -402,7 +438,7 @@ export default function MitreTechniqueModal({
                             t(`technique.description.${technique.id}`, {
                               defaultValue: getSimpleExplanation(technique.tactic),
                               ns: 'mitre',
-                            }),
+                            })
                         )}
                       </p>
                     </motion.div>
@@ -513,7 +549,9 @@ export default function MitreTechniqueModal({
                                 {getMitigationTipTranslated(tip)}
                               </span>
                               {description && (
-                                <p className="text-gray-500 text-xs mt-2 leading-relaxed">{description}</p>
+                                <p className="text-gray-500 text-xs mt-2 leading-relaxed">
+                                  {description}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -522,11 +560,17 @@ export default function MitreTechniqueModal({
                     </div>
                     {technique.dataSources && technique.dataSources.length > 0 && (
                       <div className="mt-4 cyber-panel p-3 border border-cyber-border">
-                        <div className="text-xs text-gray-400 mb-2">{t('modal.dataSources', { ns: 'mitre' })}</div>
+                        <div className="text-xs text-gray-400 mb-2">
+                          {t('modal.dataSources', { ns: 'mitre' })}
+                        </div>
                         <div className="flex flex-wrap gap-2">
                           {technique.dataSources.map((ds, idx) => (
-                            <span key={idx} className="text-xs px-2 py-1 rounded bg-cyber-panel border border-cyber-border text-cyber-primary">
-                              {ds.source}{ds.component ? `: ${ds.component}` : ''}
+                            <span
+                              key={idx}
+                              className="text-xs px-2 py-1 rounded bg-cyber-panel border border-cyber-border text-cyber-primary"
+                            >
+                              {ds.source}
+                              {ds.component ? `: ${ds.component}` : ''}
                             </span>
                           ))}
                         </div>
@@ -555,11 +599,15 @@ export default function MitreTechniqueModal({
                             <h4 className="font-heading font-bold text-cyber-primary">
                               {mission.name}
                             </h4>
-                            <span className={`text-xs px-2 py-1 rounded ${
-                              mission.difficulty === 'beginner' ? 'bg-green-900/30 text-green-400' :
-                              mission.difficulty === 'intermediate' ? 'bg-yellow-900/30 text-yellow-400' :
-                              'bg-red-900/30 text-red-400'
-                            }`}>
+                            <span
+                              className={`text-xs px-2 py-1 rounded ${
+                                mission.difficulty === 'beginner'
+                                  ? 'bg-green-900/30 text-green-400'
+                                  : mission.difficulty === 'intermediate'
+                                    ? 'bg-yellow-900/30 text-yellow-400'
+                                    : 'bg-red-900/30 text-red-400'
+                              }`}
+                            >
                               {mission.difficulty}
                             </span>
                           </div>
@@ -587,7 +635,9 @@ export default function MitreTechniqueModal({
                       {getKillChainStages().map((stage, idx) => {
                         const normalizedTactic = normalizeTactic(technique.tactic);
                         const isCurrent = stage.id === normalizedTactic;
-                        const currentIndex = getKillChainStages().findIndex(s => s.id === normalizedTactic);
+                        const currentIndex = getKillChainStages().findIndex(
+                          (s) => s.id === normalizedTactic
+                        );
                         const isBefore = currentIndex > idx;
                         const isSelected = selectedStageId === stage.id;
 
@@ -614,8 +664,8 @@ export default function MitreTechniqueModal({
                                 isCurrent
                                   ? 'border-cyber-primary bg-cyber-primary/20 cyber-glow shadow-lg shadow-cyber-primary/40'
                                   : isBefore
-                                  ? 'border-green-500 bg-green-900/20'
-                                  : 'border-gray-600 bg-gray-800/50 opacity-60'
+                                    ? 'border-green-500 bg-green-900/20'
+                                    : 'border-gray-600 bg-gray-800/50 opacity-60'
                               }`}
                             >
                               {stage.icon}
@@ -626,8 +676,8 @@ export default function MitreTechniqueModal({
                                 isCurrent
                                   ? 'text-cyber-primary font-bold'
                                   : isBefore
-                                  ? 'text-green-400'
-                                  : 'text-gray-500'
+                                    ? 'text-green-400'
+                                    : 'text-gray-500'
                               }`}
                             >
                               {stage.name}
@@ -654,7 +704,9 @@ export default function MitreTechniqueModal({
                           className="mt-5 cyber-panel p-4 border-2 border-cyber-success bg-green-900/10"
                         >
                           {(() => {
-                            const stage = getKillChainStages().find((s) => s.id === selectedStageId);
+                            const stage = getKillChainStages().find(
+                              (s) => s.id === selectedStageId
+                            );
                             const isCurrent = selectedStageId === normalizeTactic(technique.tactic);
                             if (!stage) return null;
 
@@ -668,7 +720,13 @@ export default function MitreTechniqueModal({
                                     </h4>
                                     {isCurrent && (
                                       <span className="text-xs font-mono text-cyber-primary">
-                                        {technique.id} · {t('modal.currentStage', { defaultValue: i18n.resolvedLanguage?.startsWith('en') ? 'current stage' : 'поточний етап', ns: 'mitre' })}
+                                        {technique.id} ·{' '}
+                                        {t('modal.currentStage', {
+                                          defaultValue: i18n.resolvedLanguage?.startsWith('en')
+                                            ? 'current stage'
+                                            : 'поточний етап',
+                                          ns: 'mitre',
+                                        })}
                                       </span>
                                     )}
                                   </div>
@@ -698,19 +756,33 @@ export default function MitreTechniqueModal({
                       )}
                     </AnimatePresence>
                   </div>
-                    
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 }}
-                      className="mt-6 p-4 bg-cyber-primary/10 border border-cyber-primary rounded-lg"
-                    >
-                      <p className="text-sm text-gray-300 leading-relaxed">
-                        <strong className="text-cyber-primary font-bold">{t(`technique.name.${technique.id}`, { defaultValue: technique.name, ns: 'mitre' })}</strong> {t('modal.usedOnStage', { ns: 'mitre' })} {' '}
-                        <strong className="text-cyber-primary font-bold">{getKillChainStages().find(s => s.id === normalizeTactic(technique.tactic))?.name || technique.tactic}</strong> - {t('modal.meansAttackerAlready', { ns: 'mitre' })} {' '}
-                        <strong className="text-cyber-primary">{getStageDescriptionTranslated(technique.tactic)}</strong>.
-                      </p>
-                    </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-6 p-4 bg-cyber-primary/10 border border-cyber-primary rounded-lg"
+                  >
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                      <strong className="text-cyber-primary font-bold">
+                        {t(`technique.name.${technique.id}`, {
+                          defaultValue: technique.name,
+                          ns: 'mitre',
+                        })}
+                      </strong>{' '}
+                      {t('modal.usedOnStage', { ns: 'mitre' })}{' '}
+                      <strong className="text-cyber-primary font-bold">
+                        {getKillChainStages().find(
+                          (s) => s.id === normalizeTactic(technique.tactic)
+                        )?.name || technique.tactic}
+                      </strong>{' '}
+                      - {t('modal.meansAttackerAlready', { ns: 'mitre' })}{' '}
+                      <strong className="text-cyber-primary">
+                        {getStageDescriptionTranslated(technique.tactic)}
+                      </strong>
+                      .
+                    </p>
+                  </motion.div>
                 </div>
               </div>
 

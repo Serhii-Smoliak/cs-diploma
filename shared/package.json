@@ -2,14 +2,22 @@
   "name": "@cybertactics/shared",
   "version": "0.1.0",
   "description": "Shared types and utilities for CyberTactics",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "@eslint/js": "^9.17.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1"
   }
 }
-

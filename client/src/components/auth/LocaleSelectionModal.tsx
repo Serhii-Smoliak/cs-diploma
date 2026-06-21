@@ -10,7 +10,10 @@ interface LocaleSelectionModalProps {
   saving?: boolean;
 }
 
-export default function LocaleSelectionModal({ onSelect, saving = false }: LocaleSelectionModalProps) {
+export default function LocaleSelectionModal({
+  onSelect,
+  saving = false,
+}: LocaleSelectionModalProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-cyber-background p-4">
       <motion.div
@@ -28,7 +31,8 @@ export default function LocaleSelectionModal({ onSelect, saving = false }: Local
           Choose your language
         </h1>
         <p className="text-sm text-gray-400 mb-6">
-          Select the language for the CyberTactics interface. You can change it later from the top bar.
+          Select the language for the CyberTactics interface. You can change it later from the top
+          bar.
         </p>
 
         <div className="space-y-3">

@@ -26,8 +26,7 @@ const RANK_DESCRIPTIONS = {
       'Ви розумієте основи розвідки, технік MITRE та логіку місій. Рівень початківця в основах red team.',
     'Intermediate Hacker':
       'Впевнено проходите багатокрокові ланцюги атак, розумієте OPSEC і поєднуєте техніки в місіях.',
-    'Advanced Hacker':
-      'Сильне тактичне мислення, управління стелсом і складні сценарні завдання.',
+    'Advanced Hacker': 'Сильне тактичне мислення, управління стелсом і складні сценарні завдання.',
     'Elite Hacker':
       'Рівень майстерності — глибоке знання MITRE, оптимальне проходження місій і навички оператора топ-рівня.',
   },
@@ -71,7 +70,9 @@ export default function RanksPage() {
       ns: 'ui',
       defaultValue: RANK_DESCRIPTIONS[locale][rankId as keyof (typeof RANK_DESCRIPTIONS)['uk']],
     });
-    return translated !== key ? translated : RANK_DESCRIPTIONS[locale][rankId as keyof (typeof RANK_DESCRIPTIONS)['uk']] ?? '';
+    return translated !== key
+      ? translated
+      : (RANK_DESCRIPTIONS[locale][rankId as keyof (typeof RANK_DESCRIPTIONS)['uk']] ?? '');
   };
 
   return (

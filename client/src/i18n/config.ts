@@ -1,10 +1,13 @@
 import i18n from 'i18next';
-import {initReactI18next} from 'react-i18next';
+import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import {api} from '../services/api';
+import { api } from '../services/api';
 import { I18N_NAMESPACES } from './namespaces';
 
-export const loadTranslationsFromAPI = async (locale: string, namespace: string): Promise<Record<string, string>> => {
+export const loadTranslationsFromAPI = async (
+  locale: string,
+  namespace: string
+): Promise<Record<string, string>> => {
   try {
     return await api.getTranslations(locale, namespace);
   } catch (error) {
@@ -13,7 +16,10 @@ export const loadTranslationsFromAPI = async (locale: string, namespace: string)
   }
 };
 
-export const loadMultipleNamespaces = async (locale: string, namespaces: string[]): Promise<void> => {
+export const loadMultipleNamespaces = async (
+  locale: string,
+  namespaces: string[]
+): Promise<void> => {
   try {
     const translations = await api.getTranslationsByNamespaces(locale, namespaces);
     Object.entries(translations).forEach(([ns, resources]) => {

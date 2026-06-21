@@ -90,7 +90,7 @@ export default function StealthDepletedModal() {
           t('stealthWaitNotReady', {
             ns: 'ui',
             time: formatRetryAfter(retryAfterMs, i18n.language),
-          }),
+          })
         );
         closeStealthModal();
       } else {

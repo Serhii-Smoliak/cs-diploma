@@ -24,26 +24,32 @@ export default function TacticalChoice({ level }: TacticalChoiceProps) {
       e.preventDefault();
       e.stopPropagation();
     }
-    
+
     if (!selectedChoice) return;
 
     try {
       const response = await submitAnswer(selectedChoice);
-      
+
       if (response?.success) {
         setIsSuccess(true);
         setXpGained(response.xpGained || null);
         setNextLevelId(response.nextLevelId || null);
-        setResult(`${t('success', { ns: 'tasks' })}\n${response.message || t('taskCompleted', { ns: 'tasks' })}`);
-        
+        setResult(
+          `${t('success', { ns: 'tasks' })}\n${response.message || t('taskCompleted', { ns: 'tasks' })}`
+        );
+
         setSelectedChoice(null);
       } else {
         setIsSuccess(false);
-        setResult(`${t('failure', { ns: 'tasks' })}\n${response?.message || t('wrongAnswer', { ns: 'tasks' })}`);
+        setResult(
+          `${t('failure', { ns: 'tasks' })}\n${response?.message || t('wrongAnswer', { ns: 'tasks' })}`
+        );
       }
     } catch (error) {
       setIsSuccess(false);
-      setResult(`${t('error', { ns: 'tasks' })}\n${error instanceof Error ? error.message : t('errorOccurred', { ns: 'tasks' })}`);
+      setResult(
+        `${t('error', { ns: 'tasks' })}\n${error instanceof Error ? error.message : t('errorOccurred', { ns: 'tasks' })}`
+      );
     }
   };
 
@@ -134,18 +140,16 @@ export default function TacticalChoice({ level }: TacticalChoiceProps) {
           >
             <div className="flex items-start gap-3">
               {isSuccess && (
-                <motion.span
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="text-2xl"
-                >
+                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-2xl">
                   ✓
                 </motion.span>
               )}
               <div className="flex-1">
                 {isSuccess && (
                   <>
-                    <div className="text-cyber-success font-bold text-lg mb-2">{t('successTitle', { ns: 'tasks' })}</div>
+                    <div className="text-cyber-success font-bold text-lg mb-2">
+                      {t('successTitle', { ns: 'tasks' })}
+                    </div>
                     {xpGained && (
                       <div className="text-cyber-success font-bold text-xl mb-3">
                         +{xpGained} XP
@@ -183,4 +187,3 @@ export default function TacticalChoice({ level }: TacticalChoiceProps) {
     </div>
   );
 }
-

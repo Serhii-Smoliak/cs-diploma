@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import type { Level, Mission, SubmitAnswerRequest, SubmitAnswerResponse } from '@cybertactics/shared';
+import type {
+  Level,
+  Mission,
+  SubmitAnswerRequest,
+  SubmitAnswerResponse,
+} from '@cybertactics/shared';
 import { api } from '../services/api';
 import { useAuthStore } from './authStore';
 
@@ -85,7 +90,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const levels = await api.getMissionLevels(mission.id);
-      
+
       set({
         currentMission: mission,
         levels,
@@ -193,13 +198,12 @@ export const useGameStore = create<GameState>((set, get) => ({
           authStore.updateUser({
             xp: (authStore.user.xp || 0) + result.xpGained,
           });
-          authStore.refreshUser().catch(err => console.error('Failed to refresh user:', err));
+          authStore.refreshUser().catch((err) => console.error('Failed to refresh user:', err));
         }
       }
 
       if (result.success) {
-        const answerString =
-          typeof answer === 'string' ? answer : JSON.stringify(answer);
+        const answerString = typeof answer === 'string' ? answer : JSON.stringify(answer);
         set({
           isLoading: false,
           levelProgress: {
@@ -210,7 +214,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
         return result;
       }
-      
+
       set({ isLoading: false });
       return result;
     } catch (error) {
@@ -235,4 +239,3 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 }));
-

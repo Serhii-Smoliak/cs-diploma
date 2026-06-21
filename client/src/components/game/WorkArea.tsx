@@ -29,7 +29,8 @@ export default function WorkArea() {
   const showCompletedState = isCompleted && !retryMode;
 
   const currentIndex = levels.findIndex((l) => l.level_id === currentLevel.level_id);
-  const nextLevel = currentIndex >= 0 && currentIndex < levels.length - 1 ? levels[currentIndex + 1] : null;
+  const nextLevel =
+    currentIndex >= 0 && currentIndex < levels.length - 1 ? levels[currentIndex + 1] : null;
 
   const handleNextAssignment = async () => {
     if (!nextLevel) return;
@@ -59,7 +60,9 @@ export default function WorkArea() {
   return (
     <div className="h-full cyber-panel flex flex-col min-h-0 min-w-0 overflow-hidden">
       <div className="border-b border-cyber-border pb-3 mb-4 flex-shrink-0 min-w-0">
-        <h3 className="font-heading font-bold text-lg text-cyber-primary">{t('workArea', { ns: 'ui' })}</h3>
+        <h3 className="font-heading font-bold text-lg text-cyber-primary">
+          {t('workArea', { ns: 'ui' })}
+        </h3>
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden cyber-scrollbar min-h-0 min-w-0 pr-3">
@@ -89,7 +92,9 @@ export default function WorkArea() {
                   </button>
                 ) : (
                   <>
-                    <p className="text-cyber-success text-sm">{t('allMissionTasksCompleted', { ns: 'ui' })}</p>
+                    <p className="text-cyber-success text-sm">
+                      {t('allMissionTasksCompleted', { ns: 'ui' })}
+                    </p>
                     <button
                       type="button"
                       onClick={() => navigate('/missions')}

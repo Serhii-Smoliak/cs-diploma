@@ -6,7 +6,11 @@ interface TaskSubmitButtonProps {
   children: ReactNode;
 }
 
-export default function TaskSubmitButton({ disabled = false, onClick, children }: TaskSubmitButtonProps) {
+export default function TaskSubmitButton({
+  disabled = false,
+  onClick,
+  children,
+}: TaskSubmitButtonProps) {
   return (
     <button
       type="button"

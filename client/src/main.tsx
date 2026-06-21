@@ -1,9 +1,9 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import App from './App.tsx'
-import './styles/index.css'
-import { applyLocale, normalizeLocale } from './i18n/applyLocale'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App.tsx';
+import './styles/index.css';
+import { applyLocale, normalizeLocale } from './i18n/applyLocale';
 
 function getInitialLanguage(): 'uk' | 'en' {
   try {
@@ -41,7 +41,7 @@ const initApp = async () => {
       <BrowserRouter>
         <App />
       </BrowserRouter>
-    </StrictMode>,
+    </StrictMode>
   );
 };
 

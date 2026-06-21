@@ -109,9 +109,12 @@ export default function SkillMatrixPage() {
     }, 400);
   }, [loading, techniques, setSearchParams]);
 
-  const isTechniqueCompleted = useCallback((techniqueId: string): boolean => {
-    return completedTechniques.includes(techniqueId);
-  }, [completedTechniques]);
+  const isTechniqueCompleted = useCallback(
+    (techniqueId: string): boolean => {
+      return completedTechniques.includes(techniqueId);
+    },
+    [completedTechniques]
+  );
 
   useEffect(() => {
     saveExpandedTactics(expandedTactics);
@@ -211,7 +214,9 @@ export default function SkillMatrixPage() {
 
           <div className="mb-4">
             <div className="border border-cyber-border rounded-lg bg-cyber-panel/40 px-4 py-3">
-              <div className="text-xs text-gray-400 mb-2">{t('progress', { ns: 'skillMatrix' })}</div>
+              <div className="text-xs text-gray-400 mb-2">
+                {t('progress', { ns: 'skillMatrix' })}
+              </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                 <div className="text-xl font-bold text-cyber-primary">{completionPercentage}%</div>
                 <div className="flex-1 w-full">
@@ -225,7 +230,8 @@ export default function SkillMatrixPage() {
                   </div>
                 </div>
                 <div className="text-xs text-gray-400 whitespace-nowrap">
-                  {completedTechniques.length} / {techniques.length} {t('techniques', { ns: 'skillMatrix' })}
+                  {completedTechniques.length} / {techniques.length}{' '}
+                  {t('techniques', { ns: 'skillMatrix' })}
                 </div>
               </div>
             </div>
@@ -244,7 +250,9 @@ export default function SkillMatrixPage() {
             <div className="flex items-center gap-2">
               <select
                 value={filterCompleted}
-                onChange={(e) => setFilterCompleted(e.target.value as 'all' | 'completed' | 'incomplete')}
+                onChange={(e) =>
+                  setFilterCompleted(e.target.value as 'all' | 'completed' | 'incomplete')
+                }
                 className="cyber-input text-sm px-3 py-2 appearance-none cursor-pointer bg-cyber-panel border border-cyber-border rounded-lg text-white focus:border-cyber-primary focus:outline-none pr-8"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
@@ -257,10 +265,18 @@ export default function SkillMatrixPage() {
                 <option value="completed">{t('filterCompleted', { ns: 'skillMatrix' })}</option>
                 <option value="incomplete">{t('filterIncomplete', { ns: 'skillMatrix' })}</option>
               </select>
-              <button onClick={expandAll} className="cyber-button text-sm px-2.5 py-1" title={t('expandAll', { ns: 'skillMatrix' })}>
+              <button
+                onClick={expandAll}
+                className="cyber-button text-sm px-2.5 py-1"
+                title={t('expandAll', { ns: 'skillMatrix' })}
+              >
                 ↓
               </button>
-              <button onClick={collapseAll} className="cyber-button text-sm px-2.5 py-1" title={t('collapseAll', { ns: 'skillMatrix' })}>
+              <button
+                onClick={collapseAll}
+                className="cyber-button text-sm px-2.5 py-1"
+                title={t('collapseAll', { ns: 'skillMatrix' })}
+              >
                 ↑
               </button>
             </div>
@@ -280,7 +296,8 @@ export default function SkillMatrixPage() {
           <div className="space-y-2">
             {tacticGroups.map((group) => {
               const isExpanded = expandedTactics.has(group.tactic);
-              const completionRate = group.total > 0 ? Math.round((group.completed / group.total) * 100) : 0;
+              const completionRate =
+                group.total > 0 ? Math.round((group.completed / group.total) * 100) : 0;
 
               return (
                 <div key={group.tactic} id={tacticSectionId(group.tactic)}>
@@ -308,10 +325,13 @@ export default function SkillMatrixPage() {
                           </h2>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                             <span className="text-xs text-gray-400">
-                              {group.techniques.length} {t('techniquesShort', { ns: 'skillMatrix' })}
+                              {group.techniques.length}{' '}
+                              {t('techniquesShort', { ns: 'skillMatrix' })}
                             </span>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-400">{t('completed', { ns: 'skillMatrix' })}</span>
+                              <span className="text-xs text-gray-400">
+                                {t('completed', { ns: 'skillMatrix' })}
+                              </span>
                               <span className="text-xs font-medium text-cyber-success">
                                 {group.completed} / {group.total} ({completionRate}%)
                               </span>
