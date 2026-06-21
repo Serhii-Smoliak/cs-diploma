@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import jwt from 'jsonwebtoken';
-import { authenticate } from './auth.js';
+import { authenticate, type AuthRequest } from './auth.js';
 
 vi.mock('../config/jwtConfig.js', () => ({
   JWT_SECRET: 'test-secret',
@@ -36,7 +36,7 @@ describe('authenticate middleware', () => {
 
   it('accepts valid token', () => {
     const token = jwt.sign({ userId: 'u1', email: 'agent@test.com' }, 'test-secret');
-    const req = { headers: { authorization: `Bearer ${token}` } };
+    const req = { headers: { authorization: `Bearer ${token}` } } as AuthRequest;
     const res = createResponse();
     const next = vi.fn();
 
