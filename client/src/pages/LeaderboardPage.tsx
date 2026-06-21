@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { LeaderboardEntry } from '@cybertactics/shared';
 import { api } from '../services/api';
 import { getRankLabel } from '../utils/rank';
-import { getPositionLabel } from '../utils/leaderboard';
 import UserAvatar from '../components/profile/UserAvatar';
+import LeaderboardPositionBadge from '../components/leaderboard/LeaderboardPositionBadge';
 import { loadMultipleNamespaces } from '../i18n/config';
 
 export default function LeaderboardPage() {
@@ -117,8 +117,8 @@ export default function LeaderboardPage() {
                           : 'hover:bg-cyber-panel/40'
                       }`}
                     >
-                      <td className="px-3 py-2 font-mono font-bold text-cyber-primary text-center">
-                        {getPositionLabel(entry.position)}
+                      <td className="px-3 py-2 text-center">
+                        <LeaderboardPositionBadge position={entry.position} />
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2 min-w-0">
