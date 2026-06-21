@@ -1,3 +1,4 @@
+import { UserRole } from '@prisma/client';
 import { describe, expect, it } from 'vitest';
 import { formatAuthUser } from './formatUser';
 
@@ -15,7 +16,7 @@ describe('formatAuthUser', () => {
       preferredLocale: 'uk',
       createdAt,
       passwordHash: 'hash',
-      isAdmin: false,
+      role: UserRole.USER,
     };
 
     expect(formatAuthUser(user)).toEqual({
@@ -43,7 +44,7 @@ describe('formatAuthUser', () => {
       preferredLocale: 'en',
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       passwordHash: 'hash',
-      isAdmin: false,
+      role: UserRole.USER,
     };
 
     expect(formatAuthUser(user, { xp: 500, rank: 'Novice Hacker', stealth: 40 })).toMatchObject({

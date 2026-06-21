@@ -25,7 +25,7 @@ export function useTaskProgress() {
   }, []);
 
   const applySubmitResponse = useCallback(
-    (response: SubmitAnswerResponse | undefined, t: TFunction, onSuccess?: () => void) => {
+    (response: SubmitAnswerResponse | null | undefined, t: TFunction, onSuccess?: () => void) => {
       if (response?.success) {
         setIsSuccess(true);
         setXpGained(response.xpGained ?? null);

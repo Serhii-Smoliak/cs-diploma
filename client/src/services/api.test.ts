@@ -135,7 +135,7 @@ describe('api client', () => {
       })
     );
 
-    await api.submitAnswer('iron/code 01', { type: 'text', value: 'answer' });
+    await api.submitAnswer('iron/code 01', 'answer');
 
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:4000/api/levels/iron%2Fcode%2001/submit',

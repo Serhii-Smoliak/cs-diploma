@@ -51,7 +51,7 @@ interface AssignmentListItemProps {
   readonly title: string;
   readonly taskTypeLabel: string;
   readonly onSelect: (level: Level) => void;
-  readonly onStart: (level: Level) => void;
+  readonly onStart: (level: Level) => Promise<void>;
 }
 
 export default function AssignmentListItem({

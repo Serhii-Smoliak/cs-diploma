@@ -54,14 +54,14 @@ describe('validateAnswer', () => {
       {
         task_type: 'phishing_constructor',
         work_area: {
-          type: 'phishing_constructor',
-          attachments: [{ id: 'att1', name: 'report.pdf' }],
+          attachments: [{ id: 'att1', name: 'report.pdf', type: 'pdf', allowed: true }],
         },
       }
     );
 
     expect(
       validateAnswer(level, {
+        to: 'victim@apexdynamics.tech',
         subject: 'Urgent password reset',
         body: 'Please update your password now',
         attachments: ['att1'],
@@ -70,6 +70,7 @@ describe('validateAnswer', () => {
 
     expect(
       validateAnswer(level, {
+        to: 'victim@apexdynamics.tech',
         subject: 'Hello',
         body: 'No keywords here',
         attachments: [],
@@ -78,6 +79,7 @@ describe('validateAnswer', () => {
 
     expect(
       validateAnswer(level, {
+        to: 'victim@apexdynamics.tech',
         subject: 'Urgent password reset',
         body: 'Download malware.exe attachment',
         attachments: ['malware.exe'],
@@ -98,8 +100,7 @@ describe('validateAnswer', () => {
       {
         task_type: 'sentence_constructor',
         work_area: {
-          type: 'sentence_constructor',
-          attachments: [{ id: 'lnk1', name: 'invoice.lnk' }],
+          attachments: [{ id: 'lnk1', name: 'invoice.lnk', type: 'lnk', allowed: true }],
         },
       }
     );

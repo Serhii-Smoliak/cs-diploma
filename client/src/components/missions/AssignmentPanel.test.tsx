@@ -37,8 +37,8 @@ const baseLevel: Level = {
   order: 1,
   dialogue: [],
   task_type: 'code_editor',
-  work_area: { type: 'code_editor', language: 'regex', starter_code: '' },
-  validation: { type: 'regex', pattern: '.*' },
+  work_area: { input_type: 'regex', placeholder: 'Enter regex pattern' },
+  validation: { type: 'regex_match', correct_pattern: '.*' },
   rewards: { xp: 25, stealth_impact: -5 },
   hints: [],
 };
