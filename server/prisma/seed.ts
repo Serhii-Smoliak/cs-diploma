@@ -90,6 +90,7 @@ async function main() {
             name: missionData.name,
             description: missionData.description,
             difficulty: missionData.difficulty,
+            orderIndex: missionData.order_index ?? 1,
             mitreTechniques: missionData.mitre_techniques || [],
           },
           create: {
@@ -97,7 +98,7 @@ async function main() {
             name: missionData.name,
             description: missionData.description,
             difficulty: missionData.difficulty,
-            orderIndex: 1,
+            orderIndex: missionData.order_index ?? 1,
             mitreTechniques: missionData.mitre_techniques || [],
           },
         });

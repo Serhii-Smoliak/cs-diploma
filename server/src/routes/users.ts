@@ -31,7 +31,7 @@ router.get('/me', authenticate, async (req: AuthRequest, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'Session expired. Please login again.' });
     }
 
     const stealth = await applyPassiveRegen(userId);

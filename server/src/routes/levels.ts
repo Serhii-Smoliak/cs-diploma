@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, type AuthRequest } from '../middleware/auth.js';
 import { submitAnswer } from '../services/levelService.js';
+import { HttpError } from '../errors/httpError.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -39,6 +40,9 @@ router.post('/:id/submit', authenticate, async (req: AuthRequest, res) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
+    }
+    if (error instanceof HttpError) {
+      return res.status(error.statusCode).json({ error: error.message });
     }
     console.error('Submit answer error:', error);
     console.error('Error details:', error instanceof Error ? error.stack : error);

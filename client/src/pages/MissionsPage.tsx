@@ -6,11 +6,14 @@ import type { Mission } from '@cybertactics/shared';
 import { motion } from 'framer-motion';
 import MitreTechniqueChip from '../components/mitre/MitreTechniqueChip';
 
+type MissionStatus = 'none' | 'in_progress' | 'completed';
+
 export default function MissionsPage() {
   const { t } = useTranslation(['missions', 'ui']);
   const navigate = useNavigate();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [mitreTechniques, setMitreTechniques] = useState<Record<string, MitreTechnique>>({});
+  const [missionStatus, setMissionStatus] = useState<Record<string, MissionStatus>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,18 +22,46 @@ export default function MissionsPage() {
 
   const loadMissions = async () => {
     try {
-      const [missionsData, techniquesData] = await Promise.all([
+      const [missionsData, techniquesData, progress] = await Promise.all([
         api.getMissions(),
         api.getMitreTechniques(),
+        api.getUserProgress(),
       ]);
-      
+
       setMissions(missionsData);
-      
+
       const techniquesMap: Record<string, MitreTechnique> = {};
       techniquesData.forEach((tech) => {
         techniquesMap[tech.id] = tech;
       });
       setMitreTechniques(techniquesMap);
+
+      const progressByLevel = Object.fromEntries(progress.map((p) => [p.levelId, p]));
+      const levelsByMission = await Promise.all(
+        missionsData.map((mission) => api.getMissionLevels(mission.id))
+      );
+
+      const status: Record<string, MissionStatus> = {};
+      missionsData.forEach((mission, index) => {
+        const levels = levelsByMission[index];
+        if (levels.length === 0) {
+          status[mission.id] = 'none';
+          return;
+        }
+
+        const allCompleted = levels.every((level) => progressByLevel[level.level_id]?.completed);
+        if (allCompleted) {
+          status[mission.id] = 'completed';
+          return;
+        }
+
+        const hasActivity = levels.some((level) => {
+          const entry = progressByLevel[level.level_id];
+          return entry && (entry.completed || entry.attempts > 0);
+        });
+        status[mission.id] = hasActivity ? 'in_progress' : 'none';
+      });
+      setMissionStatus(status);
     } catch (error) {
       console.error('Failed to load missions:', error);
     } finally {
@@ -68,25 +99,46 @@ export default function MissionsPage() {
         {t('missions', { ns: 'ui' })}
       </h1>
 
-      <div className="flex flex-wrap justify-center gap-6">
-        {missions.map((mission) => (
+      <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-6">
+        {missions.map((mission) => {
+          const status = missionStatus[mission.id] ?? 'none';
+
+          return (
           <motion.div
             key={mission.id}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.99 }}
             onClick={() => handleStartMission(mission)}
-            className="w-full max-w-sm sm:w-72 cyber-panel p-6 cursor-pointer border-cyber-border hover:border-cyber-primary transition-all duration-300 hover:cyber-glow"
+            className="w-full min-w-[18rem] max-w-[28rem] sm:flex-1 sm:basis-[calc(50%-0.75rem)] sm:max-w-[28rem] cyber-panel p-6 cursor-pointer border-cyber-border hover:border-cyber-primary transition-colors duration-200 hover:cyber-glow"
           >
-            <h2 className="font-heading font-bold text-xl text-cyber-primary mb-2">
-              {getMissionName(mission.id, mission.name)}
-            </h2>
-            <p className="text-sm text-gray-400 mb-4">{getMissionDescription(mission.id, mission.description)}</p>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <h2 className="font-heading font-bold text-lg sm:text-xl text-cyber-primary leading-snug">
+                {getMissionName(mission.id, mission.name)}
+              </h2>
+              {status === 'completed' && (
+                <span
+                  className="shrink-0 text-xl text-cyber-success leading-none"
+                  title={t('missionCompletedBadge', { ns: 'ui' })}
+                  aria-label={t('missionCompletedBadge', { ns: 'ui' })}
+                >
+                  ✓
+                </span>
+              )}
+              {status === 'in_progress' && (
+                <span
+                  className="shrink-0 text-xl text-yellow-400 leading-none"
+                  title={t('missionInProgressBadge', { ns: 'ui' })}
+                  aria-label={t('missionInProgressBadge', { ns: 'ui' })}
+                >
+                  ✓
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-gray-400 mb-4 leading-relaxed">{getMissionDescription(mission.id, mission.description)}</p>
             
-            {/* MITRE Techniques */}
             {mission.mitreTechniques.length > 0 && (
               <div className="mb-4">
                 <div className="text-xs text-gray-500 mb-2">{t('mitreTechniques', { ns: 'ui' })}</div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {mission.mitreTechniques.slice(0, 3).map((techId) => {
                     const tech = mitreTechniques[techId];
                     return (
@@ -119,7 +171,8 @@ export default function MissionsPage() {
               </span>
             </div>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
 
       {missions.length === 0 && (

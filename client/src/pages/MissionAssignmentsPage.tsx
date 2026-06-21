@@ -11,34 +11,69 @@ import MitreTechniqueChip from '../components/mitre/MitreTechniqueChip';
 
 const KILL_CHAIN_STEP_KEYS = ['step1', 'step2', 'step3', 'step4', 'step5'] as const;
 
-const KILL_CHAIN_COPY = {
-  en: {
-    title: 'Cyber Kill Chain',
-    intro: 'Mission tasks follow the attack stages in order:',
-    steps: [
-      'Reconnaissance — find the admin email (task 1)',
-      'Resource Development — choose a phishing domain (task 2)',
-      'Initial Access — craft a phishing email (task 3)',
-      'Execution — run a PowerShell payload (task 4)',
-      'Persistence — registry autostart (task 5)',
-    ],
-    expandLabel: 'Show Cyber Kill Chain',
-    collapseLabel: 'Hide Cyber Kill Chain',
+const KILL_CHAIN_MISSION_DEFAULTS: Record<
+  string,
+  { en: (typeof KILL_CHAIN_COPY)['en']; uk: (typeof KILL_CHAIN_COPY)['uk'] }
+> = {
+  operation_ghost: {
+    en: {
+      title: 'Cyber Kill Chain',
+      intro: 'Mission tasks follow the attack stages in order:',
+      steps: [
+        'Reconnaissance — find the admin email (task 1)',
+        'Resource Development — choose a phishing domain (task 2)',
+        'Initial Access — craft a phishing email (task 3)',
+        'Execution — run a PowerShell payload (task 4)',
+        'Persistence — registry autostart (task 5)',
+      ],
+      expandLabel: 'Show Cyber Kill Chain',
+      collapseLabel: 'Hide Cyber Kill Chain',
+    },
+    uk: {
+      title: 'Ланцюг кібератак',
+      intro: 'Завдання місії відповідають етапам атаки по порядку:',
+      steps: [
+        'Розвідка — знайти email адміністратора (завдання 1)',
+        'Розробка ресурсів — обрати домен для фішингу (завдання 2)',
+        'Початковий доступ — фішинговий лист (завдання 3)',
+        'Виконання — запуск PowerShell payload (завдання 4)',
+        'Стійкість — автозапуск через реєстр (завдання 5)',
+      ],
+      expandLabel: 'Показати ланцюг кібератак',
+      collapseLabel: 'Згорнути ланцюг кібератак',
+    },
   },
-  uk: {
-    title: 'Ланцюг кібератак',
-    intro: 'Завдання місії відповідають етапам атаки по порядку:',
-    steps: [
-      'Розвідка — знайти email адміністратора (завдання 1)',
-      'Розробка ресурсів — обрати домен для фішингу (завдання 2)',
-      'Початковий доступ — фішинговий лист (завдання 3)',
-      'Виконання — запуск PowerShell payload (завдання 4)',
-      'Стійкість — автозапуск через реєстр (завдання 5)',
-    ],
-    expandLabel: 'Показати ланцюг кібератак',
-    collapseLabel: 'Згорнути ланцюг кібератак',
+  operation_iron_signal: {
+    en: {
+      title: 'Attack progression',
+      intro: 'Intermediate mission — post-perimeter tactics in order:',
+      steps: [
+        'Discovery — find service account in AD dump (task 1)',
+        'Credential Access — password spray strategy (task 2)',
+        'Initial Access — spearphishing link email (task 3)',
+        'Lateral Movement — RDP via jump host (task 4)',
+        'Execution — certutil staging download (task 5)',
+      ],
+      expandLabel: 'Show attack progression',
+      collapseLabel: 'Hide attack progression',
+    },
+    uk: {
+      title: 'Етапи атаки',
+      intro: 'Місія intermediate — тактики після периметра по порядку:',
+      steps: [
+        'Discovery — знайти service account у AD dump (завдання 1)',
+        'Credential Access — стратегія password spray (завдання 2)',
+        'Initial Access — spearphishing з посиланням (завдання 3)',
+        'Lateral Movement — RDP через jump host (завдання 4)',
+        'Execution — завантаження staging через certutil (завдання 5)',
+      ],
+      expandLabel: 'Показати етапи атаки',
+      collapseLabel: 'Згорнути етапи атаки',
+    },
   },
-} as const;
+};
+
+const KILL_CHAIN_COPY = KILL_CHAIN_MISSION_DEFAULTS.operation_ghost;
 
 function getLocaleCode(): 'en' | 'uk' {
   const raw = i18n.resolvedLanguage || i18n.language || 'uk';
@@ -76,10 +111,10 @@ export default function MissionAssignmentsPage() {
     expandLabel: string;
     collapseLabel: string;
   } | null => {
-    if (missionId !== 'operation_ghost') return null;
+    if (!KILL_CHAIN_MISSION_DEFAULTS[missionId]) return null;
 
     const locale = getLocaleCode();
-    const defaults = KILL_CHAIN_COPY[locale];
+    const defaults = KILL_CHAIN_MISSION_DEFAULTS[missionId][locale];
     const prefix = `${missionId}.killChain`;
 
     const translate = (suffix: string, fallback: string) => {
@@ -416,28 +451,32 @@ export default function MissionAssignmentsPage() {
             </span>
           </div>
 
-          {selectedLevel.rewards && (
-            <div className="rounded-lg border border-cyber-border bg-cyber-panel/50 px-3 py-2.5">
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-1">
-                {t('xp', { ns: 'ui' })}
-              </span>
-              <span className="text-sm text-cyber-primary font-mono font-medium">
-                +{selectedLevel.rewards.xp}
-              </span>
-            </div>
-          )}
+          <div className="rounded-lg border border-cyber-border bg-cyber-panel/50 px-3 py-2.5">
+            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-1">
+              {t('xp', { ns: 'ui' })}
+            </span>
+            <span className="text-sm text-cyber-primary font-mono font-medium">
+              +{selectedLevel.rewards?.xp ?? 0}
+            </span>
+          </div>
 
-          {selectedLevel.rewards && selectedLevel.rewards.stealth_impact !== 0 && (
-            <div className="rounded-lg border border-cyber-border bg-cyber-panel/50 px-3 py-2.5 col-span-2">
-              <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-1">
-                {t('stealth', { ns: 'ui' })}
-              </span>
-              <span className="text-sm font-mono font-medium text-cyber-success">
-                {selectedLevel.rewards.stealth_impact > 0 ? '+' : ''}
-                {selectedLevel.rewards.stealth_impact}
-              </span>
-            </div>
-          )}
+          <div className="rounded-lg border border-cyber-border bg-cyber-panel/50 px-3 py-2.5">
+            <span className="text-[10px] uppercase tracking-wider text-gray-500 block mb-1">
+              {t('stealth', { ns: 'ui' })}
+            </span>
+            <span
+              className={`text-sm font-mono font-medium ${
+                (selectedLevel.rewards?.stealth_impact ?? 0) < 0
+                  ? 'text-orange-400'
+                  : (selectedLevel.rewards?.stealth_impact ?? 0) > 0
+                    ? 'text-green-400'
+                    : 'text-gray-400'
+              }`}
+            >
+              {(selectedLevel.rewards?.stealth_impact ?? 0) > 0 ? '+' : ''}
+              {selectedLevel.rewards?.stealth_impact ?? 0}
+            </span>
+          </div>
         </div>
 
         <button

@@ -13,6 +13,7 @@ export default function Sidebar() {
     { path: '/skill-matrix', labelKey: 'skillMatrix', icon: '⬡' },
     { path: '/leaderboard', labelKey: 'leaderboard', icon: '🏆' },
     { path: '/faq', labelKey: 'faq', icon: '❓' },
+    { path: '/community', labelKey: 'community', icon: '💬' },
     // { path: '/settings', labelKey: 'settings', icon: '⚙️' },
   ];
 

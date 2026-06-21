@@ -14,6 +14,7 @@ export const ALLOWED_TRANSLATION_NAMESPACES = [
   'profile',
   'agreement',
   'faq',
+  'community',
 ] as const;
 
 export const ALLOWED_TRANSLATION_LOCALES = ['uk', 'en'] as const;

@@ -8,6 +8,7 @@ import type {
   UserStats,
   LeaderboardEntry,
 } from '@cybertactics/shared';
+import { handleSessionExpired } from '../auth/sessionExpired';
 import { getApiBase, getApiOrigin } from '../config/apiOrigin';
 
 export interface MitreTechnique {
@@ -90,6 +91,15 @@ class ApiClient {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+      if (
+        response.status === 401 &&
+        token &&
+        !endpoint.startsWith('/auth/')
+      ) {
+        handleSessionExpired();
+      }
+
       throw new ApiError(
         (errorBody.error as string) || `HTTP ${response.status}`,
         response.status,

@@ -11,4 +11,5 @@ export const I18N_NAMESPACES = [
   'profile',
   'agreement',
   'faq',
+  'community',
 ] as const;

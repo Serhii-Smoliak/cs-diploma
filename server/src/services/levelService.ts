@@ -1,5 +1,6 @@
 import type { Level, SubmitAnswerRequest, SubmitAnswerResponse } from '@cybertactics/shared';
 import { validateAnswer } from '../validators/AnswerValidator.js';
+import { HttpError } from '../errors/httpError.js';
 import prisma from '../db/database.js';
 import { mapPrismaLevelToLevel } from '../utils/levelMapper.js';
 import { changeStealth, getCurrentStealth } from './stealthService.js';
@@ -20,7 +21,7 @@ export async function submitAnswer(
     console.error(
       `User ${userId} not found in database. User should be created during registration.`
     );
-    throw new Error(`User not found. Please register or login first.`);
+    throw new HttpError(401, 'User not found. Please register or login first.');
   }
 
   const stealth = await getCurrentStealth(userId);
@@ -40,7 +41,7 @@ export async function submitAnswer(
 
   if (!levelDb) {
     console.error('Level not found:', levelId);
-    throw new Error(`Level ${levelId} not found`);
+    throw new HttpError(404, `Level ${levelId} not found`);
   }
 
   const level: Level = mapPrismaLevelToLevel(levelDb);
