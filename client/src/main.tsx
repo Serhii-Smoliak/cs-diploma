@@ -3,8 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './styles/index.css'
-import i18n, { loadMultipleNamespaces } from './i18n/config'
-import { normalizeLocale } from './i18n/applyLocale'
+import { applyLocale, normalizeLocale } from './i18n/applyLocale'
 
 function getInitialLanguage(): 'uk' | 'en' {
   try {
@@ -35,13 +34,7 @@ function getInitialLanguage(): 'uk' | 'en' {
 
 const initApp = async () => {
   const currentLanguage = getInitialLanguage();
-
-  if (i18n.language !== currentLanguage) {
-    await i18n.changeLanguage(currentLanguage);
-  }
-
-  const namespaces = ['common', 'mitre', 'tasks', 'missions', 'ui', 'skillMatrix', 'levels', 'dialogues', 'profile'];
-  await loadMultipleNamespaces(currentLanguage, namespaces);
+  await applyLocale(currentLanguage);
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

@@ -4,6 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import type { Level, EmailSubmission } from '@cybertactics/shared';
 import { motion, AnimatePresence } from 'framer-motion';
 import TaskHints from './TaskHints';
+import TaskSubmitButton from './TaskSubmitButton';
 
 interface PhishingConstructorProps {
   level: Level;
@@ -104,7 +105,7 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
   }, [level.level_id, level.work_area.email_fields?.to]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 max-w-full">
       <div className="text-sm text-gray-400 mb-4">
         {t('phishingConstructorTitle', { ns: 'tasks' })}
       </div>
@@ -151,55 +152,48 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
         </div>
       </div>
 
-      <div>
+      <div className="min-w-0 max-w-full">
         <label className="block text-sm font-medium text-cyber-primary mb-2">
           {t('emailAttachments', { ns: 'tasks' })}
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid gap-2 min-w-0 max-w-full [grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr))]">
           {attachments.map((attachment) => {
             const isSelected = selectedAttachments.includes(attachment.id);
 
             return (
-              <motion.div
+              <button
                 key={attachment.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                type="button"
                 onClick={() => toggleAttachment(attachment.id)}
-                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                className={`min-w-0 max-w-full p-3 rounded-lg border cursor-pointer text-left transition-colors ${
                   isSelected
-                    ? 'bg-cyber-success/20 border-cyber-success cyber-glow-green'
-                    : 'bg-cyber-panel border-cyber-border hover:border-cyber-primary'
+                    ? 'bg-cyber-success/20 border-cyber-success'
+                    : 'bg-cyber-panel border-cyber-border hover:border-cyber-primary hover:bg-cyber-primary/5'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xl shrink-0">
                     {attachment.type.includes('word') ? '📄' : attachment.type.includes('exe') ? '⚙️' : '📁'}
                   </span>
-                  {isSelected && <span className="text-cyber-success text-xl">✓</span>}
+                  <span className="text-xs text-gray-400 truncate min-w-0 flex-1">{attachment.name}</span>
+                  {isSelected && <span className="text-cyber-success text-lg shrink-0">✓</span>}
                 </div>
-                <div className="text-xs text-gray-400 truncate">{attachment.name}</div>
-              </motion.div>
+              </button>
             );
           })}
         </div>
       </div>
 
-      <motion.button
-        type="button"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+      <TaskSubmitButton
+        disabled={isLoading || !subject || !body}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           handleSubmit();
         }}
-        disabled={isLoading || !subject || !body}
-        className="w-full cyber-button-success py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isLoading
-          ? t('sendingEmail', { ns: 'tasks' })
-          : t('sendEmail', { ns: 'tasks' })}
-      </motion.button>
+        {isLoading ? t('sendingEmail', { ns: 'tasks' }) : t('sendEmail', { ns: 'tasks' })}
+      </TaskSubmitButton>
 
       <AnimatePresence>
         {result && (
@@ -238,16 +232,13 @@ export default function PhishingConstructor({ level }: PhishingConstructorProps)
                   <pre className="whitespace-pre-wrap font-mono text-sm mb-3">{result}</pre>
                 )}
                 {isSuccess && hasNextLevel() && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                  <button
+                    type="button"
                     onClick={handleNextLevel}
                     className="w-full cyber-button py-3 text-base"
                   >
                     {t('nextLevel', { ns: 'tasks' })} →
-                  </motion.button>
+                  </button>
                 )}
                 {isSuccess && !hasNextLevel() && (
                   <div className="text-cyber-success font-medium text-sm">

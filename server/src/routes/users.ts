@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { UserRole } from '@prisma/client';
 import { authenticate, type AuthRequest } from '../middleware/auth.js';
 import { resolveOwnerUserId } from '../middleware/ownership.js';
 import prisma from '../db/database.js';
@@ -192,6 +193,55 @@ async function loadUserStats(userId: string) {
     mitreTechniques: stats.user.mitreTechniques.map((t) => t.mitreId),
   };
 }
+
+router.get('/leaderboard', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+
+    const requester = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (!requester) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const includeAdmins = requester.role === UserRole.ADMIN;
+
+    const users = await prisma.user.findMany({
+      where: includeAdmins ? undefined : { role: UserRole.USER },
+      include: {
+        stats: true,
+        _count: {
+          select: { mitreTechniques: true },
+        },
+      },
+    });
+
+    const entries = users
+      .map((user) => ({
+        userId: user.id,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        xp: user.stats?.totalXp ?? user.xp,
+        rank: user.stats?.rank ?? user.rank,
+        completedLevels: user.stats?.completedLevels ?? 0,
+        mitreTechniquesCount: user._count.mitreTechniques,
+        isCurrentUser: user.id === userId,
+      }))
+      .sort((a, b) => b.xp - a.xp || a.username.localeCompare(b.username))
+      .map((entry, index) => ({
+        position: index + 1,
+        ...entry,
+      }));
+
+    res.json(entries);
+  } catch (error) {
+    console.error('Error fetching leaderboard:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 router.get('/me/progress', authenticate, async (req: AuthRequest, res) => {
   try {

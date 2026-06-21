@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api, type MitreTechnique } from '../services/api';
 import type { Mission } from '@cybertactics/shared';
 import { motion } from 'framer-motion';
+import MitreTechniqueChip from '../components/mitre/MitreTechniqueChip';
 
 export default function MissionsPage() {
   const { t } = useTranslation(['missions', 'ui']);
@@ -62,17 +63,19 @@ export default function MissionsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-6 sm:mb-8">{t('missions', { ns: 'ui' })}</h1>
+    <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
+      <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-6 sm:mb-8 text-center">
+        {t('missions', { ns: 'ui' })}
+      </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="flex flex-wrap justify-center gap-6">
         {missions.map((mission) => (
           <motion.div
             key={mission.id}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => handleStartMission(mission)}
-            className="cyber-panel p-6 cursor-pointer border-cyber-border hover:border-cyber-primary transition-all duration-300 hover:cyber-glow"
+            className="w-full max-w-sm sm:w-72 cyber-panel p-6 cursor-pointer border-cyber-border hover:border-cyber-primary transition-all duration-300 hover:cyber-glow"
           >
             <h2 className="font-heading font-bold text-xl text-cyber-primary mb-2">
               {getMissionName(mission.id, mission.name)}
@@ -86,20 +89,12 @@ export default function MissionsPage() {
                 <div className="flex flex-wrap gap-2">
                   {mission.mitreTechniques.slice(0, 3).map((techId) => {
                     const tech = mitreTechniques[techId];
-                    return tech ? (
-                      <div
+                    return (
+                      <MitreTechniqueChip
                         key={techId}
-                        className="text-xs font-mono px-2 py-1 bg-cyber-panel border border-cyber-border rounded text-cyber-primary"
-                      >
-                        {tech.id}
-                      </div>
-                    ) : (
-                      <div
-                        key={techId}
-                        className="text-xs font-mono px-2 py-1 bg-cyber-panel border border-cyber-border rounded text-gray-400"
-                      >
-                        {techId}
-                      </div>
+                        techniqueId={techId}
+                        title={tech?.name}
+                      />
                     );
                   })}
                   {mission.mitreTechniques.length > 3 && (

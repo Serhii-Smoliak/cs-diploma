@@ -6,6 +6,7 @@ import type {
   SubmitAnswerResponse,
   UserProgress,
   UserStats,
+  LeaderboardEntry,
 } from '@cybertactics/shared';
 import { getApiBase, getApiOrigin } from '../config/apiOrigin';
 
@@ -181,6 +182,10 @@ class ApiClient {
 
   async getMitreTechnique(id: string): Promise<MitreTechnique & { relatedMissions?: Array<{ id: string; name: string; description: string | null; difficulty: string }> }> {
     return this.request<MitreTechnique & { relatedMissions?: Array<{ id: string; name: string; description: string | null; difficulty: string }> }>(`/mitre/techniques/${id}`);
+  }
+
+  async getLeaderboard(): Promise<LeaderboardEntry[]> {
+    return this.request<LeaderboardEntry[]>('/users/leaderboard');
   }
 
   async getLanguages(): Promise<Array<{ code: string; name: string; flag: string; isActive: boolean }>> {

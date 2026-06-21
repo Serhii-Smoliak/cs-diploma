@@ -8,8 +8,11 @@ import MissionsPage from './pages/MissionsPage'
 import MissionAssignmentsPage from './pages/MissionAssignmentsPage'
 import SkillMatrixPage from './pages/SkillMatrixPage'
 import LeaderboardPage from './pages/LeaderboardPage'
+import RanksPage from './pages/RanksPage'
+import FaqPage from './pages/FaqPage'
 import ProfilePage from './pages/ProfilePage'
 import SettingsPage from './pages/SettingsPage'
+import AgreementPage from './pages/AgreementPage'
 import GameLayout from './components/game/GameLayout'
 import LocaleSelectionGate from './components/auth/LocaleSelectionGate'
 import { useGameStore } from './store/gameStore'
@@ -112,6 +115,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/missions" replace />} />
+      <Route path="/agreement" element={<AgreementPage />} />
       <Route
         path="/*"
         element={
@@ -125,6 +129,8 @@ function App() {
                   <Route path="/missions/:missionId/assignments/:assignmentId" element={<GameRoute />} />
                   <Route path="/skill-matrix" element={<SkillMatrixPage />} />
                   <Route path="/leaderboard" element={<LeaderboardPage />} />
+                  <Route path="/ranks" element={<RanksPage />} />
+                  <Route path="/faq" element={<FaqPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                 </Routes>

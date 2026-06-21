@@ -12,7 +12,8 @@ export default function Sidebar() {
     { path: '/missions', labelKey: 'missions', icon: '🎯' },
     { path: '/skill-matrix', labelKey: 'skillMatrix', icon: '⬡' },
     { path: '/leaderboard', labelKey: 'leaderboard', icon: '🏆' },
-    { path: '/settings', labelKey: 'settings', icon: '⚙️' },
+    { path: '/faq', labelKey: 'faq', icon: '❓' },
+    // { path: '/settings', labelKey: 'settings', icon: '⚙️' },
   ];
 
   const showLabels = isMobileOpen || !isCollapsed;
@@ -89,16 +90,16 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-cyber-border hidden lg:block">
+      <div className="shrink-0 h-11 border-t border-cyber-border hidden lg:flex items-center px-3">
         <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={toggle}
-          className={`w-full ${isCollapsed ? 'px-0 justify-center' : 'px-4'} flex items-center gap-3 py-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-cyber-panel hover:text-cyber-primary`}
+          className="w-full h-8 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 text-gray-300 hover:bg-cyber-panel hover:text-cyber-primary"
           title={isCollapsed ? t('expandMenu') : t('collapseMenu')}
         >
           <motion.span
-            className="text-lg flex-shrink-0"
+            className="text-sm flex-shrink-0 leading-none"
             animate={{ rotate: isCollapsed ? 180 : 0 }}
             transition={{ duration: 0.3 }}
           >
@@ -109,7 +110,7 @@ export default function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="font-medium whitespace-nowrap"
+              className="text-xs font-medium whitespace-nowrap"
             >
               {t('collapse')}
             </motion.span>

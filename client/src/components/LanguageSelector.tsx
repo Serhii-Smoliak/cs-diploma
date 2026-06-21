@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { applyLocale } from '../i18n/applyLocale';
 
 export const LanguageSelector: React.FC = () => {
   const { i18n } = useTranslation();
@@ -10,7 +11,7 @@ export const LanguageSelector: React.FC = () => {
       <select
         id="language-select"
         value={i18n.language}
-        onChange={(e) => i18n.changeLanguage(e.target.value)}
+        onChange={(e) => void applyLocale(e.target.value)}
         aria-label="Select language"
       >
         <option value="en">English</option>

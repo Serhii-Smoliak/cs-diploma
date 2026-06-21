@@ -128,6 +128,18 @@ export interface UserStats {
   mitreTechniques: string[];
 }
 
+export interface LeaderboardEntry {
+  position: number;
+  userId: string;
+  username: string;
+  avatarUrl?: string | null;
+  xp: number;
+  rank: string;
+  completedLevels: number;
+  mitreTechniquesCount: number;
+  isCurrentUser: boolean;
+}
+
 export interface SubmitAnswerRequest {
   levelId: string;
   answer: string | number | EmailSubmission | SentenceConstructorSubmission;

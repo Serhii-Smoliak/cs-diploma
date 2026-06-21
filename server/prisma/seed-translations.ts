@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { MITRE_TECHNIQUE_DESCRIPTIONS } from './mitre-technique-descriptions.ts';
 
 const prisma = new PrismaClient();
 
@@ -10,6 +11,22 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       error: 'Error',
       success: 'Success',
       unknown: 'Unknown',
+    },
+    auth: {
+      login: 'Login',
+      register: 'Register',
+      email: 'Email',
+      password: 'Password',
+      username: 'Username',
+      loginSubtitle: 'Sign in',
+      registerSubtitle: 'Create an account',
+      loading: 'Loading...',
+      usernameRequired: 'Username is required',
+      errorOccurred: 'An error occurred',
+      switchToRegister: "Don't have an account? Register",
+      switchToLogin: 'Already have an account? Login',
+      acceptAgreementPrefix: 'I agree to the',
+      agreementRequired: 'You must accept the User Agreement',
     },
     mitre: {
       'killChain.stage.reconnaissance': 'Reconnaissance',
@@ -137,10 +154,12 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'modal.usedOnStage': 'is used on stage',
       'modal.meansAttackerAlready': 'this means that the attacker already',
       'modal.openOnMitre': 'Open on MITRE',
+      'modal.copyId': 'Copy technique ID',
+      'modal.idCopied': 'Copied!',
       'example.data-from-local-system': 'Data from Local System',
       'example.description.data-from-local-system':
         "The attacker collects data from the victim's local system, including files, configurations, and other sensitive information.",
-      'example.defaultDescription': 'This is an example of how {example} can be used in attacks.',
+      'example.defaultDescription': 'This is an example of how {{example}} can be used in attacks.',
       'technique.name.T1005': 'Data from Local System',
       'technique.name.T1593': 'Search Open Websites/Domains',
       'technique.name.T1583.001': 'Acquire Infrastructure: Domains',
@@ -150,6 +169,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
         'Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder',
       'technique.description.T1025':
         'Adversaries may search local system sources, such as file systems, configuration files, local databases, virtual machine files, or process memory, to find files of interest and sensitive data prior to Exfiltration. Adversaries may do this using a Command and Scripting Interpreter, such as cmd as well as a Network Device CLI, which have functionality to interact with the file system to gather information. Adversaries may also use Automated Collection on the local system.',
+      ...MITRE_TECHNIQUE_DESCRIPTIONS.en,
       'tactic.Reconnaissance': 'Reconnaissance',
       'tactic.Resource Development': 'Resource Development',
       'tactic.Initial Access': 'Initial Access',
@@ -246,9 +266,34 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'rank.Intermediate Hacker': 'Intermediate Hacker',
       'rank.Advanced Hacker': 'Advanced Hacker',
       'rank.Elite Hacker': 'Elite Hacker',
+      'rank.description.Script Kiddie':
+        'Starting point. In security culture, a "script kiddie" uses ready-made tools without deep understanding. In CyberTactics this marks the beginning of your path in ethical hacking simulations.',
+      'rank.description.Novice Hacker':
+        'You grasp reconnaissance basics, MITRE techniques, and mission flow. A junior level in red-team fundamentals.',
+      'rank.description.Intermediate Hacker':
+        'You handle multi-step attack chains, OPSEC awareness, and combining techniques across missions.',
+      'rank.description.Advanced Hacker':
+        'Strong tactical thinking, stealth management, and complex scenario-based challenges.',
+      'rank.description.Elite Hacker':
+        'Mastery level — deep MITRE coverage, optimal mission execution, and top-tier operator skill.',
+      ranks: 'Career Ranks',
+      ranksIntro:
+        'Ranks reflect your XP from missions. This is a gamified learning ladder — from Script Kiddie to Elite Hacker — inspired by real offensive security culture, not an official certification.',
+      ranksCurrent: 'Your rank',
+      ranksXpRange: '{{from}}–{{to}} XP',
+      ranksXpFrom: '{{xp}}+ XP',
       missions: 'Missions',
       skillMatrix: 'Skill Matrix',
+      faq: 'FAQ',
       leaderboard: 'Leaderboard',
+      leaderboardPosition: '#',
+      leaderboardPlayer: 'Player',
+      leaderboardLevels: 'Levels',
+      leaderboardTechniques: 'MITRE',
+      leaderboardYou: 'you',
+      leaderboardEmpty: 'No players on the leaderboard yet.',
+      leaderboardLoadError: 'Failed to load leaderboard.',
+      loading: 'Loading...',
       settings: 'Settings',
       profile: 'Profile',
       inDevelopment: 'Coming soon...',
@@ -268,7 +313,12 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       stealthDepletedTitle: 'Stealth depleted',
       stealthDepletedMessage:
         'You cannot submit answers while stealth is at 0%. Choose a recovery option:',
-      stealthBuyMasking: 'Buy masking — restore stealth',
+      stealthManageTitle: 'Stealth',
+      stealthManageMessage: 'Current stealth: {{stealth}}%. Choose a recovery option:',
+      stealthOpenModal: 'Open stealth recovery options',
+      stealthBuyMasking: 'Buy {{amount}}% masking — restore stealth',
+      stealthMaskingUnavailable:
+        'Masking (+{{amount}}%) would exceed 100% (current: {{stealth}}%).',
       stealthUpgradePlan: 'Upgrade to premium',
       stealthWaitRecovery: 'Wait — partial stealth recovery',
       stealthWaitNotReady: 'Stealth is not ready yet. Try again in {{time}}.',
@@ -292,6 +342,10 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       assignmentStatusCompleted: 'Completed',
       assignmentStatusLocked: 'Locked',
       assignmentStatusIncomplete: 'Incomplete',
+      assignmentPanelEmpty: 'Select an assignment on the left',
+      assignmentPanelEmptyHint: 'Details, progress and MITRE context will appear here.',
+      assignmentPanelLearnTitle: 'What you will learn',
+      assignmentStart: 'Start assignment',
       assignmentCompleted: 'Completed',
       assignmentLocked: 'Locked',
       taskTypeCaption: 'Task type:',
@@ -345,6 +399,70 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       fileTooLarge: 'File is too large (max 5 MB).',
       uploadFailed: 'Failed to save photo.',
     },
+    faq: {
+      title: 'FAQ',
+      intro: 'Answers about mission types and how to use CyberTactics.',
+      'section.missionTypes': 'Mission task types',
+      'section.platform': 'Using the platform',
+      'items.codeEditor.question': 'What is a Code editor task?',
+      'items.codeEditor.answer':
+        'You write code or a regex pattern in the work area. For example, search HTML for hidden data or compose a PowerShell command. Click Execute to check your answer. Wrong attempts reduce stealth.',
+      'items.tacticalChoice.question': 'What is a Tactical choice task?',
+      'items.tacticalChoice.answer':
+        'You pick one option from a list — for example, the most convincing phishing domain or registry key for persistence. Read each option carefully and submit your choice.',
+      'items.phishingConstructor.question': 'What is a Phishing constructor task?',
+      'items.phishingConstructor.answer':
+        'You build a phishing email: subject, body, and sometimes attachments. The goal is to bypass filters and trick the target into running a payload — without forbidden file types like .exe.',
+      'items.sentenceConstructor.question': 'What is a Sentence constructor task?',
+      'items.sentenceConstructor.answer':
+        'You assemble phrases or email parts from word blocks — like crafting convincing social-engineering text step by step. Complete all required fields before sending.',
+      'items.whatIs.question': 'What is CyberTactics?',
+      'items.whatIs.answer':
+        'An educational platform for learning offensive security basics through mission simulations. Tasks map to MITRE ATT&CK techniques. Everything runs in a safe sandbox — no real attacks.',
+      'items.howMissions.question': 'How do I start a mission?',
+      'items.howMissions.answer':
+        'Open Missions, pick a campaign, then choose an assignment. Click the card to see what you will learn on the right; use the arrow or Start assignment to enter the task. Complete assignments in order — the next unlocks after the previous one.',
+      'items.stealth.question': 'What is Stealth?',
+      'items.stealth.answer':
+        'Stealth is your operational security meter. Wrong answers and noisy actions lower it. At 0% you cannot submit until you recover. Click the STEALTH bar in the header to open recovery options (masking, wait, premium).',
+      'items.xpRanks.question': 'What are XP and ranks?',
+      'items.xpRanks.answer':
+        'You earn XP for completing tasks. XP raises your rank from Script Kiddie to Elite Hacker. Click your rank in the header to see the full progression ladder.',
+      'items.skillMatrix.question': 'What is the Skill Matrix?',
+      'items.skillMatrix.answer':
+        'A map of MITRE ATT&CK techniques you encounter in missions. Expand tactics, click a technique for details, kill chain context, and related missions. Completed techniques are marked in green.',
+      'items.hints.question': 'How do hints work?',
+      'items.hints.answer':
+        'In the work area, use Show hint at the bottom. Hints guide you without giving the full answer. Use them when stuck — they are part of the learning flow.',
+      'items.leaderboard.question': 'What is the Leaderboard?',
+      'items.leaderboard.answer':
+        'Compare progress with other players: XP, completed levels, and MITRE techniques mastered. Your row is highlighted.',
+      'items.language.question': 'How do I change the language?',
+      'items.language.answer':
+        'Use the language switcher in the top bar (UA / EN). Translations load without refreshing the page.',
+    },
+    agreement: {
+      footerLink: 'User Agreement',
+      title: 'User Agreement',
+      intro:
+        'Welcome to CyberTactics. By using this service, you confirm that you have read and agree to the terms below.',
+      'section1.title': '1. Purpose of the Platform',
+      'section1.body':
+        'CyberTactics is an educational interactive platform designed to lower the barrier to entry in cybersecurity. The service helps users learn—in a safe environment—the fundamentals of information security, attack models (including MITRE ATT&CK), and threat response practices.',
+      'section2.title': '2. Educational Nature and Simulation',
+      'section2.body':
+        'All scenarios, missions, and tasks on the platform are for educational purposes only. CyberTactics does not attack real systems, networks, or servers and does not provide tools for use outside the learning context. Any actions within the platform are simulations and do not cause real harm to third-party infrastructure.',
+      'section3.title': '3. Lawful Use of Knowledge',
+      'section3.body':
+        'Knowledge gained on the platform is intended solely for lawful activities: education, certification, and protecting your own or your organization\'s infrastructure in accordance with applicable law and professional ethics. Using this knowledge for unauthorized access, data damage, extortion, phishing, malware distribution, or other unlawful acts is strictly prohibited.',
+      'section4.title': '4. User Responsibility',
+      'section4.body':
+        'You are fully responsible for your actions outside the platform. Violations of applicable law regarding cybercrime—including unauthorized interference with computer systems, data theft, and fraud in electronic communications—may result in civil, administrative, and criminal liability as provided by law.',
+      'section5.title': '5. Acceptance of Terms',
+      'section5.body':
+        'By continuing to use the platform, you confirm that you understand the educational nature of the simulations and agree not to use the knowledge gained for unlawful purposes.',
+      back: 'Back',
+    },
     missions: {
       'operation_ghost.name': 'Operation Ghost',
       'operation_ghost.description':
@@ -396,6 +514,22 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       error: 'Помилка',
       success: 'Успіх',
       unknown: 'Невідомо',
+    },
+    auth: {
+      login: 'Вхід',
+      register: 'Реєстрація',
+      email: 'Електронна пошта',
+      password: 'Пароль',
+      username: "Ім'я користувача",
+      loginSubtitle: 'Увійти',
+      registerSubtitle: 'Створіть обліковий запис',
+      loading: 'Завантаження...',
+      usernameRequired: "Ім'я користувача обов'язкове",
+      errorOccurred: 'Сталася помилка',
+      switchToRegister: 'Немає облікового запису? Зареєструватися',
+      switchToLogin: 'Вже є обліковий запис? Увійти',
+      acceptAgreementPrefix: 'Я погоджуюся з',
+      agreementRequired: 'Потрібно прийняти Угоду користувача',
     },
     mitre: {
       'killChain.stage.reconnaissance': 'Розвідка',
@@ -461,7 +595,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'killChain.goal.persistence': 'зберегти доступ надовго',
       'killChain.goal.privilege-escalation': 'отримати права адміністратора',
       'killChain.goal.defense-evasion': 'сховатися від захисту',
-      'killChain.goal.credential-access': 'вкрасти логини та паролі',
+      'killChain.goal.credential-access': 'вкрасти логіни та паролі',
       'killChain.goal.discovery': 'вивчити структуру системи',
       'killChain.goal.lateral-movement': "переміститися на інші комп'ютери",
       'killChain.goal.collection': 'Зібрати важливі дані',
@@ -475,7 +609,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'killChain.result.persistence': 'Доступ збережено навіть після перезавантаження',
       'killChain.result.privilege-escalation': 'Отримано права адміністратора',
       'killChain.result.defense-evasion': 'Системи захисту обмануті',
-      'killChain.result.credential-access': 'Вкрадено логини та паролі',
+      'killChain.result.credential-access': 'Вкрадено логіни та паролі',
       'killChain.result.discovery': 'Вивчено структуру системи',
       'killChain.result.lateral-movement': 'Отримано доступ до інших систем',
       'killChain.result.collection': 'Зібрано важливі дані (файли, бази даних)',
@@ -523,11 +657,13 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'modal.usedOnStage': 'використовується на етапі',
       'modal.meansAttackerAlready': 'це означає, що зловмисник вже',
       'modal.openOnMitre': 'Відкрити на MITRE',
+      'modal.copyId': 'Скопіювати ID техніки',
+      'modal.idCopied': 'Скопійовано!',
       'example.data-from-local-system': 'Дані з локальної системи',
       'example.description.data-from-local-system':
         'Зловмисник збирає дані з локальної системи жертви, включаючи файли, конфігурації та іншу конфіденційну інформацію.',
       'example.defaultDescription':
-        'Це приклад того, як {example} може використовуватися в атаках.',
+        'Це приклад того, як {{example}} може використовуватися в атаках.',
       'technique.name.T1005': 'Дані з локальної системи',
       'technique.name.T1593': 'Пошук на відкритих веб-сайтах/доменах',
       'technique.name.T1583.001': 'Отримання інфраструктури: домени',
@@ -535,6 +671,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'technique.name.T1059.001': 'Командний та скриптовий інтерпретатор: PowerShell',
       'technique.name.T1547.001':
         'Автозапуск при завантаженні: ключі реєстру Run / папка автозапуску',
+      ...MITRE_TECHNIQUE_DESCRIPTIONS.uk,
       'tactic.Reconnaissance': 'Розвідка',
       'tactic.Resource Development': 'Підготовка ресурсів',
       'tactic.Initial Access': 'Початковий доступ',
@@ -564,13 +701,13 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'tactic.explanation.Defense Evasion':
         'Зловмисник намагається уникнути виявлення системами безпеки.',
       'tactic.explanation.Credential Access':
-        'Зловмисник краде облікові дані (логини, паролі) для доступу до систем.',
+        'Зловмисник краде облікові дані (логіни, паролі) для доступу до систем.',
       'tactic.explanation.Discovery':
         'Зловмисник досліджує систему, щоб зрозуміти її структуру та знайти вразливості.',
       'tactic.explanation.Lateral Movement':
         'Зловмисник переміщується по мережі, отримуючи доступ до інших систем.',
       'tactic.explanation.Collection':
-        'Зловмисник збирає дані, які представляють інтерес (файли, бази даних).',
+        'Зловмисник збирає цікаві дані (файли, бази даних).',
       'tactic.explanation.Command and Control':
         "Зловмисник встановлює канал зв'язку з зараженою системою для управління.",
       'tactic.explanation.Exfiltration':
@@ -600,8 +737,8 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       allCompleted: '🎉 Всі завдання місії виконано!',
       execute: 'ВИКОНАТИ',
       executing: 'ВИКОНАННЯ...',
-      enterRegexPattern: 'ВВЕДІТЬ REGEX ПАТЕРН:',
-      enterRegexPatternPlaceholder: 'Введіть regex паттерн',
+      enterRegexPattern: 'ВВЕДІТЬ REGEX-ШАБЛОН:',
+      enterRegexPatternPlaceholder: 'Введіть regex-шаблон',
       enterCode: 'ВВЕДІТЬ КОД:',
       hints: 'Підказки:',
       showHints: 'Показати підказку',
@@ -632,9 +769,34 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'rank.Intermediate Hacker': 'Середній хакер',
       'rank.Advanced Hacker': 'Досвідчений хакер',
       'rank.Elite Hacker': 'Елітний хакер',
+      'rank.description.Script Kiddie':
+        'Початкова точка. У культурі кібербезпеки «скрипт-кіді» користується готовими інструментами без глибокого розуміння. У CyberTactics це старт вашого шляху в навчальних симуляціях етичного хакінгу.',
+      'rank.description.Novice Hacker':
+        'Ви розумієте основи розвідки, технік MITRE та логіку місій. Рівень початківця в основах red team.',
+      'rank.description.Intermediate Hacker':
+        'Впевнено проходите багатокрокові ланцюги атак, розумієте OPSEC і поєднуєте техніки в місіях.',
+      'rank.description.Advanced Hacker':
+        'Сильне тактичне мислення, управління стелсом і складні сценарні завдання.',
+      'rank.description.Elite Hacker':
+        'Рівень майстерності — глибоке знання MITRE, оптимальне проходження місій і навички оператора топ-рівня.',
+      ranks: 'Звання',
+      ranksIntro:
+        'Звання відображають ваш досвід (XP) з місій. Це ігрова шкала прогресу — від Скрипт-кіді до Елітного хакера — натхненна культурою offensive security, а не офіційною сертифікацією.',
+      ranksCurrent: 'Ваше звання',
+      ranksXpRange: '{{from}}–{{to}} XP',
+      ranksXpFrom: 'від {{xp}} XP',
       missions: 'Місії',
       skillMatrix: 'Навички',
+      faq: 'FAQ',
       leaderboard: 'Таблиця лідерів',
+      leaderboardPosition: '#',
+      leaderboardPlayer: 'Гравець',
+      leaderboardLevels: 'Рівні',
+      leaderboardTechniques: 'MITRE',
+      leaderboardYou: 'ви',
+      leaderboardEmpty: 'У таблиці лідерів поки немає гравців.',
+      leaderboardLoadError: 'Не вдалося завантажити таблицю лідерів.',
+      loading: 'Завантаження...',
       settings: 'Налаштування',
       profile: 'Профіль',
       inDevelopment: 'Розділ у розробці...',
@@ -653,7 +815,12 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       stealthDepletedTitle: 'Stealth вичерпано',
       stealthDepletedMessage:
         'Поки стелс 0%, відповіді не приймаються. Оберіть спосіб відновлення:',
-      stealthBuyMasking: 'Купити маскування — відновити стелс',
+      stealthManageTitle: 'Стелс',
+      stealthManageMessage: 'Поточний стелс: {{stealth}}%. Оберіть спосіб поповнення:',
+      stealthOpenModal: 'Відкрити опції відновлення стелсу',
+      stealthBuyMasking: 'Купити {{amount}}% маскування — відновити стелс',
+      stealthMaskingUnavailable:
+        'Маскування (+{{amount}}%) перевищить 100% (зараз: {{stealth}}%).',
       stealthUpgradePlan: 'Перейти на платний тариф',
       stealthWaitRecovery: 'Зачекати — часткове відновлення стелсу',
       stealthWaitNotReady: 'Stealth ще не відновився. Спробуйте через {{time}}.',
@@ -677,6 +844,10 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       assignmentStatusCompleted: 'Завершене',
       assignmentStatusLocked: 'Заблоковано',
       assignmentStatusIncomplete: 'Незавершене',
+      assignmentPanelEmpty: 'Оберіть завдання зліва',
+      assignmentPanelEmptyHint: 'Тут з’являться деталі, прогрес і контекст MITRE.',
+      assignmentPanelLearnTitle: 'Чого навчишся',
+      assignmentStart: 'Почати завдання',
       assignmentCompleted: 'Виконано',
       assignmentLocked: 'Заблоковано',
       taskTypeCaption: 'Тип завдання:',
@@ -729,6 +900,70 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       invalidFileType: 'Дозволені лише JPG, PNG або WEBP.',
       fileTooLarge: 'Файл занадто великий (макс. 5 МБ).',
       uploadFailed: 'Не вдалося зберегти фото.',
+    },
+    faq: {
+      title: 'Часті питання',
+      intro: 'Відповіді про типи місій і як користуватися CyberTactics.',
+      'section.missionTypes': 'Типи завдань у місіях',
+      'section.platform': 'Користування платформою',
+      'items.codeEditor.question': 'Що таке завдання «Редактор коду»?',
+      'items.codeEditor.answer':
+        'Ви пишете код або regex-шаблон у робочій області. Наприклад, шукаєте приховані дані в HTML або складаєте PowerShell-команду. Натисніть Виконати для перевірки. Помилкові спроби знижують стелс.',
+      'items.tacticalChoice.question': 'Що таке завдання «Тактичний вибір»?',
+      'items.tacticalChoice.answer':
+        'Ви обираєте один варіант зі списку — наприклад, найправдоподібніший фішинговий домен або ключ реєстру для стійкості. Уважно прочитайте варіанти і підтвердіть вибір.',
+      'items.phishingConstructor.question': 'Що таке завдання «Конструктор фішингу»?',
+      'items.phishingConstructor.answer':
+        'Ви збираєте фішинговий лист: тема, текст і інколи вкладення. Мета — обійти фільтри і схилити ціль до запуску payload без заборонених типів файлів (наприклад, .exe).',
+      'items.sentenceConstructor.question': 'Що таке завдання «Конструктор фраз»?',
+      'items.sentenceConstructor.answer':
+        'Ви складаєте фрази або частини листа з блоків слів — крок за кроком формуєте переконливий соціальний інжиніринг. Заповніть усі обов’язкові поля перед відправкою.',
+      'items.whatIs.question': 'Що таке CyberTactics?',
+      'items.whatIs.answer':
+        'Навчальна платформа для вивчення основ offensive security через симуляції місій. Завдання прив’язані до технік MITRE ATT&CK. Усе відбувається в безпечному середовищі — без реальних атак.',
+      'items.howMissions.question': 'Як почати місію?',
+      'items.howMissions.answer':
+        'Відкрийте Місії, оберіть кампанію, потім завдання. Клік по картці показує справа, чого навчишся; стрілка або «Почати завдання» — вхід у гру. Завдання відкриваються по порядку — наступне після виконання попереднього.',
+      'items.stealth.question': 'Що таке Стелс?',
+      'items.stealth.answer':
+        'Стелс — показник операційної безпеки. Помилки та «шумні» дії знижують його. При 0% відповіді не приймаються, поки не відновите. Клік по смузі СТЕЛС у шапці відкриває опції поповнення (маскування, очікування, тариф).',
+      'items.xpRanks.question': 'Що таке досвід (XP) і звання?',
+      'items.xpRanks.answer':
+        'За виконані завдання ви отримуєте XP. Він підвищує звання від Скрипт-кіді до Елітного хакера. Клік по званню в шапці показує повну шкалу прогресу.',
+      'items.skillMatrix.question': 'Що таке Матриця навичок?',
+      'items.skillMatrix.answer':
+        'Карта технік MITRE ATT&CK з місій. Розгорніть тактику, клікніть техніку — деталі, контекст kill chain і пов’язані місії. Освоєні техніки позначені зеленим.',
+      'items.hints.question': 'Як працюють підказки?',
+      'items.hints.answer':
+        'У робочій області внизу — «Показати підказку». Підказки направляють без повної відповіді. Користуйтеся, коли застрягли — це частина навчального процесу.',
+      'items.leaderboard.question': 'Що таке Таблиця лідерів?',
+      'items.leaderboard.answer':
+        'Порівняння прогресу з іншими гравцями: XP, пройдені рівні та освоєні техніки MITRE. Ваш рядок підсвічений.',
+      'items.language.question': 'Як змінити мову?',
+      'items.language.answer':
+        'Перемикач мови у верхній панелі (UA / EN). Переклади підвантажуються без перезавантаження сторінки.',
+    },
+    agreement: {
+      footerLink: 'Угода користувача',
+      title: 'Угода користувача',
+      intro:
+        'Ласкаво просимо на CyberTactics. Користуючись цим сервісом, ви підтверджуєте, що ознайомилися з наведеними нижче умовами та погоджуєтеся їх дотримуватися.',
+      'section1.title': '1. Призначення платформи',
+      'section1.body':
+        'CyberTactics — навчальна інтерактивна платформа, створена для зниження порогу входу в сферу кібербезпеки. Сервіс допомагає користувачам у безпечному середовищі засвоїти базові поняття захисту інформації, моделі атак (зокрема MITRE ATT&CK) та практики реагування на загрози.',
+      'section2.title': '2. Навчальний характер і симуляція',
+      'section2.body':
+        'Усі сценарії, місії та завдання на платформі мають виключно навчальний характер. CyberTactics не здійснює атак на реальні системи, мережі чи сервери та не надає інструментів для дій поза навчальним контекстом. Будь-які дії в межах платформи є симуляцією і не спричиняють реальної шкоди інфраструктурі третіх осіб.',
+      'section3.title': '3. Законне використання знань',
+      'section3.body':
+        'Знання, отримані на платформі, призначені виключно для законної діяльності: навчання, сертифікації, захисту власної або корпоративної інфраструктури в рамках чинного законодавства та етичних норм професії. Застосування знань для несанкціонованого доступу, пошкодження даних, шантажу, фішингу, розповсюдження шкідливого ПЗ чи інших протиправних дій суворо заборонено.',
+      'section4.title': '4. Відповідальність користувача',
+      'section4.body':
+        'Користувач несе повну особисту відповідальність за свої дії поза межами платформи. Порушення законодавства щодо кіберзлочинів — зокрема несанкціоноване втручання в роботу комп\'ютерів, крадіжка даних, шахрайство в сфері електронних комунікацій — тягне цивільну, адміністративну та кримінальну відповідальність відповідно до закону.',
+      'section5.title': '5. Прийняття умов',
+      'section5.body':
+        'Продовжуючи користування платформою, ви підтверджуєте, що розумієте навчальний характер симуляцій і зобов\'язуєтеся не використовувати отримані знання в протиправних цілях.',
+      back: 'Назад',
     },
     missions: {
       'operation_ghost.name': 'Операція Привид',

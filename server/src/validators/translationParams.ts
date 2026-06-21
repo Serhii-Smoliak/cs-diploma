@@ -3,6 +3,7 @@ import { z } from 'zod';
 /** Namespaces used by the client i18n loader (see client/src/main.tsx). */
 export const ALLOWED_TRANSLATION_NAMESPACES = [
   'common',
+  'auth',
   'mitre',
   'tasks',
   'missions',
@@ -11,6 +12,8 @@ export const ALLOWED_TRANSLATION_NAMESPACES = [
   'levels',
   'dialogues',
   'profile',
+  'agreement',
+  'faq',
 ] as const;
 
 export const ALLOWED_TRANSLATION_LOCALES = ['uk', 'en'] as const;

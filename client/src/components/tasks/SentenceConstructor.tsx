@@ -4,6 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import type { Level, SentenceConstructorSubmission, SentenceField } from '@cybertactics/shared';
 import { motion, AnimatePresence } from 'framer-motion';
 import TaskHints from './TaskHints';
+import TaskSubmitButton from './TaskSubmitButton';
 
 interface SentenceConstructorProps {
   level: Level;
@@ -52,15 +53,15 @@ function FieldBuilder({
   };
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full">
       <label className="block text-sm font-medium text-cyber-primary mb-2">{label}</label>
-      <div className="flex flex-wrap gap-2 min-h-[44px] p-3 rounded-lg border border-cyber-border bg-cyber-panel/40 mb-3">
+      <div className="flex flex-wrap gap-2 min-h-[44px] p-3 rounded-lg border border-cyber-border bg-cyber-panel/40 mb-3 min-w-0 max-w-full">
         {slots.map((tokenId, index) => (
           <button
             key={`${field.id}-slot-${index}`}
             type="button"
             onClick={() => tokenId && removeAt(index)}
-            className={`px-3 py-1.5 rounded-lg border text-sm transition-all ${
+            className={`max-w-full px-3 py-1.5 rounded-lg border text-sm transition-colors ${
               tokenId
                 ? 'border-cyber-primary bg-cyber-primary/10 text-white hover:border-cyber-danger'
                 : 'border-dashed border-cyber-border text-gray-600 min-w-[72px]'
@@ -70,18 +71,16 @@ function FieldBuilder({
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 min-w-0 max-w-full">
         {availableTokens.map((token) => (
-          <motion.button
+          <button
             key={token.id}
             type="button"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
             onClick={() => addToken(token.id)}
-            className="px-3 py-1.5 rounded-lg border border-cyber-border bg-cyber-panel hover:border-cyber-primary text-sm text-gray-200"
+            className="max-w-full px-3 py-1.5 rounded-lg border border-cyber-border bg-cyber-panel hover:border-cyber-primary hover:bg-cyber-primary/5 text-sm text-gray-200 transition-colors"
           >
             {token.text}
-          </motion.button>
+          </button>
         ))}
       </div>
     </div>
@@ -193,7 +192,7 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
   /* eslint-enable react-hooks/exhaustive-deps */
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 max-w-full">
       <div className="text-sm text-gray-400 mb-2">
         {t('sentenceConstructorHint', { ns: 'tasks' })}
       </div>
@@ -222,51 +221,44 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
         />
       ))}
 
-      <div>
+      <div className="min-w-0 max-w-full">
         <label className="block text-sm font-medium text-cyber-primary mb-2">
           {t('emailAttachments', { ns: 'tasks' })}
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid gap-2 min-w-0 max-w-full [grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr))]">
           {attachments.map((attachment) => {
             const isSelected = selectedAttachments.includes(attachment.id);
 
             return (
-              <motion.div
+              <button
                 key={attachment.id}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
+                type="button"
                 onClick={() => toggleAttachment(attachment.id)}
-                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                className={`min-w-0 max-w-full p-3 rounded-lg border cursor-pointer text-left transition-colors ${
                   isSelected
-                    ? 'bg-cyber-success/20 border-cyber-success cyber-glow-green'
-                    : 'bg-cyber-panel border-cyber-border hover:border-cyber-primary'
+                    ? 'bg-cyber-success/20 border-cyber-success'
+                    : 'bg-cyber-panel border-cyber-border hover:border-cyber-primary hover:bg-cyber-primary/5'
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xl shrink-0">
                     {attachment.type.includes('word') ? '📄' : attachment.type.includes('exe') ? '⚙️' : '📁'}
                   </span>
-                  {isSelected && <span className="text-cyber-success text-xl">✓</span>}
+                  <span className="text-xs text-gray-400 truncate min-w-0 flex-1">{attachment.name}</span>
+                  {isSelected && <span className="text-cyber-success text-lg shrink-0">✓</span>}
                 </div>
-                <div className="text-xs text-gray-400 truncate">{attachment.name}</div>
-              </motion.div>
+              </button>
             );
           })}
         </div>
       </div>
 
-      <motion.button
-        type="button"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={handleSubmit}
+      <TaskSubmitButton
         disabled={isLoading || !isComplete || selectedAttachments.length === 0}
-        className="w-full cyber-button-success py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={handleSubmit}
       >
-        {isLoading
-          ? t('sendingEmail', { ns: 'tasks' })
-          : t('sendEmail', { ns: 'tasks' })}
-      </motion.button>
+        {isLoading ? t('sendingEmail', { ns: 'tasks' }) : t('sendEmail', { ns: 'tasks' })}
+      </TaskSubmitButton>
 
       <AnimatePresence>
         {result && (
@@ -282,15 +274,13 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
           >
             <pre className="whitespace-pre-wrap font-mono text-sm">{result}</pre>
             {isSuccess && hasNextLevel() && (
-              <motion.button
+              <button
                 type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={handleNextLevel}
                 className="w-full cyber-button py-3 text-base mt-3"
               >
                 {t('nextLevel', { ns: 'tasks' })} →
-              </motion.button>
+              </button>
             )}
             {isSuccess && xpGained && (
               <div className="text-cyber-success font-bold text-xl mt-2">+{xpGained} XP</div>

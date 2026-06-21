@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import Footer from './Footer';
 import StealthDepletedModal from '../game/StealthDepletedModal';
 import { useAuthStore } from '../../store/authStore';
 import { useSidebarStore } from '../../store/sidebarStore';
@@ -48,6 +49,7 @@ export default function Layout({ children }: LayoutProps) {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <TopBar />
         <main className="flex-1 overflow-hidden min-h-0">{children}</main>
+        <Footer />
       </div>
       <StealthDepletedModal />
     </div>

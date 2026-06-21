@@ -53,7 +53,7 @@ export default function GameLayout({ children }: GameLayoutProps) {
         <div className="flex-none lg:flex-[3] min-h-[240px] sm:min-h-[280px] lg:min-h-0 lg:overflow-hidden">
           <ContextPanel />
         </div>
-        <div className="flex-1 lg:flex-[7] min-h-[320px] lg:min-h-0 lg:overflow-hidden">
+        <div className="flex-1 lg:flex-[7] min-h-[320px] lg:min-h-0 lg:overflow-hidden min-w-0">
           <WorkArea />
         </div>
         {children}

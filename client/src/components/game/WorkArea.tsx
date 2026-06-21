@@ -57,12 +57,12 @@ export default function WorkArea() {
   };
 
   return (
-    <div className="h-full cyber-panel flex flex-col min-h-0">
-      <div className="border-b border-cyber-border pb-3 mb-4 flex-shrink-0">
+    <div className="h-full cyber-panel flex flex-col min-h-0 min-w-0 overflow-hidden">
+      <div className="border-b border-cyber-border pb-3 mb-4 flex-shrink-0 min-w-0">
         <h3 className="font-heading font-bold text-lg text-cyber-primary">{t('workArea', { ns: 'ui' })}</h3>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden cyber-scrollbar min-h-0 pr-3">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden cyber-scrollbar min-h-0 min-w-0 pr-3">
         {showCompletedState ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-6 py-12">
             <div className="w-full max-w-md px-6 py-8 bg-cyber-success/10 border border-cyber-success rounded-xl">
@@ -103,7 +103,7 @@ export default function WorkArea() {
             </div>
           </div>
         ) : (
-          renderTask()
+          <div className="min-w-0 max-w-full">{renderTask()}</div>
         )}
       </div>
     </div>

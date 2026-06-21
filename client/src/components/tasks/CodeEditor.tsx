@@ -5,6 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import type { Level } from '@cybertactics/shared';
 import { motion, AnimatePresence } from 'framer-motion';
 import TaskHints from './TaskHints';
+import TaskSubmitButton from './TaskSubmitButton';
 
 interface CodeEditorProps {
   level: Level;
@@ -159,23 +160,16 @@ const CodeEditor = memo(function CodeEditor({ level }: CodeEditorProps) {
         </div>
       )}
 
-      <motion.button
-        type="button"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+      <TaskSubmitButton
+        disabled={isSubmitting || (isRegexTask ? !regexInput.trim() : !code.trim())}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           handleSubmit(e);
         }}
-        onMouseDown={(e) => {
-          e.preventDefault();
-        }}
-        disabled={isSubmitting || (isRegexTask ? !regexInput.trim() : !code.trim())}
-        className="w-full cyber-button-success py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isSubmitting ? t('executing', { ns: 'tasks' }) : t('execute', { ns: 'tasks' })}
-      </motion.button>
+      </TaskSubmitButton>
 
       <AnimatePresence mode="wait">
         {result && (
