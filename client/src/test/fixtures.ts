@@ -49,8 +49,8 @@ export const tacticalLevel = createTestLevel({
   task_type: 'tactical_choice',
   work_area: {
     choices: [
-      { id: 'choice_1', text: 'Use phishing domain A' },
-      { id: 'choice_2', text: 'Use phishing domain B' },
+      { id: 'choice_1', text: 'Use phishing domain A', correct: true },
+      { id: 'choice_2', text: 'Use phishing domain B', correct: false },
     ],
   },
   validation: { type: 'choice', correct_choice_id: 'choice_1' },
