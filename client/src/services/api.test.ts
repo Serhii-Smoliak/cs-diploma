@@ -142,4 +142,66 @@ describe('api client', () => {
       expect.objectContaining({ method: 'POST' })
     );
   });
+
+  it('loads leaderboard entries', async () => {
+    const entries = [{ position: 1, userId: 'u1', username: 'agent', xp: 100 }];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => entries,
+      })
+    );
+
+    await expect(api.getLeaderboard()).resolves.toEqual(entries);
+  });
+
+  it('loads current user profile', async () => {
+    api.setToken('token');
+    const user = { id: 'u1', username: 'agent', email: 'a@b.c' };
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => user,
+      })
+    );
+
+    await expect(api.getCurrentUser()).resolves.toEqual(user);
+  });
+
+  it('updates preferred locale', async () => {
+    api.setToken('token');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: 'u1', preferredLocale: 'uk' }),
+      })
+    );
+
+    await api.updatePreferredLocale('uk');
+
+    expect(fetch).toHaveBeenCalledWith(
+      'http://localhost:4000/api/users/me/locale',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ locale: 'uk' }),
+      })
+    );
+  });
+
+  it('loads translations by namespaces', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ ui: { title: 'CyberTactics' } }),
+      })
+    );
+
+    await expect(api.getTranslationsByNamespaces(['ui'], 'uk')).resolves.toEqual({
+      ui: { title: 'CyberTactics' },
+    });
+  });
 });
