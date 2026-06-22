@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import App from './App';
+import { api } from './services/api';
+import App, { GameRoute } from './App';
 import { createFetchMock, createTestLevel, testMission } from './test/fixtures';
 
 const {
@@ -103,13 +104,15 @@ vi.mock('./pages/MissionsPage', () => ({
   default: () => <div>Operation Ghost</div>,
 }));
 
-vi.mock('./auth/sessionExpired', () => ({
-  registerSessionExpiredHandler: vi.fn(),
-}));
-
 const getToken = vi.hoisted(() =>
   vi.fn(() => (typeof localStorage !== 'undefined' ? localStorage.getItem('auth_token') : null))
 );
+
+const registerSessionExpiredHandler = vi.hoisted(() => vi.fn());
+
+vi.mock('./auth/sessionExpired', () => ({
+  registerSessionExpiredHandler,
+}));
 
 vi.mock('./services/api', () => ({
   api: {
@@ -118,8 +121,6 @@ vi.mock('./services/api', () => ({
     getMissionLevels: vi.fn(),
   },
 }));
-
-import { api } from './services/api';
 
 describe('App', () => {
   beforeEach(() => {
@@ -301,6 +302,49 @@ describe('App', () => {
       expect(setMission).toHaveBeenCalledWith(testMission);
       expect(loadLevel).toHaveBeenCalledWith('ghost_recon_01');
     });
+  });
+
+  it('resets game state when session expires', () => {
+    const calls = registerSessionExpiredHandler.mock.calls;
+    const handler = calls[calls.length - 1]?.[0] as (() => void) | undefined;
+
+    handler?.();
+
+    expect(resetGame).toHaveBeenCalled();
+  });
+
+  it('redirects game route when mission params are missing', async () => {
+    currentMission.value = null;
+    currentLevel.value = null;
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<GameRoute />} />
+          <Route path="/missions" element={<div>Operation Ghost</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Operation Ghost')).toBeInTheDocument();
+  });
+
+  it('redirects game route when restore fails with non-error value', async () => {
+    isAuthenticated.value = true;
+    currentMission.value = null;
+    currentLevel.value = null;
+    apiSetToken();
+    vi.mocked(api.getMissions).mockRejectedValueOnce('offline');
+
+    render(
+      <MemoryRouter initialEntries={['/missions/operation_ghost/assignments/ghost_recon_01']}>
+        <Routes>
+          <Route path="/*" element={<App />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Operation Ghost')).toBeInTheDocument();
   });
 });
 

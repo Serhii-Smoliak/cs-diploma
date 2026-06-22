@@ -6,9 +6,10 @@ import { phishingLevel } from '../../test/fixtures';
 
 const submitAnswer = vi.fn();
 
-const { resetProgress, applySubmitResponse } = vi.hoisted(() => ({
+const { resetProgress, applySubmitResponse, applySubmitError } = vi.hoisted(() => ({
   resetProgress: vi.fn(),
   applySubmitResponse: vi.fn(),
+  applySubmitError: vi.fn(),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -30,7 +31,7 @@ vi.mock('./useTaskProgress', () => ({
     xpGained: null,
     resetProgress,
     applySubmitResponse,
-    applySubmitError: vi.fn(),
+    applySubmitError,
     hasNextLevel: () => false,
     goToNextLevel: vi.fn(),
   }),
@@ -56,6 +57,22 @@ describe('PhishingConstructor', () => {
         body: 'Please review the attached report',
         attachments: [],
       });
+    });
+  });
+
+  it('handles submit errors', async () => {
+    const user = userEvent.setup();
+    submitAnswer.mockRejectedValueOnce(new Error('send failed'));
+
+    render(<PhishingConstructor level={phishingLevel} />);
+
+    const inputs = screen.getAllByRole('textbox');
+    await user.type(inputs[1]!, 'Subject');
+    await user.type(inputs[2]!, 'Body');
+    await user.click(screen.getByRole('button', { name: 'sendEmail' }));
+
+    await waitFor(() => {
+      expect(applySubmitError).toHaveBeenCalled();
     });
   });
 });

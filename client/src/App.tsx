@@ -201,4 +201,6 @@ function App() {
   );
 }
 
+export { GameRoute };
+
 export default App;

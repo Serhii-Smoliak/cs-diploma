@@ -6,9 +6,10 @@ import { createTestLevel } from '../../test/fixtures';
 
 const submitAnswer = vi.fn();
 
-const { resetProgress, applySubmitResponse } = vi.hoisted(() => ({
+const { resetProgress, applySubmitResponse, applySubmitError } = vi.hoisted(() => ({
   resetProgress: vi.fn(),
   applySubmitResponse: vi.fn(),
+  applySubmitError: vi.fn(),
 }));
 
 const sentenceLevel = createTestLevel({
@@ -47,7 +48,7 @@ vi.mock('./useTaskProgress', () => ({
     xpGained: null,
     resetProgress,
     applySubmitResponse,
-    applySubmitError: vi.fn(),
+    applySubmitError,
     hasNextLevel: () => false,
     goToNextLevel: vi.fn(),
   }),
@@ -70,6 +71,52 @@ describe('SentenceConstructor', () => {
         fields: { cmd: ['t1'] },
         attachments: ['lnk1'],
       });
+    });
+  });
+
+  it('uses default labels for subject and body fields', () => {
+    const labeledLevel = createTestLevel({
+      level_id: 'ghost_sentence_02',
+      task_type: 'sentence_constructor',
+      work_area: {
+        email_to: 'admin@target.test',
+        fields: [
+          { id: 'subject', slots: 1, tokens: [{ id: 't1', text: 'subject_token' }] },
+          { id: 'body', slots: 1, tokens: [{ id: 't2', text: 'body_token' }] },
+        ],
+        attachments: [{ id: 'lnk1', name: 'invoice.lnk', type: 'lnk', allowed: true }],
+      },
+    });
+
+    render(<SentenceConstructor level={labeledLevel} />);
+
+    expect(screen.getByText('emailSubject')).toBeInTheDocument();
+    expect(screen.getByText('emailBody')).toBeInTheDocument();
+  });
+
+  it('removes selected token from a slot', async () => {
+    const user = userEvent.setup();
+
+    render(<SentenceConstructor level={sentenceLevel} />);
+
+    await user.click(screen.getByRole('button', { name: 'part_a' }));
+    await user.click(screen.getByRole('button', { name: 'part_a' }));
+
+    expect(screen.getByRole('button', { name: 'part_a' })).toBeInTheDocument();
+  });
+
+  it('handles submit errors', async () => {
+    const user = userEvent.setup();
+    submitAnswer.mockRejectedValueOnce(new Error('submit failed'));
+
+    render(<SentenceConstructor level={sentenceLevel} />);
+
+    await user.click(screen.getByRole('button', { name: 'part_a' }));
+    await user.click(screen.getByRole('button', { name: /invoice\.lnk/i }));
+    await user.click(screen.getByRole('button', { name: 'sendEmail' }));
+
+    await waitFor(() => {
+      expect(applySubmitError).toHaveBeenCalled();
     });
   });
 });

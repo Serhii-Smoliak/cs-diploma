@@ -99,4 +99,59 @@ describe('LoginPage', () => {
 
     expect(await screen.findByText('Email taken')).toBeInTheDocument();
   });
+
+  it('requires username before register submit', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'switchToRegister' }));
+    fireEvent.submit(document.querySelector('form')!);
+
+    expect(await screen.findByText('usernameRequired')).toBeInTheDocument();
+    expect(register).not.toHaveBeenCalled();
+  });
+
+  it('requires agreement acceptance on register submit', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'switchToRegister' }));
+    const [usernameInput, emailInput, passwordInput] = document.querySelectorAll('form input');
+    fireEvent.change(usernameInput!, { target: { value: 'agent' } });
+    fireEvent.change(emailInput!, { target: { value: 'agent@test.com' } });
+    fireEvent.change(passwordInput!, { target: { value: 'secret12' } });
+    fireEvent.submit(document.querySelector('form')!);
+
+    expect(await screen.findByText('agreementRequired')).toBeInTheDocument();
+    expect(register).not.toHaveBeenCalled();
+  });
+
+  it('shows generic error when login fails with non-error value', async () => {
+    login.mockRejectedValueOnce('offline');
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'agent@test.com' } });
+    fireEvent.change(document.querySelector('input[type="password"]')!, {
+      target: { value: 'secret12' },
+    });
+    await user.click(screen.getByRole('button', { name: 'login' }));
+
+    expect(await screen.findByText('errorOccurred')).toBeInTheDocument();
+  });
 });
