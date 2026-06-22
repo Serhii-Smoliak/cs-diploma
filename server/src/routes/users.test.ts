@@ -267,4 +267,38 @@ describe('users routes', () => {
 
     expect(response.status).toBe(404);
   });
+
+  it('GET /:id/stats returns 403 for another user', async () => {
+    const response = await request(createApp()).get('/api/users/other-user/stats');
+
+    expect(response.status).toBe(403);
+  });
+
+  it('GET /:id/progress returns 403 for another user', async () => {
+    const response = await request(createApp()).get('/api/users/other-user/progress');
+
+    expect(response.status).toBe(403);
+  });
+
+  it('GET /:id/stats returns 400 for invalid user id', async () => {
+    const response = await request(createApp()).get(`/api/users/${'x'.repeat(129)}/stats`);
+
+    expect(response.status).toBe(400);
+  });
+
+  it('GET /me/stats returns 500 on unexpected error', async () => {
+    prismaMock.userStats.findUnique.mockRejectedValueOnce(new Error('db'));
+
+    const response = await request(createApp()).get('/api/users/me/stats');
+
+    expect(response.status).toBe(500);
+  });
+
+  it('GET /me/progress returns 500 on unexpected error', async () => {
+    prismaMock.userProgress.findMany.mockRejectedValueOnce(new Error('db'));
+
+    const response = await request(createApp()).get('/api/users/me/progress');
+
+    expect(response.status).toBe(500);
+  });
 });

@@ -204,4 +204,54 @@ describe('api client', () => {
       ui: { title: 'CyberTactics' },
     });
   });
+
+  it('loads stealth recovery endpoints and mitre data', async () => {
+    api.setToken('token');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/stealth/masking')) {
+          return { ok: true, json: async () => ({ stealth: 30, message: 'Masked' }) };
+        }
+        if (url.includes('/stealth/wait')) {
+          return { ok: true, json: async () => ({ stealth: 15, message: 'Recovered' }) };
+        }
+        if (url.includes('/mitre/techniques/T1593')) {
+          return {
+            ok: true,
+            json: async () => ({ id: 'T1593', name: 'Search', relatedMissions: [] }),
+          };
+        }
+        if (url.includes('/mitre/techniques')) {
+          return { ok: true, json: async () => [{ id: 'T1593', name: 'Search' }] };
+        }
+        if (url.includes('/translations/languages')) {
+          return {
+            ok: true,
+            json: async () => [{ code: 'uk', name: 'Ukrainian', flag: '🇺🇦', isActive: true }],
+          };
+        }
+        if (url.includes('/translations?locale=en')) {
+          return { ok: true, json: async () => ({ hello: 'Hello' }) };
+        }
+        return { ok: true, json: async () => ({}) };
+      })
+    );
+
+    await expect(api.purchaseStealthMasking()).resolves.toEqual({
+      stealth: 30,
+      message: 'Masked',
+    });
+    await expect(api.waitForStealthRecovery()).resolves.toEqual({
+      stealth: 15,
+      message: 'Recovered',
+    });
+    await expect(api.getMitreTechniques()).resolves.toEqual([{ id: 'T1593', name: 'Search' }]);
+    await expect(api.getMitreTechnique('T1593')).resolves.toMatchObject({ id: 'T1593' });
+    await expect(api.getLanguages()).resolves.toEqual([
+      { code: 'uk', name: 'Ukrainian', flag: '🇺🇦', isActive: true },
+    ]);
+    await expect(api.getTranslations('en', 'common')).resolves.toEqual({ hello: 'Hello' });
+  });
 });

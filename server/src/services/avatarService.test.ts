@@ -35,6 +35,14 @@ describe('avatarService', () => {
     expect(fs.writeFile).toHaveBeenCalled();
   });
 
+  it('rejects oversized image payload', async () => {
+    const { saveAvatarFromDataUrl } = await import('./avatarService.js');
+    const oversized = Buffer.alloc(2 * 1024 * 1024 + 1, 1);
+    const dataUrl = `data:image/jpeg;base64,${oversized.toString('base64')}`;
+
+    await expect(saveAvatarFromDataUrl('u1', dataUrl)).rejects.toThrow('Image too large');
+  });
+
   it('ignores missing file on delete', async () => {
     const { deleteAvatarFile } = await import('./avatarService.js');
     await expect(deleteAvatarFile('u1')).resolves.toBeUndefined();

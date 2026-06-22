@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import WorkArea from './WorkArea';
-import { createTestLevel, tacticalLevel } from '../../test/fixtures';
+import { createTestLevel, phishingLevel, sentenceLevel, tacticalLevel } from '../../test/fixtures';
 
 const gameState = vi.hoisted(() => ({
   currentLevel: null as ReturnType<typeof createTestLevel> | null,
@@ -38,6 +38,18 @@ vi.mock('../../store/gameStore', () => ({
 
 vi.mock('../tasks/TacticalChoice', () => ({
   default: () => <div>tactical-task</div>,
+}));
+
+vi.mock('../tasks/CodeEditor', () => ({
+  default: () => <div>code-task</div>,
+}));
+
+vi.mock('../tasks/PhishingConstructor', () => ({
+  default: () => <div>phishing-task</div>,
+}));
+
+vi.mock('../tasks/SentenceConstructor', () => ({
+  default: () => <div>sentence-task</div>,
 }));
 
 function renderWorkArea(initialEntry = '/missions/operation_ghost/assignments/ghost_choice_01') {
@@ -80,5 +92,61 @@ describe('WorkArea', () => {
 
     renderWorkArea('/missions/operation_ghost/assignments');
     expect(screen.getByText('selectMission')).toBeInTheDocument();
+  });
+
+  it('renders code editor task while in progress', () => {
+    gameState.currentLevel = createTestLevel({ task_type: 'code_editor' });
+    gameState.levelProgress = { completed: false, lastAnswer: null };
+    gameState.retryMode = false;
+
+    renderWorkArea();
+    expect(screen.getByText('code-task')).toBeInTheDocument();
+  });
+
+  it('renders phishing and sentence tasks while in progress', () => {
+    gameState.currentLevel = phishingLevel;
+    gameState.levelProgress = { completed: false, lastAnswer: null };
+    gameState.retryMode = false;
+    renderWorkArea('/missions/operation_ghost/assignments/ghost_phish_01');
+    expect(screen.getByText('phishing-task')).toBeInTheDocument();
+
+    gameState.currentLevel = sentenceLevel;
+    renderWorkArea('/missions/operation_ghost/assignments/ghost_sentence_01');
+    expect(screen.getByText('sentence-task')).toBeInTheDocument();
+  });
+
+  it('loads next assignment from completed state', async () => {
+    const user = userEvent.setup();
+    gameState.currentLevel = tacticalLevel;
+    gameState.levelProgress = { completed: true, lastAnswer: 'choice_1' };
+    gameState.retryMode = false;
+
+    renderWorkArea('/missions/operation_ghost/assignments/ghost_choice_01');
+    await user.click(screen.getByRole('button', { name: 'nextAssignment' }));
+
+    expect(gameState.loadLevel).toHaveBeenCalledWith('ghost_02');
+  });
+
+  it('shows back to missions when mission is finished', async () => {
+    const user = userEvent.setup();
+    gameState.currentLevel = createTestLevel({ level_id: 'ghost_02', order: 2 });
+    gameState.levelProgress = { completed: true, lastAnswer: 'x' };
+    gameState.retryMode = false;
+
+    renderWorkArea('/missions/operation_ghost/assignments/ghost_02');
+    expect(screen.getByText('allMissionTasksCompleted')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'backToMissions' }));
+  });
+
+  it('shows unknown task fallback', () => {
+    gameState.currentLevel = createTestLevel({
+      level_id: 'ghost_unknown',
+      task_type: 'unknown' as 'code_editor',
+    });
+    gameState.levelProgress = { completed: false, lastAnswer: null };
+    gameState.retryMode = false;
+
+    renderWorkArea('/missions/operation_ghost/assignments/ghost_unknown');
+    expect(screen.getByText('unknownTask')).toBeInTheDocument();
   });
 });

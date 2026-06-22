@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -41,6 +41,7 @@ vi.mock('react-i18next', () => ({
       resolvedLanguage: 'en',
       on: vi.fn(),
       off: vi.fn(),
+      exists: vi.fn().mockReturnValue(false),
     },
   }),
 }));
@@ -118,5 +119,66 @@ describe('MitreTechniqueModal', () => {
 
     await userEvents.click(screen.getByRole('button', { name: 'T1593' }));
     expect(writeText).toHaveBeenCalledWith('T1593');
+  });
+
+  it('renders examples, mitigation tips and navigates from related mission', async () => {
+    const userEvents = userEvent.setup();
+    const onClose = vi.fn();
+    const richTechnique = {
+      ...technique,
+      examples: ['Search LinkedIn profiles', 'Scan job boards'],
+      mitigation: ['Monitor network traffic and logs'],
+      dataSources: [{ source: 'Process', component: 'creation' }],
+    };
+
+    getMitreTechnique.mockResolvedValue({
+      ...richTechnique,
+      relatedMissions: [
+        {
+          id: 'operation_ghost',
+          name: 'Ghost',
+          description: 'Ghost mission',
+          difficulty: 'intermediate',
+        },
+      ],
+    });
+
+    render(
+      <MemoryRouter>
+        <MitreTechniqueModal
+          technique={richTechnique}
+          isOpen
+          isCompleted={false}
+          onClose={onClose}
+        />
+      </MemoryRouter>
+    );
+
+    await userEvents.click(
+      screen
+        .getAllByRole('button')
+        .find((button) => button.textContent?.includes('Search LinkedIn profiles'))!
+    );
+
+    await userEvents.click(screen.getByText('Ghost'));
+    expect(onClose).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith('/missions');
+  });
+
+  it('toggles kill chain stage details', async () => {
+    getMitreTechnique.mockResolvedValue({ ...technique, relatedMissions: [] });
+
+    render(
+      <MemoryRouter>
+        <MitreTechniqueModal technique={technique} isOpen isCompleted={false} onClose={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    const stageLabel = screen
+      .getAllByText('resource-development')
+      .find((node) => node.className.includes('text-[10px]'));
+    expect(stageLabel?.parentElement).toBeTruthy();
+    fireEvent.click(stageLabel!.parentElement!);
+    fireEvent.click(stageLabel!.parentElement!);
   });
 });

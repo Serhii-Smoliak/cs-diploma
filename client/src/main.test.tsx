@@ -48,4 +48,45 @@ describe('main bootstrap', () => {
       expect(applyLocale).toHaveBeenCalledWith('uk');
     });
   });
+
+  it('uses uk when authenticated user has no preferred locale', async () => {
+    vi.resetModules();
+    localStorage.setItem(
+      'cybertactics-auth',
+      JSON.stringify({
+        state: {
+          isAuthenticated: true,
+          user: { preferredLocale: null },
+        },
+      })
+    );
+
+    await import('./main.tsx');
+
+    await vi.waitFor(() => {
+      expect(applyLocale).toHaveBeenCalledWith('uk');
+    });
+  });
+
+  it('uses english from i18next storage when auth is absent', async () => {
+    vi.resetModules();
+    localStorage.setItem('i18nextLng', 'en-US');
+
+    await import('./main.tsx');
+
+    await vi.waitFor(() => {
+      expect(applyLocale).toHaveBeenCalledWith('en');
+    });
+  });
+
+  it('ignores malformed persisted auth json', async () => {
+    vi.resetModules();
+    localStorage.setItem('cybertactics-auth', '{bad-json');
+
+    await import('./main.tsx');
+
+    await vi.waitFor(() => {
+      expect(applyLocale).toHaveBeenCalledWith('uk');
+    });
+  });
 });

@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import SkillMatrixPage from './SkillMatrixPage';
 import { createFetchMock, testMitreTechnique } from '../test/fixtures';
 
@@ -60,6 +60,10 @@ describe('SkillMatrixPage', () => {
     vi.stubGlobal('fetch', createFetchMock());
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('renders tactics and opens technique modal', async () => {
     const userEvents = userEvent.setup();
 
@@ -113,5 +117,36 @@ describe('SkillMatrixPage', () => {
     await userEvents.selectOptions(screen.getByRole('combobox'), 'all');
 
     expect(screen.getByText('reconnaissance')).toBeInTheDocument();
+  });
+
+  it('opens technique from query param after data load', async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    render(
+      <MemoryRouter initialEntries={['/skill-matrix?technique=T1593']}>
+        <Routes>
+          <Route path="/skill-matrix" element={<SkillMatrixPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('close-modal', {}, { timeout: 3000 })).toBeInTheDocument();
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled(), { timeout: 2000 });
+  });
+
+  it('toggles tactic section expansion', async () => {
+    const userEvents = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <SkillMatrixPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('reconnaissance');
+    const tacticButton = screen.getByRole('button', { name: /reconnaissance/i });
+    await userEvents.click(tacticButton);
+    await userEvents.click(tacticButton);
   });
 });

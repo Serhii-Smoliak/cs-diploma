@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import ContextPanel from './ContextPanel';
-import { createTestLevel, phishingLevel, tacticalLevel } from '../../test/fixtures';
+import { createTestLevel, phishingLevel, sentenceLevel, tacticalLevel } from '../../test/fixtures';
 
 const gameState = vi.hoisted(() => ({
   currentLevel: null as ReturnType<typeof createTestLevel> | null,
@@ -59,5 +59,60 @@ describe('ContextPanel', () => {
 
     expect(screen.getByText(/Urgent/)).toBeInTheDocument();
     expect(screen.getByText(/report\.pdf/)).toBeInTheDocument();
+  });
+
+  it('formats sentence constructor answer when completed', () => {
+    gameState.currentLevel = sentenceLevel;
+    gameState.levelProgress = {
+      completed: true,
+      lastAnswer: JSON.stringify({
+        fields: { cmd: ['t1'] },
+        attachments: ['lnk1'],
+      }),
+    };
+
+    render(<ContextPanel />);
+
+    expect(screen.getByText(/part_a/)).toBeInTheDocument();
+    expect(screen.getByText(/invoice\.lnk/)).toBeInTheDocument();
+  });
+
+  it('formats code editor answer when completed', () => {
+    gameState.currentLevel = createTestLevel({ task_type: 'code_editor' });
+    gameState.levelProgress = { completed: true, lastAnswer: '.*@.*' };
+
+    render(<ContextPanel />);
+
+    expect(screen.getByText('Completed:')).toBeInTheDocument();
+    expect(screen.getByText('.*@.*')).toBeInTheDocument();
+  });
+
+  it('inserts handler completion after last handler message', () => {
+    gameState.currentLevel = createTestLevel({
+      dialogue: [
+        { speaker: 'system', text: 'Briefing' },
+        { speaker: 'handler', text: 'Start task' },
+      ],
+    });
+    gameState.levelProgress = { completed: true, lastAnswer: '.*@.*' };
+
+    render(<ContextPanel />);
+
+    expect(screen.getByText(/Completed:/)).toBeInTheDocument();
+    expect(screen.getByText('Start task')).toBeInTheDocument();
+  });
+
+  it('inserts not completed message after leading system messages', () => {
+    gameState.currentLevel = createTestLevel({
+      dialogue: [
+        { speaker: 'system', text: 'Intro' },
+        { speaker: 'handler', text: 'Go' },
+      ],
+    });
+    gameState.levelProgress = { completed: false, lastAnswer: null };
+
+    render(<ContextPanel />);
+
+    expect(screen.getByText('taskStatusNotCompleted')).toBeInTheDocument();
   });
 });
