@@ -11,6 +11,7 @@ const {
   purchaseStealthMasking,
   waitForStealthRecovery,
   setStealthNotice,
+  authState,
 } = vi.hoisted(() => ({
   refreshUser: vi.fn().mockResolvedValue(undefined),
   updateUser: vi.fn(),
@@ -18,19 +19,35 @@ const {
   setStealthNotice: vi.fn(),
   purchaseStealthMasking: vi.fn().mockResolvedValue({ stealth: 30 }),
   waitForStealthRecovery: vi.fn().mockResolvedValue({ stealth: 15 }),
+  authState: {
+    user: { stealth: 0, xp: 100 } as { stealth: number; xp: number } | null,
+    language: 'en',
+  },
 }));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
-    i18n: { language: 'en' },
+    t: (key: string, options?: { time?: string; defaultValue?: string }) =>
+      options?.time ? `${key}:${options.time}` : (options?.defaultValue ?? key),
+    i18n: { language: authState.language },
   }),
+}));
+
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children, onClick, ...props }: React.PropsWithChildren<{ onClick?: () => void }>) => (
+      <div onClick={onClick} {...props}>
+        {children}
+      </div>
+    ),
+  },
+  AnimatePresence: ({ children }: React.PropsWithChildren) => <>{children}</>,
 }));
 
 vi.mock('../../store/authStore', () => ({
   useAuthStore: (selector?: (state: Record<string, unknown>) => unknown) => {
     const state = {
-      user: { stealth: 0, xp: 100 },
+      user: authState.user,
       updateUser,
       refreshUser,
     };
@@ -65,7 +82,10 @@ vi.mock('../../services/api', () => ({
 
 describe('StealthDepletedModal', () => {
   beforeEach(() => {
+    authState.user = { stealth: 0, xp: 100 };
+    authState.language = 'en';
     refreshUser.mockClear();
+    refreshUser.mockResolvedValue(undefined);
     updateUser.mockClear();
     closeStealthModal.mockClear();
     purchaseStealthMasking.mockClear();
@@ -82,7 +102,7 @@ describe('StealthDepletedModal', () => {
       expect(refreshUser).toHaveBeenCalled();
     });
 
-    await user.click(screen.getByRole('button', { name: 'stealthBuyMasking' }));
+    await user.click(screen.getByRole('button', { name: /Buy 50% masking/i }));
 
     await waitFor(() => {
       expect(purchaseStealthMasking).toHaveBeenCalled();
@@ -96,7 +116,7 @@ describe('StealthDepletedModal', () => {
     const user = userEvent.setup();
 
     render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthBuyMasking' }));
+    await user.click(await screen.findByRole('button', { name: /Buy 50% masking/i }));
 
     expect(await screen.findByText('stealthMaskingFailed')).toBeInTheDocument();
   });
@@ -124,10 +144,35 @@ describe('StealthDepletedModal', () => {
     await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
 
     await waitFor(() => {
-      expect(setStealthNotice).toHaveBeenCalled();
+      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:2m');
       expect(updateUser).toHaveBeenCalledWith({ stealth: 5 });
       expect(closeStealthModal).toHaveBeenCalled();
     });
+  });
+
+  it('formats retry time in ukrainian hours and minutes', async () => {
+    authState.language = 'uk';
+    waitForStealthRecovery.mockRejectedValueOnce(
+      new ApiError('Too many requests', 429, { retryAfterMs: 5400000, stealth: 0 })
+    );
+    const user = userEvent.setup();
+
+    render(<StealthDepletedModal />);
+    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
+
+    await waitFor(() => {
+      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:1 год 30 хв');
+    });
+  });
+
+  it('shows notice when wait recovery fails', async () => {
+    waitForStealthRecovery.mockRejectedValueOnce(new Error('network'));
+    const user = userEvent.setup();
+
+    render(<StealthDepletedModal />);
+    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
+
+    expect(await screen.findByText('stealthWaitFailed')).toBeInTheDocument();
   });
 
   it('shows premium mock notice', async () => {
@@ -139,9 +184,30 @@ describe('StealthDepletedModal', () => {
     expect(await screen.findByText('stealthPremiumMock')).toBeInTheDocument();
   });
 
-  it('closes on escape key', async () => {
+  it('closes on escape key and backdrop click', async () => {
     render(<StealthDepletedModal />);
     fireEvent.keyDown(document, { key: 'Escape' });
-    expect(closeStealthModal).toHaveBeenCalled();
+    expect(closeStealthModal).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(document.querySelector('.backdrop-blur-sm')!);
+    expect(closeStealthModal).toHaveBeenCalledTimes(2);
+  });
+
+  it('renders manage mode for partial stealth and disables masking near max', async () => {
+    authState.user = { stealth: 60, xp: 100 };
+
+    render(<StealthDepletedModal />);
+
+    expect(screen.getByText('Stealth')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Buy 50% masking/i })).toBeDisabled();
+    expect(screen.getByText(/Masking \(\+50%\) would exceed 100%/)).toBeInTheDocument();
+  });
+
+  it('returns null without authenticated user', () => {
+    authState.user = null;
+
+    const { container } = render(<StealthDepletedModal />);
+
+    expect(container).toBeEmptyDOMElement();
   });
 });

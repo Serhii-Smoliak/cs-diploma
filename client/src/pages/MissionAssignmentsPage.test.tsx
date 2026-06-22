@@ -1,11 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import MissionAssignmentsPage from './MissionAssignmentsPage';
 import { createFetchMock, createTestLevel, testMission } from '../test/fixtures';
 
-const { t, i18n, navigate, setMission, loadLevel } = vi.hoisted(() => ({
+const { t, i18n, navigate, setMission, loadLevel, gameState } = vi.hoisted(() => ({
   t: (key: string, options?: { defaultValue?: string; count?: number }) => {
     if (options?.defaultValue) return options.defaultValue;
     if (options?.count !== undefined) return `${key}:${options.count}`;
@@ -15,6 +15,10 @@ const { t, i18n, navigate, setMission, loadLevel } = vi.hoisted(() => ({
   navigate: vi.fn(),
   setMission: vi.fn().mockResolvedValue(undefined),
   loadLevel: vi.fn().mockResolvedValue(undefined),
+  gameState: {
+    currentMission: null as { id: string } | null,
+    levels: null as ReturnType<typeof createTestLevel>[] | null,
+  },
 }));
 
 const levels = [
@@ -42,8 +46,8 @@ vi.mock('../i18n/config', () => ({
 vi.mock('../store/gameStore', () => ({
   useGameStore: (selector?: (state: Record<string, unknown>) => unknown) => {
     const state = {
-      currentMission: testMission,
-      levels,
+      currentMission: gameState.currentMission ?? testMission,
+      levels: gameState.levels ?? levels,
       setMission,
       loadLevel,
     };
@@ -78,6 +82,8 @@ function renderPage() {
 
 describe('MissionAssignmentsPage', () => {
   beforeEach(() => {
+    gameState.currentMission = testMission;
+    gameState.levels = null;
     navigate.mockClear();
     setMission.mockClear();
     loadLevel.mockClear();
@@ -112,5 +118,40 @@ describe('MissionAssignmentsPage', () => {
 
     await user.click(await screen.findByTitle('Show Cyber Kill Chain'));
     expect(screen.getByText(/Reconnaissance/)).toBeInTheDocument();
+  });
+
+  it('redirects when mission is missing', async () => {
+    vi.stubGlobal('fetch', createFetchMock({ missions: [], levels: [] }));
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalledWith('/missions');
+    });
+  });
+
+  it('shows empty state when mission has no assignments', async () => {
+    gameState.levels = [];
+    vi.stubGlobal('fetch', createFetchMock({ levels: [] }));
+
+    renderPage();
+
+    expect(await screen.findByText('assignmentsNotFound')).toBeInTheDocument();
+  });
+
+  it('continues when user progress request fails', async () => {
+    const baseFetch = createFetchMock({ levels });
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/progress')) {
+        throw new Error('progress down');
+      }
+      return baseFetch(input);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    renderPage();
+
+    expect(await screen.findByText('Find admin email')).toBeInTheDocument();
   });
 });

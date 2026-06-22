@@ -89,4 +89,17 @@ describe('main bootstrap', () => {
       expect(applyLocale).toHaveBeenCalledWith('uk');
     });
   });
+
+  it('logs bootstrap errors when locale init fails', async () => {
+    vi.resetModules();
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    applyLocale.mockRejectedValueOnce(new Error('locale failed'));
+
+    await import('./main.tsx');
+
+    await vi.waitFor(() => {
+      expect(consoleError).toHaveBeenCalled();
+    });
+    consoleError.mockRestore();
+  });
 });

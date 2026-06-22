@@ -29,4 +29,18 @@ describe('sessionExpired', () => {
     expect(handler).toHaveBeenCalledTimes(1);
     expect(globalThis.location.assign).toHaveBeenCalledTimes(1);
   });
+
+  it('allows a new session expiry after guard reset', async () => {
+    const { registerSessionExpiredHandler, handleSessionExpired, resetSessionExpiredGuard } =
+      await import('./sessionExpired');
+    const handler = vi.fn();
+    registerSessionExpiredHandler(handler);
+
+    handleSessionExpired();
+    resetSessionExpiredGuard();
+    handleSessionExpired();
+
+    expect(handler).toHaveBeenCalledTimes(2);
+    expect(globalThis.location.assign).toHaveBeenCalledTimes(2);
+  });
 });

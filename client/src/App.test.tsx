@@ -282,6 +282,26 @@ describe('App', () => {
     expect(await screen.findByText('game-layout')).toBeInTheDocument();
     expect(api.getMissions).not.toHaveBeenCalled();
   });
+
+  it('restores game state by loading mission and level', async () => {
+    isAuthenticated.value = true;
+    currentMission.value = null;
+    currentLevel.value = null;
+    apiSetToken();
+
+    render(
+      <MemoryRouter initialEntries={['/missions/operation_ghost/assignments/ghost_recon_01']}>
+        <Routes>
+          <Route path="/*" element={<App />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(setMission).toHaveBeenCalledWith(testMission);
+      expect(loadLevel).toHaveBeenCalledWith('ghost_recon_01');
+    });
+  });
 });
 
 function apiSetToken() {

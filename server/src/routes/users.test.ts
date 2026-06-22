@@ -24,11 +24,13 @@ const stealthMocks = vi.hoisted(() => ({
   applyWaitRecovery: vi.fn(),
 }));
 
+const authState = vi.hoisted(() => ({ userId: 'user-1' as string | undefined }));
+
 vi.mock('../db/database.js', () => ({ default: prismaMock }));
 
 vi.mock('../middleware/auth.js', () => ({
   authenticate: (req: AuthRequest, _res: unknown, next: () => void) => {
-    req.userId = 'user-1';
+    req.userId = authState.userId;
     req.userEmail = 'agent@test.com';
     next();
   },
@@ -66,6 +68,7 @@ function createApp() {
 
 describe('users routes', () => {
   beforeEach(() => {
+    authState.userId = 'user-1';
     vi.clearAllMocks();
     stealthMocks.applyPassiveRegen.mockResolvedValue(80);
     stealthMocks.restoreMasking.mockResolvedValue(50);
@@ -300,5 +303,35 @@ describe('users routes', () => {
     const response = await request(createApp()).get('/api/users/me/progress');
 
     expect(response.status).toBe(500);
+  });
+
+  it('GET /me/progress returns 401 without user id', async () => {
+    authState.userId = undefined;
+
+    const response = await request(createApp()).get('/api/users/me/progress');
+
+    expect(response.status).toBe(401);
+  });
+
+  it('GET /me/stats returns 401 without user id', async () => {
+    authState.userId = undefined;
+
+    const response = await request(createApp()).get('/api/users/me/stats');
+
+    expect(response.status).toBe(401);
+  });
+
+  it('GET /leaderboard returns 500 on unexpected error', async () => {
+    prismaMock.user.findMany.mockRejectedValueOnce(new Error('db'));
+
+    const response = await request(createApp()).get('/api/users/leaderboard');
+
+    expect(response.status).toBe(500);
+  });
+
+  it('GET /:id/progress returns 403 for another user', async () => {
+    const response = await request(createApp()).get('/api/users/other-user/progress');
+
+    expect(response.status).toBe(403);
   });
 });
