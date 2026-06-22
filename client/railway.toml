@@ -1,6 +1,0 @@
-# Railway service: cs-diploma-fe (set Root Directory to "client" in Railway dashboard)
-[build]
-buildCommand = "cd ../shared && npm ci && npm run build && npm ci && npm run build"
-
-[deploy]
-startCommand = "npm start"
