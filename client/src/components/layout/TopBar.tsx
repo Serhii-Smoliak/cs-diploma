@@ -1,9 +1,10 @@
-import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { useGameStore } from '../../store/gameStore';
 import { useSidebarStore } from '../../store/sidebarStore';
 import LanguageSwitcher from './LanguageSwitcher';
+import { getNextRankXp } from '../../constants/ranks';
 import { getRankLabel } from '../../utils/rank';
 import UserAvatar from '../profile/UserAvatar';
 
@@ -12,20 +13,13 @@ export default function TopBar() {
   const { user } = useAuthStore();
   const stealthNotice = useGameStore((state) => state.stealthNotice);
   const setStealthNotice = useGameStore((state) => state.setStealthNotice);
+  const openStealthModal = useGameStore((state) => state.openStealthModal);
   const openMobile = useSidebarStore((state) => state.openMobile);
-
-  const getXpForNextRank = (currentXp: number) => {
-    if (currentXp < 500) return 500;
-    if (currentXp < 1500) return 1500;
-    if (currentXp < 3000) return 3000;
-    if (currentXp < 5000) return 5000;
-    return 10000;
-  };
 
   const xp = user?.xp || 0;
   const rank = user?.rank || 'Script Kiddie';
   const stealth = user?.stealth ?? 100;
-  const nextRankXp = getXpForNextRank(xp);
+  const nextRankXp = getNextRankXp(xp) ?? 10000;
   const xpProgress = (xp / nextRankXp) * 100;
   const stealthBarClass =
     stealth <= 0 ? 'bg-cyber-danger' : stealth < 30 ? 'bg-yellow-400' : 'bg-cyber-success';
@@ -33,7 +27,7 @@ export default function TopBar() {
     stealth <= 0 ? 'text-cyber-danger' : stealth < 30 ? 'text-yellow-400' : 'text-cyber-success';
 
   return (
-    <header className="bg-cyber-panel border-b border-l border-cyber-border px-3 sm:px-4 lg:px-6 py-2 sm:py-3 min-h-[60px] sm:min-h-[73px] flex items-center shrink-0">
+    <header className="bg-cyber-panel border-b border-l border-cyber-border px-3 sm:px-4 lg:px-6 h-[73px] flex items-center shrink-0">
       <div className="flex items-center gap-2 sm:gap-4 w-full min-w-0">
         <button
           type="button"
@@ -44,19 +38,37 @@ export default function TopBar() {
           ☰
         </button>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <span className="text-xs sm:text-sm text-gray-400 shrink-0">{t('stealth', { ns: 'ui' })}:</span>
-            <div className="flex-1 min-w-[72px] max-w-[12rem] sm:max-w-none sm:w-32 md:w-48 shrink">
-              <div className="h-2 bg-cyber-panel rounded-full overflow-hidden border border-cyber-border">
+        <div className="shrink-0 min-w-0">
+          <button
+            type="button"
+            onClick={openStealthModal}
+            title={t('stealthManageTitle', {
+              ns: 'ui',
+              defaultValue: 'Stealth',
+            })}
+            className="flex items-center gap-2 sm:gap-2.5 rounded-lg px-1 py-0.5 hover:bg-cyber-panel/60 transition-colors cursor-pointer"
+            aria-label={t('stealthOpenModal', {
+              ns: 'ui',
+              defaultValue: 'Open stealth recovery options',
+            })}
+          >
+            <span className="text-sm text-gray-300 shrink-0 font-medium">
+              {t('stealth', { ns: 'ui' })}:
+            </span>
+            <div className="w-16 sm:w-20 md:w-24 shrink-0">
+              <div className="h-2 bg-cyber-panel/80 rounded-full overflow-hidden border border-cyber-border/80">
                 <div
                   className={`h-full transition-all duration-300 ${stealthBarClass} ${stealth > 0 ? 'cyber-glow-green' : ''}`}
                   style={{ width: `${stealth}%` }}
                 />
               </div>
             </div>
-            <span className={`text-xs sm:text-sm font-medium shrink-0 ${stealthTextClass}`}>{stealth}%</span>
-          </div>
+            <span
+              className={`text-sm font-semibold shrink-0 w-9 text-right tabular-nums ${stealthTextClass}`}
+            >
+              {stealth}%
+            </span>
+          </button>
           {stealthNotice && (
             <div className="flex items-start gap-2 mt-1 max-w-full sm:max-w-xl">
               <p className="text-xs text-yellow-400 leading-snug">{stealthNotice}</p>
@@ -72,14 +84,18 @@ export default function TopBar() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-auto">
           <LanguageSwitcher />
           <div className="hidden md:block text-right">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-400">{t('rank', { ns: 'ui' })}:</span>
-              <span className="font-heading font-bold text-cyber-primary text-sm lg:text-base">
+              <Link
+                to="/ranks"
+                title={t('ranks', { ns: 'ui' })}
+                className="font-heading font-bold text-cyber-primary text-sm lg:text-base hover:text-cyber-success transition-colors"
+              >
                 {getRankLabel(rank, t)}
-              </span>
+              </Link>
             </div>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-sm text-gray-400">{t('xp', { ns: 'ui' })}:</span>

@@ -13,7 +13,7 @@ function createImage(url: string): Promise<HTMLImageElement> {
 export async function getCroppedImage(
   imageSrc: string,
   pixelCrop: Area,
-  outputSize = 256,
+  outputSize = 256
 ): Promise<string> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -35,7 +35,7 @@ export async function getCroppedImage(
     0,
     0,
     outputSize,
-    outputSize,
+    outputSize
   );
 
   return canvas.toDataURL('image/jpeg', 0.92);

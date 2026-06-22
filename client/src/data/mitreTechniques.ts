@@ -13,11 +13,12 @@ export interface MitreTactic {
 }
 
 export const MITRE_TECHNIQUES: Record<string, MitreTechnique> = {
-  'T1593': {
+  T1593: {
     id: 'T1593',
     name: 'Search Open Websites/Domains',
     tactic: 'Reconnaissance',
-    description: 'Adversaries may search publicly available information sources that can be used during targeting.',
+    description:
+      'Adversaries may search publicly available information sources that can be used during targeting.',
   },
   'T1583.001': {
     id: 'T1583.001',
@@ -29,7 +30,8 @@ export const MITRE_TECHNIQUES: Record<string, MitreTechnique> = {
     id: 'T1566.001',
     name: 'Phishing: Spearphishing Attachment',
     tactic: 'Initial Access',
-    description: 'Adversaries may send spearphishing emails with a malicious attachment in an attempt to gain access to victim systems.',
+    description:
+      'Adversaries may send spearphishing emails with a malicious attachment in an attempt to gain access to victim systems.',
   },
   'T1059.001': {
     id: 'T1059.001',
@@ -41,7 +43,8 @@ export const MITRE_TECHNIQUES: Record<string, MitreTechnique> = {
     id: 'T1547.001',
     name: 'Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder',
     tactic: 'Persistence',
-    description: 'Adversaries may achieve persistence by adding a program to a startup folder or referencing it with a Registry run key.',
+    description:
+      'Adversaries may achieve persistence by adding a program to a startup folder or referencing it with a Registry run key.',
   },
 };
 
@@ -49,13 +52,15 @@ export const MITRE_TACTICS: MitreTactic[] = [
   {
     id: 'reconnaissance',
     name: 'Reconnaissance',
-    description: 'The adversary is trying to gather information they can use to plan future operations.',
+    description:
+      'The adversary is trying to gather information they can use to plan future operations.',
     techniques: [MITRE_TECHNIQUES['T1593']],
   },
   {
     id: 'resource-development',
     name: 'Resource Development',
-    description: 'The adversary is trying to establish resources they can use to support operations.',
+    description:
+      'The adversary is trying to establish resources they can use to support operations.',
     techniques: [MITRE_TECHNIQUES['T1583.001']],
   },
   {
@@ -81,4 +86,3 @@ export const MITRE_TACTICS: MitreTactic[] = [
 export const getAllTechniques = (): MitreTechnique[] => {
   return MITRE_TACTICS.flatMap((tactic) => tactic.techniques);
 };
-

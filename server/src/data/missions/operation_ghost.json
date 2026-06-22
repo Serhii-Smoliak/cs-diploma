@@ -3,6 +3,7 @@
   "name": "Operation Ghost",
   "description": "Імітувати атаку на корпорацію Apex Dynamics. Пройдіть усі етапи Cyber Kill Chain — від дослідження до встановлення стійкості.",
   "difficulty": "beginner",
+  "order_index": 1,
   "mitre_techniques": ["T1593", "T1583.001", "T1566.001", "T1059.001", "T1547.001"],
   "levels": [
     {

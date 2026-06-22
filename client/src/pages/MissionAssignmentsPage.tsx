@@ -6,39 +6,83 @@ import { useGameStore } from '../store/gameStore';
 import { useAuthStore } from '../store/authStore';
 import { api, type MitreTechnique } from '../services/api';
 import type { Level } from '@cybertactics/shared';
-import { motion, AnimatePresence } from 'framer-motion';
-import MitreTechniqueBadge from '../components/mitre/MitreTechniqueBadge';
+import { AnimatePresence } from 'framer-motion';
+import MitreTechniqueChip from '../components/mitre/MitreTechniqueChip';
+import AssignmentPanel from '../components/missions/AssignmentPanel';
+import AssignmentListItem from '../components/missions/AssignmentListItem';
+import MissionKillChainSection from '../components/missions/MissionKillChainSection';
 
 const KILL_CHAIN_STEP_KEYS = ['step1', 'step2', 'step3', 'step4', 'step5'] as const;
 
-const KILL_CHAIN_COPY = {
-  en: {
-    title: 'Cyber Kill Chain',
-    intro: 'Mission tasks follow the attack stages in order:',
-    steps: [
-      'Reconnaissance — find the admin email (task 1)',
-      'Resource Development — choose a phishing domain (task 2)',
-      'Initial Access — craft a phishing email (task 3)',
-      'Execution — run a PowerShell payload (task 4)',
-      'Persistence — registry autostart (task 5)',
-    ],
-    expandLabel: 'Show Cyber Kill Chain',
-    collapseLabel: 'Hide Cyber Kill Chain',
+type KillChainLocaleCopy = {
+  title: string;
+  intro: string;
+  steps: string[];
+  expandLabel: string;
+  collapseLabel: string;
+};
+
+const KILL_CHAIN_MISSION_DEFAULTS: Record<
+  string,
+  { en: KillChainLocaleCopy; uk: KillChainLocaleCopy }
+> = {
+  operation_ghost: {
+    en: {
+      title: 'Cyber Kill Chain',
+      intro: 'Mission tasks follow the attack stages in order:',
+      steps: [
+        'Reconnaissance — find the admin email (task 1)',
+        'Resource Development — choose a phishing domain (task 2)',
+        'Initial Access — craft a phishing email (task 3)',
+        'Execution — run a PowerShell payload (task 4)',
+        'Persistence — registry autostart (task 5)',
+      ],
+      expandLabel: 'Show Cyber Kill Chain',
+      collapseLabel: 'Hide Cyber Kill Chain',
+    },
+    uk: {
+      title: 'Ланцюг кібератак',
+      intro: 'Завдання місії відповідають етапам атаки по порядку:',
+      steps: [
+        'Розвідка — знайти email адміністратора (завдання 1)',
+        'Розробка ресурсів — обрати домен для фішингу (завдання 2)',
+        'Початковий доступ — фішинговий лист (завдання 3)',
+        'Виконання — запуск PowerShell payload (завдання 4)',
+        'Стійкість — автозапуск через реєстр (завдання 5)',
+      ],
+      expandLabel: 'Показати ланцюг кібератак',
+      collapseLabel: 'Згорнути ланцюг кібератак',
+    },
   },
-  uk: {
-    title: 'Ланцюг кібератак',
-    intro: 'Завдання місії відповідають етапам атаки по порядку:',
-    steps: [
-      'Розвідка — знайти email адміністратора (завдання 1)',
-      'Розробка ресурсів — обрати домен для фішингу (завдання 2)',
-      'Початковий доступ — фішинговий лист (завдання 3)',
-      'Виконання — запуск PowerShell payload (завдання 4)',
-      'Стійкість — автозапуск через реєстр (завдання 5)',
-    ],
-    expandLabel: 'Показати ланцюг кібератак',
-    collapseLabel: 'Згорнути ланцюг кібератак',
+  operation_iron_signal: {
+    en: {
+      title: 'Attack progression',
+      intro: 'Intermediate mission — post-perimeter tactics in order:',
+      steps: [
+        'Discovery — find service account in AD dump (task 1)',
+        'Credential Access — password spray strategy (task 2)',
+        'Initial Access — spearphishing link email (task 3)',
+        'Lateral Movement — RDP via jump host (task 4)',
+        'Execution — certutil staging download (task 5)',
+      ],
+      expandLabel: 'Show attack progression',
+      collapseLabel: 'Hide attack progression',
+    },
+    uk: {
+      title: 'Етапи атаки',
+      intro: 'Місія intermediate — тактики після периметра по порядку:',
+      steps: [
+        'Discovery — знайти service account у AD dump (завдання 1)',
+        'Credential Access — стратегія password spray (завдання 2)',
+        'Initial Access — spearphishing з посиланням (завдання 3)',
+        'Lateral Movement — RDP через jump host (завдання 4)',
+        'Execution — завантаження staging через certutil (завдання 5)',
+      ],
+      expandLabel: 'Показати етапи атаки',
+      collapseLabel: 'Згорнути етапи атаки',
+    },
   },
-} as const;
+};
 
 function getLocaleCode(): 'en' | 'uk' {
   const raw = i18n.resolvedLanguage || i18n.language || 'uk';
@@ -46,7 +90,7 @@ function getLocaleCode(): 'en' | 'uk' {
 }
 
 export default function MissionAssignmentsPage() {
-  const { t } = useTranslation(['missions', 'ui', 'levels']);
+  const { t } = useTranslation(['missions', 'ui', 'levels', 'mitre']);
   const { missionId } = useParams<{ missionId: string }>();
   const navigate = useNavigate();
   const { currentMission, levels, setMission, loadLevel } = useGameStore();
@@ -54,44 +98,47 @@ export default function MissionAssignmentsPage() {
   const [mitreTechniques, setMitreTechniques] = useState<Record<string, MitreTechnique>>({});
   const [loading, setLoading] = useState(true);
   const [killChainOpen, setKillChainOpen] = useState(false);
+  const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null);
   const [, setTranslationsTick] = useState(0);
 
   const getMissionName = (missionId: string, fallbackName: string): string => {
     const translationKey = `${missionId}.name`;
     const translated = t(translationKey, { ns: 'missions', defaultValue: fallbackName });
-    return translated !== translationKey ? translated : fallbackName;
+    return translated === translationKey ? fallbackName : translated;
   };
 
   const getMissionDescription = (missionId: string, fallbackDescription: string): string => {
     const translationKey = `${missionId}.description`;
     const translated = t(translationKey, { ns: 'missions', defaultValue: fallbackDescription });
-    return translated !== translationKey ? translated : fallbackDescription;
+    return translated === translationKey ? fallbackDescription : translated;
   };
 
-  const getMissionKillChain = (missionId: string): {
+  const getMissionKillChain = (
+    missionId: string
+  ): {
     title: string;
     intro: string;
     steps: string[];
     expandLabel: string;
     collapseLabel: string;
   } | null => {
-    if (missionId !== 'operation_ghost') return null;
+    if (!KILL_CHAIN_MISSION_DEFAULTS[missionId]) return null;
 
     const locale = getLocaleCode();
-    const defaults = KILL_CHAIN_COPY[locale];
+    const defaults = KILL_CHAIN_MISSION_DEFAULTS[missionId][locale];
     const prefix = `${missionId}.killChain`;
 
     const translate = (suffix: string, fallback: string) => {
       const key = `${prefix}.${suffix}`;
       const translated = t(key, { ns: 'missions', lng: locale, defaultValue: fallback });
-      return translated !== key ? translated : fallback;
+      return translated === key ? fallback : translated;
     };
 
     return {
       title: translate('title', defaults.title),
       intro: translate('intro', defaults.intro),
       steps: KILL_CHAIN_STEP_KEYS.map((stepKey, index) =>
-        translate(stepKey, defaults.steps[index]),
+        translate(stepKey, defaults.steps[index])
       ),
       expandLabel: translate('expand', defaults.expandLabel),
       collapseLabel: translate('collapse', defaults.collapseLabel),
@@ -101,8 +148,53 @@ export default function MissionAssignmentsPage() {
   const getLevelTitle = (levelId: string, fallbackTitle: string): string => {
     const translationKey = `${levelId}.title`;
     const translated = t(translationKey, { ns: 'levels', defaultValue: fallbackTitle });
-    return translated !== translationKey ? translated : fallbackTitle;
+    return translated === translationKey ? fallbackTitle : translated;
   };
+
+  const getTaskTypeLabel = (taskType: Level['task_type']): string => {
+    switch (taskType) {
+      case 'code_editor':
+        return t('taskTypeCodeEditor', { ns: 'ui' });
+      case 'tactical_choice':
+        return t('taskTypeTacticalChoice', { ns: 'ui' });
+      case 'phishing_constructor':
+        return t('taskTypePhishingConstructor', { ns: 'ui' });
+      case 'sentence_constructor':
+        return t('taskTypeSentenceConstructor', { ns: 'ui' });
+      default:
+        return taskType;
+    }
+  };
+
+  const isEn = getLocaleCode() === 'en';
+
+  const getTechniqueName = (techniqueId: string, fallback: string): string => {
+    const key = `technique.name.${techniqueId}`;
+    const translated = t(key, { ns: 'mitre', defaultValue: fallback });
+    return translated === key ? fallback : translated;
+  };
+
+  const getTechniqueDescription = (techniqueId: string, fallback: string | null): string => {
+    const key = `technique.description.${techniqueId}`;
+    const translated = t(key, { ns: 'mitre', defaultValue: fallback || '' });
+    return translated === key ? fallback || '' : translated;
+  };
+
+  const getTacticLabel = (tactic: string): string => {
+    const key = `tactic.${tactic}`;
+    const translated = t(key, { ns: 'mitre', defaultValue: tactic });
+    return translated === key ? tactic : translated;
+  };
+
+  const getTacticExplanation = (tactic: string): string => {
+    const key = `tactic.explanation.${tactic}`;
+    const translated = t(key, { ns: 'mitre', defaultValue: '' });
+    return translated === key ? '' : translated;
+  };
+
+  useEffect(() => {
+    setSelectedLevelId(null);
+  }, [missionId]);
 
   /* eslint-disable react-hooks/exhaustive-deps -- load when missionId changes */
   useEffect(() => {
@@ -118,10 +210,10 @@ export default function MissionAssignmentsPage() {
   /* eslint-disable react-hooks/exhaustive-deps -- reload translations on language change */
   useEffect(() => {
     const locale = getLocaleCode();
-    loadMultipleNamespaces(locale, ['missions'])
+    loadMultipleNamespaces(locale, ['missions', 'mitre'])
       .then(() => setTranslationsTick((tick) => tick + 1))
       .catch((error) => {
-        console.error('Failed to reload missions translations:', error);
+        console.error('Failed to reload mission translations:', error);
       });
   }, [i18n.resolvedLanguage, i18n.language]);
   /* eslint-enable react-hooks/exhaustive-deps */
@@ -134,7 +226,7 @@ export default function MissionAssignmentsPage() {
         try {
           const progress = await api.getUserProgress();
           const progressMap: Record<string, boolean> = {};
-          progress.forEach(p => {
+          progress.forEach((p) => {
             progressMap[p.levelId] = p.completed;
           });
           setUserProgress(progressMap);
@@ -149,7 +241,7 @@ export default function MissionAssignmentsPage() {
       refreshProgress();
     };
     window.addEventListener('focus', handleFocus);
-    
+
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
@@ -158,20 +250,20 @@ export default function MissionAssignmentsPage() {
   const loadMissionData = async () => {
     try {
       setLoading(true);
-      
+
       // Завантажуємо місію та довідник MITRE
       const [missions, techniquesData] = await Promise.all([
         api.getMissions(),
         api.getMitreTechniques(),
       ]);
-      const mission = missions.find(m => m.id === missionId);
+      const mission = missions.find((m) => m.id === missionId);
 
       const techniquesMap: Record<string, MitreTechnique> = {};
       techniquesData.forEach((tech) => {
         techniquesMap[tech.id] = tech;
       });
       setMitreTechniques(techniquesMap);
-      
+
       if (!mission) {
         navigate('/missions');
         return;
@@ -186,7 +278,7 @@ export default function MissionAssignmentsPage() {
         try {
           const progress = await api.getUserProgress();
           const progressMap: Record<string, boolean> = {};
-          progress.forEach(p => {
+          progress.forEach((p) => {
             progressMap[p.levelId] = p.completed;
           });
           setUserProgress(progressMap);
@@ -202,6 +294,10 @@ export default function MissionAssignmentsPage() {
     }
   };
 
+  const handleSelectAssignment = (level: Level) => {
+    setSelectedLevelId(level.level_id);
+  };
+
   const handleStartAssignment = async (level: Level) => {
     await loadLevel(level.level_id);
     navigate(`/missions/${missionId}/assignments/${level.level_id}`);
@@ -211,19 +307,20 @@ export default function MissionAssignmentsPage() {
   const isAssignmentAvailable = (levelIndex: number): boolean => {
     // Перше завдання завжди доступне
     if (levelIndex === 0) return true;
-    
+
     // Чи виконано попереднє завдання
     const previousLevel = levels[levelIndex - 1];
     if (!previousLevel) return true;
-    
+
     return userProgress[previousLevel.level_id] || false;
   };
-
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-cyber-primary font-heading">{t('loadingAssignments', { ns: 'ui' })}</div>
+        <div className="text-cyber-primary font-heading">
+          {t('loadingAssignments', { ns: 'ui' })}
+        </div>
       </div>
     );
   }
@@ -239,6 +336,32 @@ export default function MissionAssignmentsPage() {
   }
 
   const killChain = getMissionKillChain(currentMission.id);
+  const selectedLevel = selectedLevelId
+    ? (levels.find((level) => level.level_id === selectedLevelId) ?? null)
+    : null;
+  const selectedLevelIndex = selectedLevel
+    ? levels.findIndex((level) => level.level_id === selectedLevel.level_id)
+    : -1;
+  const selectedKillChainStep =
+    killChain && selectedLevelIndex >= 0 ? killChain.steps[selectedLevelIndex] : null;
+  const selectedIsCompleted = selectedLevel ? userProgress[selectedLevel.level_id] || false : false;
+
+  const assignmentPanel = (
+    <AssignmentPanel
+      isEn={isEn}
+      selectedLevel={selectedLevel}
+      selectedLevelIndex={selectedLevelIndex}
+      killChainStep={selectedKillChainStep}
+      isCompleted={selectedIsCompleted}
+      onStart={handleStartAssignment}
+      getLevelTitle={getLevelTitle}
+      getTaskTypeLabel={getTaskTypeLabel}
+      getTechniqueName={getTechniqueName}
+      getTacticLabel={getTacticLabel}
+      getTacticExplanation={getTacticExplanation}
+      getTechniqueDescription={getTechniqueDescription}
+    />
+  );
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
@@ -248,50 +371,16 @@ export default function MissionAssignmentsPage() {
           {getMissionName(currentMission.id, currentMission.name)}
         </h1>
         {currentMission.description && (
-          <p className="text-gray-400">{getMissionDescription(currentMission.id, currentMission.description)}</p>
+          <p className="max-w-2xl text-sm text-gray-300 leading-relaxed border border-cyber-border rounded-lg bg-cyber-panel/40 px-3 py-2.5">
+            {getMissionDescription(currentMission.id, currentMission.description)}
+          </p>
         )}
         {killChain && (
-          <div className="mt-4 cyber-panel border border-cyber-border overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setKillChainOpen((open) => !open)}
-              className="w-full flex items-center justify-between gap-2 py-2 px-3 min-h-0 text-left hover:bg-cyber-panel/60 transition-colors"
-              aria-expanded={killChainOpen}
-              title={killChainOpen ? killChain.collapseLabel : killChain.expandLabel}
-            >
-              <span className="font-heading font-bold text-sm text-cyber-primary leading-none">
-                {killChain.title}
-              </span>
-              <motion.span
-                animate={{ rotate: killChainOpen ? 90 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="text-cyber-primary text-xs leading-none flex-shrink-0"
-                aria-hidden
-              >
-                ▶
-              </motion.span>
-            </button>
-            <AnimatePresence initial={false}>
-              {killChainOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="overflow-hidden"
-                >
-                  <div className="px-3 pb-3 max-h-56 overflow-y-auto cyber-scrollbar border-t border-cyber-border pt-2">
-                    <p className="text-sm text-gray-400 mb-3">{killChain.intro}</p>
-                    <ol className="text-sm text-gray-400 space-y-2 list-decimal list-inside leading-relaxed">
-                      {killChain.steps.map((step) => (
-                        <li key={step}>{step}</li>
-                      ))}
-                    </ol>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <MissionKillChainSection
+            killChain={killChain}
+            isOpen={killChainOpen}
+            onToggle={() => setKillChainOpen((open) => !open)}
+          />
         )}
         {currentMission.mitreTechniques.length > 0 && (
           <div className="mt-4">
@@ -299,138 +388,47 @@ export default function MissionAssignmentsPage() {
             <div className="flex flex-wrap gap-2">
               {currentMission.mitreTechniques.map((techId) => {
                 const tech = mitreTechniques[techId];
-                return tech ? (
-                  <div
-                    key={techId}
-                    className="text-xs font-mono px-2 py-1 bg-cyber-panel border border-cyber-border rounded text-cyber-primary"
-                    title={tech.name}
-                  >
-                    {tech.id}
-                  </div>
-                ) : (
-                  <div
-                    key={techId}
-                    className="text-xs font-mono px-2 py-1 bg-cyber-panel border border-cyber-border rounded text-gray-400"
-                  >
-                    {techId}
-                  </div>
-                );
+                return <MitreTechniqueChip key={techId} techniqueId={techId} title={tech?.name} />;
               })}
             </div>
           </div>
         )}
       </div>
 
-      {/* Assignments List */}
-      <div className="space-y-4">
-        <h2 className="font-heading font-bold text-xl text-cyber-primary mb-4">
-          {t('missionAssignmentsSubtitle', { ns: 'ui', count: levels.length })}
-        </h2>
-        
-        {levels.map((level, index) => {
-          const isCompleted = userProgress[level.level_id] || false;
-          const isAvailable = isAssignmentAvailable(index);
-          
-          return (
-            <motion.div
+      {/* Assignments */}
+      <h2 className="font-heading font-bold text-xl text-cyber-primary mb-4">
+        {t('missionAssignmentsSubtitle', { ns: 'ui', count: levels.length })}
+      </h2>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <div className="min-w-0 space-y-2">
+          {levels.map((level, index) => (
+            <AssignmentListItem
               key={level.level_id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={isAvailable ? { scale: 1.02 } : {}}
-              whileTap={isAvailable ? { scale: 0.98 } : {}}
-              onClick={() => isAvailable && handleStartAssignment(level)}
-              className={`cyber-panel p-4 sm:p-6 border-2 transition-all duration-300 ${
-                !isAvailable
-                  ? 'border-cyber-border/30 opacity-50 cursor-not-allowed'
-                  : isCompleted
-                  ? 'border-cyber-success hover:border-cyber-success hover:cyber-glow cursor-pointer'
-                  : 'border-cyber-border hover:border-cyber-primary hover:cyber-glow cursor-pointer'
-              }`}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span
-                      className={`text-sm font-medium ${
-                        isCompleted
-                          ? 'text-cyber-success'
-                          : !isAvailable
-                            ? 'text-red-400'
-                            : 'text-yellow-400'
-                      }`}
-                    >
-                      {isCompleted
-                        ? t('assignmentStatusCompleted', { ns: 'ui' })
-                        : !isAvailable
-                          ? t('assignmentStatusLocked', { ns: 'ui' })
-                          : t('assignmentStatusIncomplete', { ns: 'ui' })}
-                    </span>
-                  </div>
-                  <h3 className="font-heading font-bold text-lg text-cyber-primary mb-2">
-                    {getLevelTitle(level.level_id, level.title)}
-                  </h3>
-                  
-                  {/* MITRE Technique */}
-                  {level.mitre_technique && (
-                    <div className="mb-3">
-                      <MitreTechniqueBadge
-                        technique={level.mitre_technique}
-                        size="sm"
-                      />
-                    </div>
-                  )}
+              level={level}
+              index={index}
+              isCompleted={userProgress[level.level_id] || false}
+              isAvailable={isAssignmentAvailable(index)}
+              isSelected={selectedLevelId === level.level_id}
+              isEn={isEn}
+              title={getLevelTitle(level.level_id, level.title)}
+              taskTypeLabel={getTaskTypeLabel(level.task_type)}
+              onSelect={handleSelectAssignment}
+              onStart={handleStartAssignment}
+            />
+          ))}
+        </div>
 
-                  {/* Task Type */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs text-gray-500">
-                      {t('taskTypeCaption', { ns: 'ui' })}
-                    </span>
-                    <span className="text-xs px-2 py-1 bg-cyber-panel border border-cyber-border rounded text-cyber-primary">
-                      {level.task_type === 'code_editor' && t('taskTypeCodeEditor', { ns: 'ui' })}
-                      {level.task_type === 'tactical_choice' && t('taskTypeTacticalChoice', { ns: 'ui' })}
-                      {level.task_type === 'phishing_constructor' && t('taskTypePhishingConstructor', { ns: 'ui' })}
-                      {level.task_type === 'sentence_constructor' && t('taskTypeSentenceConstructor', { ns: 'ui' })}
-                    </span>
-                  </div>
+        {selectedLevel && (
+          <div className="lg:hidden mt-4">
+            <AnimatePresence mode="wait">{assignmentPanel}</AnimatePresence>
+          </div>
+        )}
 
-                  {/* Rewards */}
-                  {level.rewards && (
-                    <div className="flex items-center gap-4 text-xs text-gray-400">
-                      {level.rewards.xp > 0 && (
-                        <span>XP: +{level.rewards.xp}</span>
-                      )}
-                      {level.rewards.stealth_impact !== 0 && (
-                        <span>
-                          Stealth: {level.rewards.stealth_impact > 0 ? '+' : ''}
-                          {level.rewards.stealth_impact}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-cyber-primary">
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+        <aside className="hidden lg:flex min-w-0">
+          <AnimatePresence mode="wait">{assignmentPanel}</AnimatePresence>
+        </aside>
       </div>
     </div>
   );
 }
-

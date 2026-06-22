@@ -10,6 +10,24 @@ const prisma = new PrismaClient();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+function rankFromXp(xp: number): string {
+  if (xp >= 5000) return 'Elite Hacker';
+  if (xp >= 3000) return 'Advanced Hacker';
+  if (xp >= 1500) return 'Intermediate Hacker';
+  if (xp >= 500) return 'Novice Hacker';
+  return 'Script Kiddie';
+}
+
+type SeedUser = {
+  username: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  xp?: number;
+  completedLevels?: number;
+  stealth?: number;
+};
+
 async function main() {
   console.log('🌱 Seeding database...\n');
 
@@ -19,12 +37,15 @@ async function main() {
     where: { email: { in: legacyTestEmails } },
   });
 
-  const testUsers = [
+  const testUsers: SeedUser[] = [
     {
       username: 'admin',
       email: 'admin@cybertactics.test',
       password: 'admin123',
       role: UserRole.ADMIN,
+      xp: 2250,
+      completedLevels: 8,
+      stealth: 85,
     },
     {
       username: 'user',
@@ -32,7 +53,79 @@ async function main() {
       password: 'user123',
       role: UserRole.USER,
     },
-  ] as const;
+    {
+      username: 'phantom',
+      email: 'phantom@cybertactics.test',
+      password: 'user123',
+      role: UserRole.USER,
+      xp: 5200,
+      completedLevels: 14,
+      stealth: 70,
+    },
+    {
+      username: 'zeroday',
+      email: 'zeroday@cybertactics.test',
+      password: 'user123',
+      role: UserRole.USER,
+      xp: 3400,
+      completedLevels: 10,
+      stealth: 78,
+    },
+    {
+      username: 'shadow',
+      email: 'shadow@cybertactics.test',
+      password: 'user123',
+      role: UserRole.USER,
+      xp: 2100,
+      completedLevels: 7,
+      stealth: 82,
+    },
+    {
+      username: 'cipher',
+      email: 'cipher@cybertactics.test',
+      password: 'user123',
+      role: UserRole.USER,
+      xp: 1650,
+      completedLevels: 6,
+      stealth: 88,
+    },
+    {
+      username: 'nexus',
+      email: 'nexus@cybertactics.test',
+      password: 'user123',
+      role: UserRole.USER,
+      xp: 900,
+      completedLevels: 4,
+      stealth: 91,
+    },
+    {
+      username: 'raven',
+      email: 'raven@cybertactics.test',
+      password: 'user123',
+      role: UserRole.USER,
+      xp: 550,
+      completedLevels: 2,
+      stealth: 95,
+    },
+    {
+      username: 'ghost_ops',
+      email: 'ghost_ops@cybertactics.test',
+      password: 'user123',
+      role: UserRole.USER,
+      xp: 120,
+      completedLevels: 1,
+      stealth: 98,
+    },
+    {
+      username: 'iron_wolf',
+      email: 'iron_wolf@cybertactics.test',
+      password: 'user123',
+      role: UserRole.USER,
+      xp: 40,
+      completedLevels: 0,
+      stealth: 100,
+    },
+  ];
 
   for (const account of testUsers) {
     await prisma.user.deleteMany({
@@ -40,6 +133,10 @@ async function main() {
     });
 
     const passwordHash = await bcrypt.hash(account.password, 10);
+    const xp = account.xp ?? 0;
+    const rank = rankFromXp(xp);
+    const stealth = account.stealth ?? 100;
+    const completedLevels = account.completedLevels ?? 0;
 
     const user = await prisma.user.create({
       data: {
@@ -47,28 +144,28 @@ async function main() {
         email: account.email,
         passwordHash,
         role: account.role,
-        xp: 0,
-        rank: 'Script Kiddie',
-        stealth: 100,
+        xp,
+        rank,
+        stealth,
       },
     });
 
     await prisma.userStats.create({
       data: {
         userId: user.id,
-        totalXp: 0,
-        rank: 'Script Kiddie',
-        stealth: 100,
-        completedLevels: 0,
+        totalXp: xp,
+        rank,
+        stealth,
+        completedLevels,
       },
     });
-
-    console.log('✅ Test user created successfully!');
-    console.log('📧 Credentials:');
-    console.log(`   Email: ${account.email}`);
-    console.log(`   Password: ${account.password}`);
-    console.log('');
   }
+
+  console.log(`✅ Seeded ${testUsers.length} users`);
+  console.log('📧 Primary credentials:');
+  console.log('   admin@cybertactics.test / admin123');
+  console.log('   user@cybertactics.test / user123');
+  console.log('   Other demo users: *@cybertactics.test / user123\n');
 
   console.log('🔄 Loading missions and levels from JSON files...\n');
 
@@ -90,6 +187,7 @@ async function main() {
             name: missionData.name,
             description: missionData.description,
             difficulty: missionData.difficulty,
+            orderIndex: missionData.order_index ?? 1,
             mitreTechniques: missionData.mitre_techniques || [],
           },
           create: {
@@ -97,7 +195,7 @@ async function main() {
             name: missionData.name,
             description: missionData.description,
             difficulty: missionData.difficulty,
-            orderIndex: 1,
+            orderIndex: missionData.order_index ?? 1,
             mitreTechniques: missionData.mitre_techniques || [],
           },
         });

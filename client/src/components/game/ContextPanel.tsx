@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { DialogueMessage, EmailSubmission, Level, SentenceConstructorSubmission } from '@cybertactics/shared';
+import type {
+  DialogueMessage,
+  EmailSubmission,
+  Level,
+  SentenceConstructorSubmission,
+} from '@cybertactics/shared';
 import { useGameStore } from '@/store/gameStore.ts';
 import DialogueLog from './DialogueLog';
 import MitreTechniqueBadge from '../mitre/MitreTechniqueBadge';
@@ -56,7 +61,11 @@ function formatLastAnswer(level: Level | null, lastAnswer: string): string {
           .join(' ');
         if (text) {
           const label =
-            field.id === 'subject' ? 'Тема' : field.id === 'body' ? 'Текст' : field.label || field.id;
+            field.id === 'subject'
+              ? 'Тема'
+              : field.id === 'body'
+                ? 'Текст'
+                : field.label || field.id;
           parts.push(`${label}: ${text}`);
         }
       }
@@ -90,7 +99,7 @@ function enrichProgressDialogues(
     lastAnswer: string | null;
     notCompletedText: string;
     handlerCompletedText?: string;
-  },
+  }
 ): DialogueMessage[] {
   const result = [...dialogues];
 
@@ -150,7 +159,9 @@ export default function ContextPanel() {
     <div className="h-full cyber-panel flex flex-col">
       {currentLevel?.mitre_technique && (
         <div className="mb-4 pb-4 border-b border-cyber-border">
-          <div className="text-xs text-gray-500 mb-2">{t('currentMitreTechnique', { ns: 'ui' })}</div>
+          <div className="text-xs text-gray-500 mb-2">
+            {t('currentMitreTechnique', { ns: 'ui' })}
+          </div>
           <MitreTechniqueBadge
             technique={currentLevel.mitre_technique}
             size="sm"

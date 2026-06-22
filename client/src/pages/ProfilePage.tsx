@@ -64,9 +64,7 @@ export default function ProfilePage() {
       setCropImageSrc(null);
     } catch (uploadError) {
       setError(
-        uploadError instanceof Error
-          ? uploadError.message
-          : t('uploadFailed', { ns: 'profile' }),
+        uploadError instanceof Error ? uploadError.message : t('uploadFailed', { ns: 'profile' })
       );
     } finally {
       setIsSaving(false);

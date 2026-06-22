@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -22,12 +19,11 @@ export default {
         body: ['Inter', 'sans-serif'],
       },
       boxShadow: {
-        'glow': '0 0 10px rgba(0, 217, 255, 0.5)',
+        glow: '0 0 10px rgba(0, 217, 255, 0.5)',
         'glow-green': '0 0 10px rgba(0, 255, 133, 0.5)',
         'glow-pink': '0 0 10px rgba(255, 0, 110, 0.5)',
       },
     },
   },
   plugins: [],
-}
-
+};

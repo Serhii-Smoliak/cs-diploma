@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { useGameStore } from '../../store/gameStore';
 import { api, ApiError } from '../../services/api';
+import { STEALTH_MASKING_RESTORE, wouldMaskingExceedMax } from '../../constants/stealth';
 
 function formatRetryAfter(ms: number, locale: string): string {
   const totalSeconds = Math.max(1, Math.ceil(ms / 1000));
@@ -89,7 +90,7 @@ export default function StealthDepletedModal() {
           t('stealthWaitNotReady', {
             ns: 'ui',
             time: formatRetryAfter(retryAfterMs, i18n.language),
-          }),
+          })
         );
         closeStealthModal();
       } else {
@@ -104,6 +105,10 @@ export default function StealthDepletedModal() {
   const handlePremium = () => {
     setNotice(t('stealthPremiumMock', { ns: 'ui' }));
   };
+
+  const stealth = user?.stealth ?? 100;
+  const isDepleted = stealth <= 0;
+  const isMaskingUnavailable = wouldMaskingExceedMax(stealth);
 
   if (!user) {
     return null;
@@ -128,9 +133,11 @@ export default function StealthDepletedModal() {
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
               transition={{ type: 'spring', duration: 0.35 }}
               onClick={(event) => event.stopPropagation()}
-              className="w-full max-w-md cyber-panel border-2 border-cyber-danger p-6 shadow-2xl pointer-events-auto relative"
+              className={`w-full max-w-md cyber-panel border-2 p-6 shadow-2xl pointer-events-auto relative ${
+                isDepleted ? 'border-cyber-danger' : 'border-cyber-success/40'
+              }`}
               role="dialog"
-              aria-labelledby="stealth-depleted-title"
+              aria-labelledby="stealth-modal-title"
             >
               <button
                 type="button"
@@ -143,12 +150,26 @@ export default function StealthDepletedModal() {
               </button>
 
               <h2
-                id="stealth-depleted-title"
-                className="font-heading font-bold text-xl text-cyber-danger mb-2 pr-8"
+                id="stealth-modal-title"
+                className={`font-heading font-bold text-xl mb-2 pr-8 ${
+                  isDepleted ? 'text-cyber-danger' : 'text-cyber-primary'
+                }`}
               >
-                {t('stealthDepletedTitle', { ns: 'ui' })}
+                {isDepleted
+                  ? t('stealthDepletedTitle', { ns: 'ui' })
+                  : t('stealthManageTitle', { ns: 'ui', defaultValue: 'Stealth' })}
               </h2>
-              <p className="text-gray-400 text-sm mb-6">{t('stealthDepletedMessage', { ns: 'ui' })}</p>
+              <p className="text-gray-400 text-sm mb-6">
+                {isDepleted
+                  ? t('stealthDepletedMessage', { ns: 'ui' })
+                  : t('stealthManageMessage', {
+                      ns: 'ui',
+                      stealth,
+                      defaultValue: i18n.language.startsWith('en')
+                        ? `Current stealth: ${stealth}%. Choose a recovery option:`
+                        : `Поточний стелс: ${stealth}%. Оберіть спосіб поповнення:`,
+                    })}
+              </p>
 
               {notice && (
                 <p className="text-yellow-400 text-sm mb-4 rounded border border-yellow-400/30 bg-yellow-400/10 px-3 py-2 leading-relaxed">
@@ -159,12 +180,42 @@ export default function StealthDepletedModal() {
               <div className="flex flex-col gap-3">
                 <button
                   type="button"
-                  disabled={isLoading}
+                  disabled={isLoading || isMaskingUnavailable}
                   onClick={handleMasking}
-                  className="w-full cyber-button-success py-3 disabled:opacity-50"
+                  title={
+                    isMaskingUnavailable
+                      ? t('stealthMaskingUnavailable', {
+                          ns: 'ui',
+                          stealth,
+                          amount: STEALTH_MASKING_RESTORE,
+                          defaultValue: i18n.language.startsWith('en')
+                            ? `Masking (+${STEALTH_MASKING_RESTORE}%) would exceed 100% (current: ${stealth}%).`
+                            : `Маскування (+${STEALTH_MASKING_RESTORE}%) перевищить 100% (зараз: ${stealth}%).`,
+                        })
+                      : undefined
+                  }
+                  className="w-full cyber-button-success py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {t('stealthBuyMasking', { ns: 'ui' })}
+                  {t('stealthBuyMasking', {
+                    ns: 'ui',
+                    amount: STEALTH_MASKING_RESTORE,
+                    defaultValue: i18n.language.startsWith('en')
+                      ? `Buy ${STEALTH_MASKING_RESTORE}% masking — restore stealth`
+                      : `Купити ${STEALTH_MASKING_RESTORE}% маскування — відновити стелс`,
+                  })}
                 </button>
+                {isMaskingUnavailable && (
+                  <p className="text-xs text-gray-500 -mt-1 text-center">
+                    {t('stealthMaskingUnavailable', {
+                      ns: 'ui',
+                      stealth,
+                      amount: STEALTH_MASKING_RESTORE,
+                      defaultValue: i18n.language.startsWith('en')
+                        ? `Masking (+${STEALTH_MASKING_RESTORE}%) would exceed 100% (current: ${stealth}%).`
+                        : `Маскування (+${STEALTH_MASKING_RESTORE}%) перевищить 100% (зараз: ${stealth}%).`,
+                    })}
+                  </p>
+                )}
                 <button
                   type="button"
                   disabled={isLoading}

@@ -62,9 +62,7 @@ export default function AvatarCropModal({
         </div>
 
         <div className="mt-4">
-          <label className="block text-sm text-gray-400 mb-2">
-            {t('zoom', { ns: 'profile' })}
-          </label>
+          <label className="block text-sm text-gray-400 mb-2">{t('zoom', { ns: 'profile' })}</label>
           <input
             type="range"
             min={1}
@@ -76,9 +74,7 @@ export default function AvatarCropModal({
           />
         </div>
 
-        <p className="text-xs text-gray-500 mt-3">
-          {t('cropHint', { ns: 'profile' })}
-        </p>
+        <p className="text-xs text-gray-500 mt-3">{t('cropHint', { ns: 'profile' })}</p>
 
         <div className="flex justify-end gap-3 mt-6">
           <button

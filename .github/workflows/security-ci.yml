@@ -44,6 +44,7 @@ jobs:
           npm run db:generate
           npm run lint
           npm run format:check
+          npm run test:coverage
           npm run build
 
       - name: Client checks
@@ -51,7 +52,17 @@ jobs:
         run: |
           npm ci
           npm run lint
+          npm run test:coverage
           npm run build
+
+      - name: Upload coverage for Sonar
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            client/coverage/lcov.info
+            server/coverage/lcov.info
+          if-no-files-found: error
 
   dependency-audit:
     name: Dependency audit
@@ -94,6 +105,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-reports
+
+      - name: Verify coverage reports
+        run: |
+          test -f client/coverage/lcov.info
+          test -f server/coverage/lcov.info
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         env:
@@ -104,6 +125,7 @@ jobs:
             -Dsonar.organization=serhii-smoliak
             -Dsonar.projectKey=Serhii-Smoliak_cs-diploma
             -Dsonar.qualitygate.wait=true
+            -Dsonar.javascript.lcov.reportPaths=client/coverage/lcov.info,server/coverage/lcov.info
 
   snyk-deps:
     name: Snyk dependencies

@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { User } from '@cybertactics/shared';
 import { api } from '../services/api';
 import { applyLocale } from '../i18n/applyLocale';
+import { registerSessionExpiredHandler, resetSessionExpiredGuard } from '../auth/sessionExpired';
 
 interface AuthState {
   user: User | null;
@@ -28,12 +29,14 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email: string, password: string) => {
         const { user } = await api.login(email, password);
+        resetSessionExpiredGuard();
         set({ user, isAuthenticated: true });
         await syncUserLocale(user);
       },
 
       register: async (username: string, email: string, password: string) => {
         const { user } = await api.register(username, email, password);
+        resetSessionExpiredGuard();
         set({ user, isAuthenticated: true });
         await syncUserLocale(user);
       },
@@ -50,17 +53,21 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refreshUser: async () => {
-        const { user } = get();
-        if (user?.id) {
-          try {
-            const profile = await api.getCurrentUser();
-            set({ user: { ...user, ...profile } });
-            if (profile.preferredLocale) {
-              await applyLocale(profile.preferredLocale);
-            }
-          } catch (error) {
-            console.error('Failed to refresh user:', error);
+        if (!api.getToken()) {
+          if (get().isAuthenticated) {
+            get().logout();
           }
+          return;
+        }
+
+        try {
+          const profile = await api.getCurrentUser();
+          set({ user: profile, isAuthenticated: true });
+          if (profile.preferredLocale) {
+            await applyLocale(profile.preferredLocale);
+          }
+        } catch (error) {
+          console.error('Failed to refresh user:', error);
         }
       },
     }),
@@ -71,3 +78,6 @@ export const useAuthStore = create<AuthState>()(
   )
 );
 
+registerSessionExpiredHandler(() => {
+  useAuthStore.getState().logout();
+});

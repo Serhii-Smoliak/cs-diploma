@@ -24,7 +24,7 @@ export default function LanguageSwitcher() {
     const loadLanguages = async () => {
       try {
         const langs = await api.getLanguages();
-        setLanguages(langs.filter(lang => lang.isActive));
+        setLanguages(langs.filter((lang) => lang.isActive));
         setLoading(false);
       } catch (error) {
         console.error('Failed to load languages:', error);
@@ -40,7 +40,7 @@ export default function LanguageSwitcher() {
 
   useEffect(() => {
     if (!loading && languages.length > 0) {
-      const currentLang = languages.find(lang => lang.code === i18n.language);
+      const currentLang = languages.find((lang) => lang.code === i18n.language);
       if (!currentLang) {
         i18n.changeLanguage('uk');
       }
@@ -82,7 +82,7 @@ export default function LanguageSwitcher() {
   }
 
   const currentLanguage = i18n.language;
-  const currentLang = languages.find(lang => lang.code === currentLanguage) || languages[0];
+  const currentLang = languages.find((lang) => lang.code === currentLanguage) || languages[0];
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -118,4 +118,3 @@ export default function LanguageSwitcher() {
     </div>
   );
 }
-

