@@ -17,13 +17,7 @@ const taskProgress = vi.hoisted(() => ({
 }));
 
 vi.mock('@monaco-editor/react', () => ({
-  default: ({
-    value,
-    onChange,
-  }: {
-    value?: string;
-    onChange?: (value: string) => void;
-  }) => (
+  default: ({ value, onChange }: { value?: string; onChange?: (value: string) => void }) => (
     <textarea
       aria-label="code-editor"
       value={value}

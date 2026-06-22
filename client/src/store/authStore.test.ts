@@ -31,11 +31,14 @@ vi.mock('../i18n/applyLocale', () => ({
   applyLocale: vi.fn().mockResolvedValue(undefined),
 }));
 
+const registerSessionExpiredHandler = vi.hoisted(() => vi.fn());
+
 vi.mock('../auth/sessionExpired', () => ({
-  registerSessionExpiredHandler: vi.fn(),
+  registerSessionExpiredHandler,
   resetSessionExpiredGuard: vi.fn(),
 }));
 
+import { applyLocale } from '../i18n/applyLocale';
 import { useAuthStore } from './authStore';
 
 const mockUser: User = {
@@ -56,6 +59,7 @@ describe('useAuthStore', () => {
     clearToken.mockReset();
     getToken.mockReset();
     getCurrentUser.mockReset();
+    vi.mocked(applyLocale).mockClear();
     useAuthStore.setState({ user: null, isAuthenticated: false });
   });
 
@@ -124,5 +128,39 @@ describe('useAuthStore', () => {
     await useAuthStore.getState().refreshUser();
 
     expect(useAuthStore.getState().user).toEqual(mockUser);
+  });
+
+  it('syncs locale after login when user has preferred locale', async () => {
+    login.mockResolvedValue({ user: mockUser });
+
+    await useAuthStore.getState().login('agent@test.com', 'pass');
+
+    expect(applyLocale).toHaveBeenCalledWith('en');
+  });
+
+  it('skips locale sync when user has no preferred locale', async () => {
+    login.mockResolvedValue({ user: { ...mockUser, preferredLocale: undefined } });
+
+    await useAuthStore.getState().login('agent@test.com', 'pass');
+
+    expect(applyLocale).not.toHaveBeenCalled();
+  });
+
+  it('ignores updateUser when user is absent', () => {
+    useAuthStore.getState().updateUser({ xp: 999 });
+
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  it('logs out when session expired handler fires', () => {
+    const handler = registerSessionExpiredHandler.mock.calls.at(-1)?.[0] as
+      | (() => void)
+      | undefined;
+    useAuthStore.setState({ user: mockUser, isAuthenticated: true });
+
+    handler?.();
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
   });
 });

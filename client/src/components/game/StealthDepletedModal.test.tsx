@@ -165,6 +165,63 @@ describe('StealthDepletedModal', () => {
     });
   });
 
+  it('formats retry time in seconds when under one minute', async () => {
+    waitForStealthRecovery.mockRejectedValueOnce(
+      new ApiError('Too many requests', 429, { retryAfterMs: 45000, stealth: 0 })
+    );
+    const user = userEvent.setup();
+
+    render(<StealthDepletedModal />);
+    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
+
+    await waitFor(() => {
+      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:45s');
+    });
+  });
+
+  it('formats retry time in minutes only', async () => {
+    waitForStealthRecovery.mockRejectedValueOnce(
+      new ApiError('Too many requests', 429, { retryAfterMs: 120000, stealth: 0 })
+    );
+    const user = userEvent.setup();
+
+    render(<StealthDepletedModal />);
+    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
+
+    await waitFor(() => {
+      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:2m');
+    });
+  });
+
+  it('formats retry time in whole hours only', async () => {
+    waitForStealthRecovery.mockRejectedValueOnce(
+      new ApiError('Too many requests', 429, { retryAfterMs: 7200000, stealth: 0 })
+    );
+    const user = userEvent.setup();
+
+    render(<StealthDepletedModal />);
+    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
+
+    await waitFor(() => {
+      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:2h');
+    });
+  });
+
+  it('formats retry time in ukrainian whole hours only', async () => {
+    authState.language = 'uk';
+    waitForStealthRecovery.mockRejectedValueOnce(
+      new ApiError('Too many requests', 429, { retryAfterMs: 3600000, stealth: 0 })
+    );
+    const user = userEvent.setup();
+
+    render(<StealthDepletedModal />);
+    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
+
+    await waitFor(() => {
+      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:1 год');
+    });
+  });
+
   it('shows notice when wait recovery fails', async () => {
     waitForStealthRecovery.mockRejectedValueOnce(new Error('network'));
     const user = userEvent.setup();

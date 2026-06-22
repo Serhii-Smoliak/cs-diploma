@@ -90,6 +90,17 @@ describe('main bootstrap', () => {
     });
   });
 
+  it('ignores persisted auth without state payload', async () => {
+    vi.resetModules();
+    localStorage.setItem('cybertactics-auth', JSON.stringify({ version: 1 }));
+
+    await import('./main.tsx');
+
+    await vi.waitFor(() => {
+      expect(applyLocale).toHaveBeenCalledWith('uk');
+    });
+  });
+
   it('logs bootstrap errors when locale init fails', async () => {
     vi.resetModules();
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);

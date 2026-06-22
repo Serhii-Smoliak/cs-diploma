@@ -154,4 +154,19 @@ describe('MissionAssignmentsPage', () => {
 
     expect(await screen.findByText('Find admin email')).toBeInTheDocument();
   });
+
+  it('redirects when mission load fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('missions down');
+      })
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalledWith('/missions');
+    });
+  });
 });
