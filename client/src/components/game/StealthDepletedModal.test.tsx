@@ -55,8 +55,8 @@ vi.mock('../../services/api', () => ({
   ApiError: class ApiError extends Error {
     status: number;
     body: Record<string, unknown>;
-    constructor(status: number, body: Record<string, unknown>) {
-      super('ApiError');
+    constructor(message: string, status: number, body: Record<string, unknown> = {}) {
+      super(message);
       this.status = status;
       this.body = body;
     }
@@ -116,7 +116,7 @@ describe('StealthDepletedModal', () => {
 
   it('handles 429 wait recovery with retry notice', async () => {
     waitForStealthRecovery.mockRejectedValueOnce(
-      new ApiError(429, { retryAfterMs: 90000, stealth: 5 })
+      new ApiError('Too many requests', 429, { retryAfterMs: 90000, stealth: 5 })
     );
     const user = userEvent.setup();
 
