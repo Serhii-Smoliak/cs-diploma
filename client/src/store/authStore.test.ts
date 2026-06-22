@@ -153,9 +153,8 @@ describe('useAuthStore', () => {
   });
 
   it('logs out when session expired handler fires', () => {
-    const handler = registerSessionExpiredHandler.mock.calls.at(-1)?.[0] as
-      | (() => void)
-      | undefined;
+    const calls = registerSessionExpiredHandler.mock.calls;
+    const handler = calls[calls.length - 1]?.[0] as (() => void) | undefined;
     useAuthStore.setState({ user: mockUser, isAuthenticated: true });
 
     handler?.();
