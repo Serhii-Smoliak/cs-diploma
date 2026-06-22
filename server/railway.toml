@@ -1,6 +1,0 @@
-# Railway service: cs-diploma-be (set Root Directory to "server" in Railway dashboard)
-[build]
-buildCommand = "cd ../shared && npm ci && npm run build && npm ci && npm run db:generate && npm run build"
-
-[deploy]
-startCommand = "node dist/index.js"
