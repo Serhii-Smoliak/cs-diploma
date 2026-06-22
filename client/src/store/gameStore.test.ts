@@ -98,4 +98,84 @@ describe('useGameStore extended', () => {
     useGameStore.getState().setRetryMode(true);
     expect(useGameStore.getState().retryMode).toBe(true);
   });
+
+  it('refreshLevelProgress loads progress from api', async () => {
+    getUserProgress.mockResolvedValue([
+      { levelId: 'ghost_recon_01', completed: true, lastAnswer: 'answer' },
+    ]);
+    useGameStore.setState({ currentLevel: createTestLevel() });
+
+    await useGameStore.getState().refreshLevelProgress();
+
+    expect(useGameStore.getState().levelProgress).toEqual({
+      completed: true,
+      lastAnswer: 'answer',
+    });
+  });
+
+  it('refreshLevelProgress clears progress without level', async () => {
+    await useGameStore.getState().refreshLevelProgress();
+    expect(useGameStore.getState().levelProgress).toBeNull();
+  });
+
+  it('loadLevel fetches levels when cache is empty', async () => {
+    getMissionLevels.mockResolvedValue([createTestLevel()]);
+    useGameStore.setState({ currentMission: testMission, levels: [] });
+
+    await useGameStore.getState().loadLevel('ghost_recon_01');
+
+    expect(useGameStore.getState().currentLevel?.level_id).toBe('ghost_recon_01');
+  });
+
+  it('loadLevel searches all missions when level missing locally', async () => {
+    getMissions.mockResolvedValue([testMission]);
+    getMissionLevels.mockResolvedValue([createTestLevel()]);
+
+    await useGameStore.getState().loadLevel('ghost_recon_01');
+
+    expect(useGameStore.getState().currentMission?.id).toBe(testMission.id);
+    expect(useGameStore.getState().currentLevel?.level_id).toBe('ghost_recon_01');
+  });
+
+  it('submitAnswer updates stealth and xp on success', async () => {
+    authState.updateUser = vi.fn();
+    useGameStore.setState({ currentLevel: createTestLevel() });
+    submitAnswer.mockResolvedValue({
+      success: true,
+      message: 'OK',
+      xpGained: 25,
+      stealth: 70,
+    });
+
+    const result = await useGameStore.getState().submitAnswer('.*');
+
+    expect(result?.success).toBe(true);
+    expect(authState.updateUser).toHaveBeenCalledWith({ stealth: 70 });
+    expect(authState.updateUser).toHaveBeenCalledWith({ xp: 125 });
+  });
+
+  it('submitAnswer opens stealth modal when server reports depletion', async () => {
+    useGameStore.setState({ currentLevel: createTestLevel() });
+    submitAnswer.mockResolvedValue({
+      success: false,
+      message: 'Low stealth',
+      stealthDepleted: true,
+    });
+
+    await useGameStore.getState().submitAnswer('bad');
+
+    expect(useGameStore.getState().stealthModalOpen).toBe(true);
+  });
+
+  it('submitAnswer throws when no level selected', async () => {
+    await expect(useGameStore.getState().submitAnswer('x')).rejects.toThrow('No level selected');
+  });
+
+  it('setMission stores error when api fails', async () => {
+    getMissionLevels.mockRejectedValue(new Error('network'));
+
+    await useGameStore.getState().setMission(testMission);
+
+    expect(useGameStore.getState().error).toBe('network');
+  });
 });

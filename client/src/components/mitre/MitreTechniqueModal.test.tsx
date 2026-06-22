@@ -88,4 +88,35 @@ describe('MitreTechniqueModal', () => {
     await userEvent.click(closeButtons[closeButtons.length - 1]!);
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('shows error when technique details fail to load', async () => {
+    getMitreTechnique.mockRejectedValueOnce(new Error('network'));
+
+    render(
+      <MemoryRouter>
+        <MitreTechniqueModal technique={technique} isOpen isCompleted={false} onClose={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(getMitreTechnique).toHaveBeenCalledWith('T1593');
+    });
+    expect(screen.getAllByText('T1593').length).toBeGreaterThan(0);
+  });
+
+  it('copies technique id to clipboard', async () => {
+    const userEvents = userEvent.setup();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
+    getMitreTechnique.mockResolvedValue({ ...technique, relatedMissions: [] });
+
+    render(
+      <MemoryRouter>
+        <MitreTechniqueModal technique={technique} isOpen isCompleted onClose={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    await userEvents.click(screen.getByRole('button', { name: 'T1593' }));
+    expect(writeText).toHaveBeenCalledWith('T1593');
+  });
 });

@@ -78,4 +78,25 @@ describe('LoginPage', () => {
     expect(screen.getByText('register')).toHaveAttribute('disabled');
     expect(register).not.toHaveBeenCalled();
   });
+
+  it('shows error when register fails', async () => {
+    register.mockRejectedValueOnce(new Error('Email taken'));
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'switchToRegister' }));
+    const [usernameInput, emailInput, passwordInput] = document.querySelectorAll('form input');
+    fireEvent.change(usernameInput!, { target: { value: 'agent' } });
+    fireEvent.change(emailInput!, { target: { value: 'agent@test.com' } });
+    fireEvent.change(passwordInput!, { target: { value: 'secret12' } });
+    await user.click(screen.getByRole('checkbox'));
+    fireEvent.submit(document.querySelector('form')!);
+
+    expect(await screen.findByText('Email taken')).toBeInTheDocument();
+  });
 });

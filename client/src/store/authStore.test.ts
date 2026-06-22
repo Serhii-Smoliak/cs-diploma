@@ -96,4 +96,33 @@ describe('useAuthStore', () => {
 
     expect(useAuthStore.getState().user?.xp).toBe(300);
   });
+
+  it('registers user and stores session', async () => {
+    register.mockResolvedValue({ user: mockUser });
+
+    await useAuthStore.getState().register('agent', 'agent@test.com', 'secret12');
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(useAuthStore.getState().user).toEqual(mockUser);
+  });
+
+  it('logs out when refreshUser called without token', async () => {
+    getToken.mockReturnValue(null);
+    useAuthStore.setState({ user: mockUser, isAuthenticated: true });
+
+    await useAuthStore.getState().refreshUser();
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  it('ignores refreshUser errors', async () => {
+    getToken.mockReturnValue('token');
+    getCurrentUser.mockRejectedValue(new Error('network'));
+    useAuthStore.setState({ user: mockUser, isAuthenticated: true });
+
+    await useAuthStore.getState().refreshUser();
+
+    expect(useAuthStore.getState().user).toEqual(mockUser);
+  });
 });

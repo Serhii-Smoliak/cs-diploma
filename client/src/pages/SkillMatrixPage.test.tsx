@@ -94,4 +94,24 @@ describe('SkillMatrixPage', () => {
 
     expect(screen.queryByText(testMitreTechnique.name)).not.toBeInTheDocument();
   });
+
+  it('collapses all tactics and toggles completed filter', async () => {
+    const userEvents = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <SkillMatrixPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('reconnaissance');
+    await userEvents.click(screen.getByTitle('expandAll'));
+    await screen.findByText(testMitreTechnique.name);
+    await userEvents.click(screen.getByTitle('collapseAll'));
+    await userEvents.selectOptions(screen.getByRole('combobox'), 'completed');
+    await userEvents.selectOptions(screen.getByRole('combobox'), 'incomplete');
+    await userEvents.selectOptions(screen.getByRole('combobox'), 'all');
+
+    expect(screen.getByText('reconnaissance')).toBeInTheDocument();
+  });
 });
