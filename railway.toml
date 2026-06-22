@@ -1,5 +1,0 @@
-[build]
-buildCommand = "cd shared && npm ci && npm run build && cd ../server && npm ci && npm run db:generate && npm run build"
-
-[deploy]
-startCommand = "cd server && node dist/index.js"
