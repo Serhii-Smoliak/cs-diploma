@@ -20,10 +20,10 @@ vi.mock('../services/api', () => ({
   },
 }));
 
-import { api } from '../services/api';
+import { api, type NewsPost } from '../services/api';
 import AdminNewsPage from './AdminNewsPage';
 
-const samplePost = {
+const samplePost: NewsPost = {
   id: 'news-1',
   titleUk: 'Новина UA',
   titleEn: 'News EN',
@@ -33,10 +33,16 @@ const samplePost = {
   body: 'Текст UA',
   isPublished: true,
   publishedAt: '2026-06-23T10:00:00.000Z',
+  authorId: 'admin-1',
   createdAt: '2026-06-23T10:00:00.000Z',
   updatedAt: '2026-06-23T10:00:00.000Z',
   authorUsername: 'admin',
 };
+
+function clickConfirmDelete(user: ReturnType<typeof userEvent.setup>) {
+  const deleteButtons = screen.getAllByRole('button', { name: 'Видалити' });
+  return user.click(deleteButtons[deleteButtons.length - 1]!);
+}
 
 describe('AdminNewsPage', () => {
   beforeEach(() => {
@@ -119,7 +125,7 @@ describe('AdminNewsPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Видалити' }));
     expect(screen.getByText('Видалити публікацію?')).toBeInTheDocument();
 
-    await user.click(screen.getAllByRole('button', { name: 'Видалити' }).at(-1)!);
+    await clickConfirmDelete(user);
 
     await waitFor(() => {
       expect(api.deleteAdminNewsPost).toHaveBeenCalledWith('news-1');
@@ -177,7 +183,7 @@ describe('AdminNewsPage', () => {
     render(<AdminNewsPage />);
 
     await user.click(await screen.findByRole('button', { name: 'Видалити' }));
-    await user.click(screen.getAllByRole('button', { name: 'Видалити' }).at(-1)!);
+    await clickConfirmDelete(user);
 
     expect(await screen.findByText('Delete failed')).toBeInTheDocument();
   });

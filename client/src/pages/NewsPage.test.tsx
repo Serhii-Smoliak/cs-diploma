@@ -28,15 +28,20 @@ vi.mock('../services/api', () => ({
   },
 }));
 
-import { api } from '../services/api';
+import { api, type NewsPost } from '../services/api';
 import NewsPage from './NewsPage';
 
-const samplePost = {
+const samplePost: NewsPost = {
   id: 'news-1',
+  titleUk: 'Оновлення платформи',
+  titleEn: 'Platform update',
+  bodyUk: 'Текст новини',
+  bodyEn: 'News text',
   title: 'Оновлення платформи',
   body: 'Текст новини',
   isPublished: true,
   publishedAt: '2026-06-23T10:00:00.000Z',
+  authorId: 'admin-1',
   createdAt: '2026-06-23T10:00:00.000Z',
   updatedAt: '2026-06-23T10:00:00.000Z',
   authorUsername: 'admin',
