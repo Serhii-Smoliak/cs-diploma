@@ -17,6 +17,7 @@ import {
   getSupportReplyNotificationData,
 } from '../services/notificationService.js';
 import { formatNewsPost, notifyAllUsersAboutNews } from '../services/newsService.js';
+import { requireRouteParam } from '../utils/routeParams.js';
 
 const router = Router();
 
@@ -58,7 +59,25 @@ const newsPostSchema = z.object({
 
 const newsPostUpdateSchema = newsPostSchema.partial();
 
-async function getEditableStaffMessage(messageId: string, adminId: string) {
+type EditableStaffMessageLookup =
+  | { error: string; status: number }
+  | {
+      message: {
+        id: string;
+        ticketId: string;
+        authorId: string;
+        body: string;
+        isStaffReply: boolean;
+        createdAt: Date;
+        ticket: { id: string; status: SupportTicketStatus; userId: string; subject: string };
+        author: { username: string };
+      };
+    };
+
+async function getEditableStaffMessage(
+  messageId: string,
+  adminId: string
+): Promise<EditableStaffMessageLookup> {
   const message = await prisma.supportMessage.findUnique({
     where: { id: messageId },
     include: {
@@ -68,16 +87,16 @@ async function getEditableStaffMessage(messageId: string, adminId: string) {
   });
 
   if (!message) {
-    return { error: 'Message not found', status: 404 as const };
+    return { error: 'Message not found', status: 404 };
   }
   if (!message.isStaffReply) {
-    return { error: 'Cannot modify user messages', status: 403 as const };
+    return { error: 'Cannot modify user messages', status: 403 };
   }
   if (message.authorId !== adminId) {
-    return { error: 'Cannot modify another admin reply', status: 403 as const };
+    return { error: 'Cannot modify another admin reply', status: 403 };
   }
   if (message.ticket.status === SupportTicketStatus.CLOSED) {
-    return { error: 'Ticket is closed', status: 400 as const };
+    return { error: 'Ticket is closed', status: 400 };
   }
 
   return { message };
@@ -130,7 +149,7 @@ router.get('/users', async (_req, res) => {
 router.patch('/users/:id/block', async (req: AuthRequest, res) => {
   try {
     const adminId = req.userId!;
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
     const { blocked, reason } = blockUserSchema.parse(req.body);
 
     if (id === adminId) {
@@ -246,7 +265,7 @@ router.get('/support/tickets', async (_req, res) => {
 
 router.get('/support/tickets/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
 
     const ticket = await prisma.supportTicket.findUnique({
       where: { id },
@@ -279,7 +298,7 @@ router.get('/support/tickets/:id', async (req, res) => {
 router.post('/support/tickets/:id/reply', async (req: AuthRequest, res) => {
   try {
     const adminId = req.userId!;
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
     const { body } = supportReplySchema.parse(req.body);
 
     const ticket = await prisma.supportTicket.findUnique({
@@ -335,7 +354,7 @@ router.post('/support/tickets/:id/reply', async (req: AuthRequest, res) => {
 
 router.post('/support/tickets/:id/close', async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
     const { reason, reasonText } = supportCloseSchema.parse(req.body);
 
     const ticket = await prisma.supportTicket.findUnique({
@@ -387,7 +406,7 @@ router.post('/support/tickets/:id/close', async (req: AuthRequest, res) => {
 router.patch('/support/messages/:messageId', async (req: AuthRequest, res) => {
   try {
     const adminId = req.userId!;
-    const { messageId } = req.params;
+    const messageId = requireRouteParam(req.params.messageId, 'messageId');
     const { body } = supportReplySchema.parse(req.body);
 
     const lookup = await getEditableStaffMessage(messageId, adminId);
@@ -414,7 +433,7 @@ router.patch('/support/messages/:messageId', async (req: AuthRequest, res) => {
 router.delete('/support/messages/:messageId', async (req: AuthRequest, res) => {
   try {
     const adminId = req.userId!;
-    const { messageId } = req.params;
+    const messageId = requireRouteParam(req.params.messageId, 'messageId');
 
     const lookup = await getEditableStaffMessage(messageId, adminId);
     if ('error' in lookup) {
@@ -507,7 +526,7 @@ router.post('/news', async (req: AuthRequest, res) => {
 
 router.patch('/news/:id', async (req: AuthRequest, res) => {
   try {
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
     const data = newsPostUpdateSchema.parse(req.body);
 
     const existing = await prisma.newsPost.findUnique({ where: { id } });
@@ -551,7 +570,7 @@ router.patch('/news/:id', async (req: AuthRequest, res) => {
 
 router.delete('/news/:id', async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
 
     const existing = await prisma.newsPost.findUnique({ where: { id } });
     if (!existing) {

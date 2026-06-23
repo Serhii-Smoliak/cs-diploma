@@ -2,6 +2,7 @@ import { Router } from 'express';
 import prisma from '../db/database.js';
 import { authenticate, type AuthRequest } from '../middleware/auth.js';
 import { formatNewsPost, resolveNewsLocale } from '../services/newsService.js';
+import { requireRouteParam } from '../utils/routeParams.js';
 
 const router = Router();
 
@@ -35,7 +36,7 @@ router.get('/:id', async (req: AuthRequest, res) => {
       select: { preferredLocale: true },
     });
     const locale = resolveNewsLocale(user?.preferredLocale);
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
 
     const post = await prisma.newsPost.findFirst({
       where: { id, isPublished: true },

@@ -8,6 +8,7 @@ import {
   formatSupportTicket,
   getDailyTicketLimit,
 } from '../services/supportService.js';
+import { requireRouteParam } from '../utils/routeParams.js';
 
 const router = Router();
 
@@ -66,7 +67,7 @@ router.get('/tickets', async (req: AuthRequest, res) => {
 router.get('/tickets/:id', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
 
     const ticket = await prisma.supportTicket.findFirst({
       where: { id, userId },

@@ -3,6 +3,7 @@ import prisma from '../db/database.js';
 import { authenticate, type AuthRequest } from '../middleware/auth.js';
 import { formatNotification, NOTIFICATION_LIST_LIMIT } from '../services/notificationService.js';
 import { resolveNewsLocale } from '../services/newsService.js';
+import { requireRouteParam } from '../utils/routeParams.js';
 
 const router = Router();
 
@@ -67,7 +68,7 @@ router.patch('/read-all', async (req: AuthRequest, res) => {
 router.patch('/:id/read', async (req: AuthRequest, res) => {
   try {
     const userId = req.userId!;
-    const { id } = req.params;
+    const id = requireRouteParam(req.params.id);
 
     const notification = await prisma.notification.findFirst({
       where: { id, userId },
