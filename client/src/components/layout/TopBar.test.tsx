@@ -25,6 +25,7 @@ vi.mock('../../store/authStore', () => ({
         stealth: 15,
         avatarUrl: null,
       },
+      isAuthenticated: true,
     };
     return selector ? selector(state) : state;
   },
@@ -48,6 +49,10 @@ vi.mock('./LanguageSwitcher', () => ({
   default: () => <div>language-switcher</div>,
 }));
 
+vi.mock('./NotificationsBell', () => ({
+  default: () => <div>notifications-bell</div>,
+}));
+
 vi.mock('../profile/UserAvatar', () => ({
   default: ({ username }: { username?: string }) => <span>{username}</span>,
 }));
@@ -64,6 +69,7 @@ describe('TopBar', () => {
 
     expect(screen.getByText('15%')).toBeInTheDocument();
     expect(screen.getByText('Low stealth warning')).toBeInTheDocument();
+    expect(screen.getByText('notifications-bell')).toBeInTheDocument();
     expect(screen.getByText('language-switcher')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'agent' })).toHaveAttribute('href', '/profile');
 

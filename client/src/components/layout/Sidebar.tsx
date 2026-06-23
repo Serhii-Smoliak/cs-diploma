@@ -1,23 +1,57 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '../../store/authStore';
 import { useSidebarStore } from '../../store/sidebarStore';
 
 export default function Sidebar() {
-  const { t } = useTranslation(['ui', 'common']);
+  const { t, i18n } = useTranslation(['ui', 'common']);
+  const isEn = i18n.resolvedLanguage?.startsWith('en') ?? false;
   const location = useLocation();
+  const user = useAuthStore((state) => state.user);
   const { isCollapsed, toggle, isMobileOpen, closeMobile } = useSidebarStore();
+  const isAdmin = user?.role === 'ADMIN';
 
-  const menuItems = [
+  const regularMenuItems = [
     { path: '/missions', labelKey: 'missions', icon: '🎯' },
     { path: '/skill-matrix', labelKey: 'skillMatrix', icon: '⬡' },
     { path: '/leaderboard', labelKey: 'leaderboard', icon: '🏆' },
     { path: '/faq', labelKey: 'faq', icon: '❓' },
     { path: '/community', labelKey: 'community', icon: '💬' },
-    // { path: '/settings', labelKey: 'settings', icon: '⚙️' },
+    { path: '/support', labelKey: 'support', icon: '📩' },
+    { path: '/news', labelKey: 'news', icon: '📰' },
   ];
 
+  const adminMenuItems = isAdmin
+    ? [
+        { path: '/admin/tickets', labelKey: 'adminTickets', icon: '📋' as const },
+        { path: '/admin/news', labelKey: 'adminNews', icon: '📰' as const },
+        { path: '/settings', labelKey: 'settings', icon: '⚙️' as const },
+      ]
+    : [];
+
   const showLabels = isMobileOpen || !isCollapsed;
+
+  const getNavLabel = (labelKey: string) => {
+    const defaults: Record<string, { uk: string; en: string }> = {
+      missions: { uk: 'Місії', en: 'Missions' },
+      skillMatrix: { uk: 'Навички', en: 'Skill Matrix' },
+      leaderboard: { uk: 'Таблиця лідерів', en: 'Leaderboard' },
+      faq: { uk: 'FAQ', en: 'FAQ' },
+      community: { uk: 'Спільнота', en: 'Community' },
+      support: { uk: 'Підтримка', en: 'Support' },
+      news: { uk: 'Новини', en: 'News' },
+      adminTickets: { uk: 'Звернення', en: 'Support tickets' },
+      adminNews: { uk: 'Новини (адмін)', en: 'News admin' },
+      settings: { uk: 'Налаштування', en: 'Settings' },
+    };
+
+    const fallback = defaults[labelKey];
+    return t(labelKey, {
+      ns: 'ui',
+      defaultValue: fallback ? (isEn ? fallback.en : fallback.uk) : labelKey,
+    });
+  };
 
   return (
     <aside
@@ -52,7 +86,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 py-4 px-4 space-y-2 overflow-y-auto">
-        {menuItems.map((item) => {
+        {regularMenuItems.map((item) => {
           const isActive =
             location.pathname === item.path ||
             (item.path === '/missions' && location.pathname === '/');
@@ -62,7 +96,7 @@ export default function Sidebar() {
               key={item.path}
               to={item.path}
               className="block"
-              title={!showLabels ? t(item.labelKey, { ns: 'ui' }) : ''}
+              title={!showLabels ? getNavLabel(item.labelKey) : undefined}
               onClick={closeMobile}
             >
               <motion.div
@@ -82,7 +116,47 @@ export default function Sidebar() {
                     exit={{ opacity: 0 }}
                     className="font-medium whitespace-nowrap"
                   >
-                    {t(item.labelKey, { ns: 'ui' })}
+                    {getNavLabel(item.labelKey)}
+                  </motion.span>
+                )}
+              </motion.div>
+            </Link>
+          );
+        })}
+
+        {adminMenuItems.length > 0 && (
+          <div className="border-t border-cyber-border/80 my-2" role="separator" aria-hidden />
+        )}
+
+        {adminMenuItems.map((item) => {
+          const isActive = location.pathname === item.path;
+
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className="block"
+              title={!showLabels ? getNavLabel(item.labelKey) : undefined}
+              onClick={closeMobile}
+            >
+              <motion.div
+                whileHover={{ x: showLabels ? 4 : 0 }}
+                whileTap={{ scale: 0.98 }}
+                className={`flex items-center gap-3 py-3 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? 'bg-cyber-primary text-cyber-background cyber-glow'
+                    : 'text-gray-300 hover:bg-cyber-panel hover:text-cyber-primary'
+                }`}
+              >
+                <span className="text-xl flex-shrink-0 w-6 text-center ml-2">{item.icon}</span>
+                {showLabels && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="font-medium whitespace-nowrap"
+                  >
+                    {getNavLabel(item.labelKey)}
                   </motion.span>
                 )}
               </motion.div>

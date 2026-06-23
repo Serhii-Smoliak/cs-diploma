@@ -12,12 +12,33 @@ enum UserRole {
   ADMIN
 }
 
+enum SupportTicketStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+enum SupportTicketCloseReason {
+  ANSWERED
+  DECLINED
+  CUSTOM
+}
+
+enum NotificationType {
+  SUPPORT_REPLY
+  SYSTEM
+  NEWS
+}
+
 model User {
   id           String   @id @default(uuid())
   username     String   @unique
   email        String   @unique
   passwordHash String   @map("password_hash")
   role         UserRole @default(USER)
+  isBlocked    Boolean  @default(false) @map("is_blocked")
+  blockedAt    DateTime? @map("blocked_at")
+  blockedReason String? @map("blocked_reason")
   xp           Int      @default(0)
   rank         String   @default("Script Kiddie")
   stealth      Int      @default(100)
@@ -25,11 +46,92 @@ model User {
   preferredLocale  String?  @map("preferred_locale")
   createdAt        DateTime @default(now()) @map("created_at")
 
-  progress        UserProgress[]
-  stats           UserStats?
-  mitreTechniques UserMitreTechnique[]
+  progress         UserProgress[]
+  stats            UserStats?
+  mitreTechniques  UserMitreTechnique[]
+  supportTickets   SupportTicket[]
+  supportMessages  SupportMessage[]
+  notifications    Notification[]
+  newsPosts        NewsPost[]
 
   @@map("users")
+}
+
+model SupportTicket {
+  id        String              @id @default(uuid())
+  userId    String              @map("user_id")
+  subject   String
+  message   String              @db.Text
+  status          SupportTicketStatus       @default(OPEN)
+  closedAt        DateTime?                 @map("closed_at")
+  closeReason     SupportTicketCloseReason? @map("close_reason")
+  closeReasonText String?                   @map("close_reason_text") @db.Text
+  createdAt       DateTime                  @default(now()) @map("created_at")
+  updatedAt       DateTime                  @updatedAt @map("updated_at")
+
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages SupportMessage[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("support_tickets")
+}
+
+model SupportMessage {
+  id          String   @id @default(uuid())
+  ticketId    String   @map("ticket_id")
+  authorId    String   @map("author_id")
+  body        String   @db.Text
+  isStaffReply Boolean @default(false) @map("is_staff_reply")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([ticketId])
+  @@map("support_messages")
+}
+
+model Notification {
+  id               String           @id @default(uuid())
+  userId           String           @map("user_id")
+  type             NotificationType
+  title            String
+  body             String           @db.Text
+  link             String?
+  isRead           Boolean          @default(false) @map("is_read")
+  supportMessageId String?          @unique @map("support_message_id")
+  newsPostId       String?          @map("news_post_id")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  supportMessage SupportMessage? @relation(fields: [supportMessageId], references: [id], onDelete: Cascade)
+  newsPost       NewsPost?       @relation(fields: [newsPostId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@index([newsPostId])
+  @@map("notifications")
+}
+
+model NewsPost {
+  id          String    @id @default(uuid())
+  titleUk     String    @map("title_uk")
+  titleEn     String    @map("title_en")
+  bodyUk      String    @db.Text @map("body_uk")
+  bodyEn      String    @db.Text @map("body_en")
+  isPublished Boolean   @default(false) @map("is_published")
+  publishedAt DateTime? @map("published_at")
+  authorId    String    @map("author_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([isPublished, publishedAt])
+  @@map("news_posts")
 }
 
 model Mission {

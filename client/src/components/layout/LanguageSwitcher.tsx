@@ -87,12 +87,14 @@ export default function LanguageSwitcher() {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="px-3 py-1.5 rounded-lg border bg-cyber-panel border-cyber-border text-gray-300 hover:border-cyber-primary hover:text-cyber-primary transition-all text-sm flex items-center gap-2"
+        title={currentLang.name}
+        className="h-10 min-w-10 px-2 sm:px-3 rounded-lg border bg-cyber-panel border-cyber-border text-gray-300 hover:border-cyber-primary hover:text-cyber-primary transition-all text-sm flex items-center justify-center gap-1.5"
       >
-        <span>{currentLang.flag}</span>
-        <span>{currentLang.code.toUpperCase()}</span>
-        <span className="text-xs">▼</span>
+        <span className="text-base leading-none">{currentLang.flag}</span>
+        <span className="hidden sm:inline uppercase">{currentLang.code}</span>
+        <span className="hidden sm:inline text-[10px] leading-none">▼</span>
       </button>
 
       {isOpen && (

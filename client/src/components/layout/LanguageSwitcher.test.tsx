@@ -39,10 +39,10 @@ describe('LanguageSwitcher', () => {
     render(<LanguageSwitcher />);
 
     await waitFor(() => {
-      expect(screen.getByText('UK')).toBeInTheDocument();
+      expect(screen.getByTitle('Українська')).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: /UK/i }));
+    await user.click(screen.getByTitle('Українська'));
     await user.click(screen.getByRole('button', { name: /English/i }));
 
     await waitFor(() => {

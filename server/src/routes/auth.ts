@@ -95,6 +95,10 @@ router.post('/login', authLoginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    if (user.isBlocked) {
+      return res.status(403).json({ error: 'Account blocked' });
+    }
+
     // Generate token
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, JWT_SIGN_OPTIONS);
 

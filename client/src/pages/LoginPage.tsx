@@ -150,16 +150,20 @@ export default function LoginPage() {
             </motion.button>
           </form>
 
-          <div className="mt-4 text-center">
+          <div className="mt-6 pt-5 border-t border-cyber-border/50 text-center space-y-2">
+            <p className="text-sm text-gray-500">
+              {isLogin ? t('switchToRegisterPrompt') : t('switchToLoginPrompt')}
+            </p>
             <button
+              type="button"
               onClick={() => {
                 setIsLogin(!isLogin);
                 setError('');
                 setAgreementAccepted(false);
               }}
-              className="text-sm text-cyber-primary hover:underline"
+              className="text-sm font-medium text-cyber-primary hover:underline"
             >
-              {isLogin ? t('switchToRegister') : t('switchToLogin')}
+              {isLogin ? t('register') : t('login')}
             </button>
           </div>
         </motion.div>

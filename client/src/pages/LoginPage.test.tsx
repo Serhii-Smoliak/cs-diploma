@@ -68,7 +68,7 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: 'switchToRegister' }));
+    await user.click(screen.getByRole('button', { name: 'register' }));
 
     const textInputs = screen.getAllByRole('textbox');
     await user.type(textInputs[0]!, 'agent');
@@ -89,7 +89,7 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: 'switchToRegister' }));
+    await user.click(screen.getByRole('button', { name: 'register' }));
     const [usernameInput, emailInput, passwordInput] = document.querySelectorAll('form input');
     fireEvent.change(usernameInput!, { target: { value: 'agent' } });
     fireEvent.change(emailInput!, { target: { value: 'agent@test.com' } });
@@ -109,7 +109,7 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: 'switchToRegister' }));
+    await user.click(screen.getByRole('button', { name: 'register' }));
     fireEvent.submit(document.querySelector('form')!);
 
     expect(await screen.findByText('usernameRequired')).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe('LoginPage', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: 'switchToRegister' }));
+    await user.click(screen.getByRole('button', { name: 'register' }));
     const [usernameInput, emailInput, passwordInput] = document.querySelectorAll('form input');
     fireEvent.change(usernameInput!, { target: { value: 'agent' } });
     fireEvent.change(emailInput!, { target: { value: 'agent@test.com' } });

@@ -1,9 +1,12 @@
 // Shared types for CyberTactics
 
+export type UserRole = 'USER' | 'ADMIN';
+
 export interface User {
   id: string;
   username: string;
   email: string;
+  role: UserRole;
   xp: number;
   rank: string;
   stealth: number;

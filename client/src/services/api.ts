@@ -26,6 +26,111 @@ export interface MitreTechnique {
   updatedAt: string;
 }
 
+export interface AdminUserSummary {
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  xp: number;
+  rank: string;
+  isBlocked: boolean;
+  blockedAt: string | null;
+  blockedReason: string | null;
+  createdAt: string;
+}
+
+export interface LocaleMitreCoverage {
+  full: number;
+  partial: number;
+  none: number;
+}
+
+export interface MitreAdminStats {
+  totalTechniques: number;
+  uk: LocaleMitreCoverage;
+  en: LocaleMitreCoverage;
+}
+
+export interface MitreAdminSyncResponse {
+  success: boolean;
+  message: string;
+  synced: number;
+  errors: number;
+  coverage: MitreAdminStats;
+}
+
+export type SupportTicketStatus = 'OPEN' | 'ANSWERED' | 'CLOSED';
+
+export type SupportTicketCloseReason = 'ANSWERED' | 'DECLINED' | 'CUSTOM';
+
+export interface SupportTicketSummary {
+  id: string;
+  subject: string;
+  message: string;
+  status: SupportTicketStatus;
+  closedAt: string | null;
+  closeReason: SupportTicketCloseReason | null;
+  closeReasonText: string | null;
+  createdAt: string;
+  updatedAt: string;
+  messagePreview?: string;
+  username?: string;
+  email?: string;
+}
+
+export interface SupportMessage {
+  id: string;
+  authorId: string;
+  authorUsername: string;
+  body: string;
+  isStaffReply: boolean;
+  createdAt: string;
+}
+
+export interface SupportTicketDetail extends SupportTicketSummary {
+  messages: SupportMessage[];
+}
+
+export interface SupportTicketLimit {
+  limit: number;
+  usedToday: number;
+  remainingToday: number;
+}
+
+export type NotificationType = 'SUPPORT_REPLY' | 'SYSTEM' | 'NEWS';
+
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  link: string | null;
+  isRead: boolean;
+  createdAt: string;
+  newsTitle?: string;
+  supportSubject?: string;
+}
+
+export interface NewsPost {
+  id: string;
+  title: string;
+  titleUk: string;
+  titleEn: string;
+  body: string;
+  bodyUk: string;
+  bodyEn: string;
+  isPublished: boolean;
+  publishedAt: string | null;
+  authorId: string;
+  authorUsername?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationUnreadCount {
+  count: number;
+}
+
 const API_BASE = getApiBase();
 
 /** Resolves relative asset paths (e.g. /uploads/...) against the API host in production. */
@@ -98,6 +203,10 @@ class ApiClient {
         response.status,
         errorBody
       );
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
     }
 
     return response.json();
@@ -237,6 +346,156 @@ class ApiClient {
     return this.request<Record<string, Record<string, string>>>(
       `/translations/namespaces?locale=${locale}&namespaces=${namespacesStr}`
     );
+  }
+
+  async getAdminUsers(): Promise<AdminUserSummary[]> {
+    return this.request<AdminUserSummary[]>('/admin/users');
+  }
+
+  async setAdminUserBlocked(
+    userId: string,
+    blocked: boolean,
+    reason?: string
+  ): Promise<AdminUserSummary> {
+    return this.request<AdminUserSummary>(`/admin/users/${userId}/block`, {
+      method: 'PATCH',
+      body: JSON.stringify({ blocked, reason }),
+    });
+  }
+
+  async getAdminMitreStats(): Promise<MitreAdminStats> {
+    return this.request<MitreAdminStats>('/admin/mitre/stats');
+  }
+
+  async syncAdminMitre(): Promise<MitreAdminSyncResponse> {
+    return this.request<MitreAdminSyncResponse>('/admin/mitre/sync', {
+      method: 'POST',
+    });
+  }
+
+  async getSupportTicketLimit(): Promise<SupportTicketLimit> {
+    return this.request<SupportTicketLimit>('/support/tickets/limit');
+  }
+
+  async getSupportTickets(): Promise<SupportTicketSummary[]> {
+    return this.request<SupportTicketSummary[]>('/support/tickets');
+  }
+
+  async getSupportTicket(ticketId: string): Promise<SupportTicketDetail> {
+    return this.request<SupportTicketDetail>(`/support/tickets/${ticketId}`);
+  }
+
+  async createSupportTicket(subject: string, message: string): Promise<SupportTicketSummary> {
+    return this.request<SupportTicketSummary>('/support/tickets', {
+      method: 'POST',
+      body: JSON.stringify({ subject, message }),
+    });
+  }
+
+  async getAdminSupportTickets(): Promise<SupportTicketSummary[]> {
+    return this.request<SupportTicketSummary[]>('/admin/support/tickets');
+  }
+
+  async getAdminSupportTicket(ticketId: string): Promise<SupportTicketDetail> {
+    return this.request<SupportTicketDetail>(`/admin/support/tickets/${ticketId}`);
+  }
+
+  async replyAdminSupportTicket(ticketId: string, body: string): Promise<SupportMessage> {
+    return this.request<SupportMessage>(`/admin/support/tickets/${ticketId}/reply`, {
+      method: 'POST',
+      body: JSON.stringify({ body }),
+    });
+  }
+
+  async closeAdminSupportTicket(
+    ticketId: string,
+    reason: SupportTicketCloseReason,
+    reasonText?: string
+  ): Promise<SupportTicketDetail> {
+    return this.request<SupportTicketDetail>(`/admin/support/tickets/${ticketId}/close`, {
+      method: 'POST',
+      body: JSON.stringify({ reason, reasonText }),
+    });
+  }
+
+  async updateAdminSupportMessage(messageId: string, body: string): Promise<SupportMessage> {
+    return this.request<SupportMessage>(`/admin/support/messages/${messageId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ body }),
+    });
+  }
+
+  async deleteAdminSupportMessage(messageId: string): Promise<void> {
+    await this.request<void>(`/admin/support/messages/${messageId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getNotifications(): Promise<AppNotification[]> {
+    return this.request<AppNotification[]>('/notifications');
+  }
+
+  async getNotificationUnreadCount(): Promise<NotificationUnreadCount> {
+    return this.request<NotificationUnreadCount>('/notifications/unread-count');
+  }
+
+  async markNotificationRead(notificationId: string): Promise<AppNotification> {
+    return this.request<AppNotification>(`/notifications/${notificationId}/read`, {
+      method: 'PATCH',
+    });
+  }
+
+  async markAllNotificationsRead(): Promise<{ success: boolean }> {
+    return this.request<{ success: boolean }>('/notifications/read-all', {
+      method: 'PATCH',
+    });
+  }
+
+  async getNewsPosts(): Promise<NewsPost[]> {
+    return this.request<NewsPost[]>('/news');
+  }
+
+  async getNewsPost(newsId: string): Promise<NewsPost> {
+    return this.request<NewsPost>(`/news/${newsId}`);
+  }
+
+  async getAdminNewsPosts(): Promise<NewsPost[]> {
+    return this.request<NewsPost[]>('/admin/news');
+  }
+
+  async createAdminNewsPost(payload: {
+    titleUk: string;
+    titleEn: string;
+    bodyUk: string;
+    bodyEn: string;
+    isPublished?: boolean;
+  }): Promise<NewsPost> {
+    return this.request<NewsPost>('/admin/news', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateAdminNewsPost(
+    newsId: string,
+    payload: Partial<{
+      titleUk: string;
+      titleEn: string;
+      bodyUk: string;
+      bodyEn: string;
+      isPublished: boolean;
+    }>
+  ): Promise<NewsPost> {
+    return this.request<NewsPost>(`/admin/news/${newsId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async deleteAdminNewsPost(newsId: string): Promise<void> {
+    await this.request<void>(`/admin/news/${newsId}`, {
+      method: 'DELETE',
+    });
   }
 }
 

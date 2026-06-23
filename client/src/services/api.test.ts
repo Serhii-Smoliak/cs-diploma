@@ -254,4 +254,145 @@ describe('api client', () => {
     ]);
     await expect(api.getTranslations('en', 'common')).resolves.toEqual({ hello: 'Hello' });
   });
+
+  it('loads support, notifications and news endpoints', async () => {
+    api.setToken('token');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        const method = init?.method ?? 'GET';
+
+        if (url.endsWith('/support/tickets/limit')) {
+          return { ok: true, json: async () => ({ limit: 3, usedToday: 1, remainingToday: 2 }) };
+        }
+        if (url.endsWith('/support/tickets') && method === 'GET') {
+          return { ok: true, json: async () => [{ id: 'ticket-1', subject: 'Help' }] };
+        }
+        if (url.includes('/support/tickets/ticket-1') && method === 'GET') {
+          return { ok: true, json: async () => ({ id: 'ticket-1', messages: [] }) };
+        }
+        if (url.endsWith('/support/tickets') && method === 'POST') {
+          return { ok: true, json: async () => ({ id: 'ticket-2', subject: 'New' }) };
+        }
+        if (url.endsWith('/notifications/unread-count')) {
+          return { ok: true, json: async () => ({ count: 2 }) };
+        }
+        if (url.endsWith('/notifications/read-all') && method === 'PATCH') {
+          return { ok: true, json: async () => ({ success: true }) };
+        }
+        if (url.includes('/notifications/notif-1/read') && method === 'PATCH') {
+          return { ok: true, json: async () => ({ id: 'notif-1', isRead: true }) };
+        }
+        if (url.endsWith('/notifications')) {
+          return { ok: true, json: async () => [{ id: 'notif-1', isRead: false }] };
+        }
+        if (url.includes('/admin/news/news-1') && method === 'PATCH') {
+          return { ok: true, json: async () => ({ id: 'news-1', titleUk: 'Updated' }) };
+        }
+        if (url.includes('/admin/news/news-1') && method === 'DELETE') {
+          return { ok: true, json: async () => ({}) };
+        }
+        if (url.endsWith('/admin/news') && method === 'POST') {
+          return { ok: true, json: async () => ({ id: 'news-2', titleUk: 'UA' }) };
+        }
+        if (url.endsWith('/admin/news') && method === 'GET') {
+          return { ok: true, json: async () => [{ id: 'news-1', titleUk: 'UA' }] };
+        }
+        if (url.endsWith('/news/news-1')) {
+          return { ok: true, json: async () => ({ id: 'news-1', title: 'News' }) };
+        }
+        if (url.endsWith('/news') && !url.includes('/admin/')) {
+          return { ok: true, json: async () => [{ id: 'news-1', title: 'News' }] };
+        }
+        if (url.endsWith('/admin/mitre/stats')) {
+          return {
+            ok: true,
+            json: async () => ({ totalTechniques: 2, uk: { full: 1, partial: 1, none: 0 } }),
+          };
+        }
+        if (url.endsWith('/admin/mitre/sync') && method === 'POST') {
+          return {
+            ok: true,
+            json: async () => ({
+              success: true,
+              message: 'Synchronized 2 techniques',
+              synced: 2,
+              errors: 0,
+              coverage: { totalTechniques: 2 },
+            }),
+          };
+        }
+        if (url.endsWith('/admin/support/tickets')) {
+          return { ok: true, json: async () => [{ id: 'ticket-1' }] };
+        }
+        if (url.includes('/admin/support/tickets/ticket-1') && method === 'GET') {
+          return { ok: true, json: async () => ({ id: 'ticket-1', messages: [] }) };
+        }
+        if (url.includes('/admin/support/tickets/ticket-1/close') && method === 'POST') {
+          return { ok: true, json: async () => ({ id: 'ticket-1', status: 'CLOSED' }) };
+        }
+        if (url.includes('/admin/support/tickets/ticket-1/reply') && method === 'POST') {
+          return { ok: true, json: async () => ({ id: 'msg-1', isStaffReply: true }) };
+        }
+        if (url.includes('/admin/support/messages/msg-1') && method === 'PATCH') {
+          return { ok: true, json: async () => ({ id: 'msg-1', body: 'Updated' }) };
+        }
+        if (url.includes('/admin/support/messages/msg-1') && method === 'DELETE') {
+          return { ok: true, json: async () => ({}) };
+        }
+        if (url.endsWith('/admin/users')) {
+          return { ok: true, json: async () => [{ id: 'user-1' }] };
+        }
+        if (url.includes('/admin/users/user-1/block') && method === 'PATCH') {
+          return { ok: true, json: async () => ({ id: 'user-1', isBlocked: true }) };
+        }
+        return { ok: true, json: async () => ({}) };
+      })
+    );
+
+    await expect(api.getSupportTicketLimit()).resolves.toMatchObject({ remainingToday: 2 });
+    await expect(api.getSupportTickets()).resolves.toHaveLength(1);
+    await expect(api.getSupportTicket('ticket-1')).resolves.toMatchObject({ id: 'ticket-1' });
+    await expect(api.createSupportTicket('Help', 'Need assistance now')).resolves.toMatchObject({
+      id: 'ticket-2',
+    });
+    await expect(api.getNotifications()).resolves.toHaveLength(1);
+    await expect(api.getNotificationUnreadCount()).resolves.toEqual({ count: 2 });
+    await expect(api.markNotificationRead('notif-1')).resolves.toMatchObject({ isRead: true });
+    await expect(api.markAllNotificationsRead()).resolves.toEqual({ success: true });
+    await expect(api.getNewsPosts()).resolves.toHaveLength(1);
+    await expect(api.getNewsPost('news-1')).resolves.toMatchObject({ id: 'news-1' });
+    await expect(api.getAdminNewsPosts()).resolves.toHaveLength(1);
+    await expect(
+      api.createAdminNewsPost({
+        titleUk: 'UA',
+        titleEn: 'EN',
+        bodyUk: 'Body UA',
+        bodyEn: 'Body EN',
+      })
+    ).resolves.toMatchObject({ id: 'news-2' });
+    await expect(api.updateAdminNewsPost('news-1', { titleUk: 'Updated' })).resolves.toMatchObject({
+      titleUk: 'Updated',
+    });
+    await expect(api.deleteAdminNewsPost('news-1')).resolves.toBeUndefined();
+    await expect(api.getAdminMitreStats()).resolves.toMatchObject({ totalTechniques: 2 });
+    await expect(api.syncAdminMitre()).resolves.toMatchObject({ success: true, synced: 2 });
+    await expect(api.getAdminSupportTickets()).resolves.toHaveLength(1);
+    await expect(api.getAdminSupportTicket('ticket-1')).resolves.toMatchObject({ id: 'ticket-1' });
+    await expect(api.replyAdminSupportTicket('ticket-1', 'Reply')).resolves.toMatchObject({
+      isStaffReply: true,
+    });
+    await expect(api.closeAdminSupportTicket('ticket-1', 'DECLINED')).resolves.toMatchObject({
+      status: 'CLOSED',
+    });
+    await expect(api.updateAdminSupportMessage('msg-1', 'Updated')).resolves.toMatchObject({
+      body: 'Updated',
+    });
+    await expect(api.deleteAdminSupportMessage('msg-1')).resolves.toBeUndefined();
+    await expect(api.getAdminUsers()).resolves.toHaveLength(1);
+    await expect(api.setAdminUserBlocked('user-1', true, 'abuse')).resolves.toMatchObject({
+      isBlocked: true,
+    });
+  });
 });

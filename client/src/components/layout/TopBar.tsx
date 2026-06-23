@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useGameStore } from '../../store/gameStore';
 import { useSidebarStore } from '../../store/sidebarStore';
 import LanguageSwitcher from './LanguageSwitcher';
+import NotificationsBell from './NotificationsBell';
 import { getNextRankXp } from '../../constants/ranks';
 import { getRankLabel } from '../../utils/rank';
 import UserAvatar from '../profile/UserAvatar';
@@ -85,6 +86,7 @@ export default function TopBar() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4 shrink-0 ml-auto">
+          <NotificationsBell />
           <LanguageSwitcher />
           <div className="hidden md:block text-right">
             <div className="flex items-center gap-2">

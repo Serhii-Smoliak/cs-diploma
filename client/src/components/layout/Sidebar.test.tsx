@@ -12,7 +12,17 @@ const sidebarState = vi.hoisted(() => ({
 }));
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key,
+    i18n: { resolvedLanguage: 'uk' },
+  }),
+}));
+
+vi.mock('../../store/authStore', () => ({
+  useAuthStore: (selector?: (state: { user: { role: 'USER' | 'ADMIN' } | null }) => unknown) => {
+    const state = { user: { role: 'ADMIN' as const } };
+    return selector ? selector(state) : state;
+  },
 }));
 
 vi.mock('../../store/sidebarStore', () => ({
@@ -38,7 +48,11 @@ describe('Sidebar', () => {
     );
 
     expect(screen.getByText('CyberTactics')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /missions/i })).toHaveAttribute('href', '/missions');
+    expect(screen.getByRole('link', { name: /Місії/i })).toHaveAttribute('href', '/missions');
+    expect(screen.getByRole('link', { name: /Звернення/i })).toHaveAttribute(
+      'href',
+      '/admin/tickets'
+    );
 
     await user.click(screen.getByTitle('collapseMenu'));
     expect(sidebarState.toggle).toHaveBeenCalled();

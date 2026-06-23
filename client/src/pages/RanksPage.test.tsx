@@ -39,5 +39,18 @@ describe('RanksPage', () => {
 
     expect(screen.getByText('Novice Hacker')).toBeInTheDocument();
     expect(screen.getByText('0–499 XP')).toBeInTheDocument();
+    expect(screen.getByText('Your rank')).toBeInTheDocument();
+  });
+
+  it('centers page content', async () => {
+    const { container } = render(<RanksPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Career Ranks')).toBeInTheDocument();
+    });
+
+    const centeredWrapper = container.querySelector('.max-w-2xl.mx-auto.text-center');
+    expect(centeredWrapper).toBeInTheDocument();
+    expect(centeredWrapper?.querySelector('h1')?.textContent).toBe('Career Ranks');
   });
 });

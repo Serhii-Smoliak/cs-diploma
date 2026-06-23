@@ -17,12 +17,16 @@ describe('formatAuthUser', () => {
       createdAt,
       passwordHash: 'hash',
       role: UserRole.USER,
+      isBlocked: false,
+      blockedAt: null,
+      blockedReason: null,
     };
 
     expect(formatAuthUser(user)).toEqual({
       id: 'u1',
       username: 'agent',
       email: 'agent@test.com',
+      role: UserRole.USER,
       xp: 100,
       rank: 'Script Kiddie',
       stealth: 80,
@@ -45,6 +49,9 @@ describe('formatAuthUser', () => {
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
       passwordHash: 'hash',
       role: UserRole.USER,
+      isBlocked: false,
+      blockedAt: null,
+      blockedReason: null,
     };
 
     expect(formatAuthUser(user, { xp: 500, rank: 'Novice Hacker', stealth: 40 })).toMatchObject({

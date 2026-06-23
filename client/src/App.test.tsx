@@ -52,6 +52,7 @@ vi.mock('./store/authStore', () => {
           rank: 'Novice Hacker',
           stealth: 80,
           preferredLocale: 'en',
+          role: 'USER',
           createdAt: '2026-01-01T00:00:00.000Z',
         }
       : null,

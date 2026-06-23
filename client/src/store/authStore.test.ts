@@ -45,6 +45,7 @@ const mockUser: User = {
   id: 'u1',
   username: 'agent',
   email: 'agent@test.com',
+  role: 'USER',
   xp: 100,
   rank: 'Novice Hacker',
   stealth: 80,
