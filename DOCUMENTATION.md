@@ -152,6 +152,18 @@
 
 ## Архітектура системи
 
+### Архітектурний стиль
+
+Проєкт реалізовано як **клієнт-серверна система** у форматі **monorepo** (`client`, `server`, `shared`):
+
+| Рівень | Стиль / патерн | Опис |
+|--------|----------------|------|
+| **Frontend** | **SPA** (Single Page Application), component-based UI | React + Vite; маршрути React Router; глобальний стан — Zustand; HTTP-клієнт — `services/api.ts` |
+| **Backend** | **REST API monolith**, **шарова (layered) архітектура** | Express 5: `routes` → `middleware` → `services` → Prisma ORM → PostgreSQL |
+| **Спільний контракт** | Shared types package | `@cybertactics/shared` — спільні TypeScript-типи для client і server |
+
+Це **не** microservices, **не** MVC-фреймворк (NestJS тощо) і **не** full Clean Architecture — класичний трирівневий веб-стек: **Presentation (SPA) → Application/API (Express) → Data (PostgreSQL)**.
+
 ### Схема
 
 ```
@@ -1017,5 +1029,5 @@ cd client && npm run dev
 
 Документ описує поточний стан **CyberTactics MVP**: стек, інтеграцію MITRE CTI, локалізацію, API та межі реалізації.
 
-**Версія документації:** 2.4  
+**Версія документації:** 2.5  
 **Оновлено:** 2026-06-23

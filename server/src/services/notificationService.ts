@@ -127,7 +127,7 @@ export async function deleteLegacySupportReplyNotification(
       const bestDiff = Math.abs(best.createdAt.getTime() - params.messageCreatedAt.getTime());
       const currentDiff = Math.abs(current.createdAt.getTime() - params.messageCreatedAt.getTime());
       return currentDiff < bestDiff ? current : best;
-    });
+    }, candidates[0]!);
 
     await tx.notification.delete({ where: { id: closest.id } });
     return;

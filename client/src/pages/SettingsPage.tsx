@@ -321,7 +321,7 @@ export default function SettingsPage() {
                 <h2 className="font-heading text-lg text-cyber-primary">
                   {t('settingsMitreTitle', {
                     ns: 'ui',
-                    defaultValue: isEn ? 'MITRE ATT&CK' : 'MITRE ATT&CK',
+                    defaultValue: 'MITRE ATT&CK',
                   })}
                 </h2>
                 <button
