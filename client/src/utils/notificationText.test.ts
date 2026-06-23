@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { TFunction } from 'i18next';
 import type { AppNotification } from '../services/api';
 import { getNotificationDisplayText } from './notificationText';
 
@@ -11,7 +12,7 @@ const t = vi.fn(
     }
     return key;
   }
-);
+) as unknown as TFunction;
 
 describe('getNotificationDisplayText', () => {
   it('translates new support reply notifications', () => {

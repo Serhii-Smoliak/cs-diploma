@@ -2,8 +2,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const authStoreState = vi.hoisted(() => ({
-  user: { id: 'admin-1', role: 'ADMIN' as 'USER' | 'ADMIN' } | null,
+const authStoreState = vi.hoisted((): {
+  user: { id: string; role: 'USER' | 'ADMIN' } | null;
+} => ({
+  user: { id: 'admin-1', role: 'ADMIN' },
 }));
 
 const refreshUserMock = vi.hoisted(() =>
