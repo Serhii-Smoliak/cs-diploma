@@ -162,7 +162,7 @@ describe('MitreTechniqueModal', () => {
 
     await userEvents.click(screen.getByText('Ghost'));
     expect(onClose).toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith('/missions');
+    expect(navigate).toHaveBeenCalledWith('/missions/operation_ghost/assignments');
   });
 
   it('toggles kill chain stage details', async () => {

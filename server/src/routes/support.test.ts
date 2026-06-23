@@ -91,4 +91,70 @@ describe('support routes', () => {
     expect(response.status).toBe(429);
     expect(response.body.error).toBe('Daily support ticket limit reached');
   });
+
+  it('POST /tickets rejects invalid payload', async () => {
+    const response = await request(createApp()).post('/api/support/tickets').send({
+      subject: 'Hi',
+      message: 'short',
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('GET /tickets returns user tickets', async () => {
+    prismaMock.supportTicket.findMany.mockResolvedValue([
+      {
+        id: 'ticket-1',
+        subject: 'Help',
+        message: 'Need assistance with login today',
+        status: 'OPEN',
+        closedAt: null,
+        closeReason: null,
+        closeReasonText: null,
+        createdAt: new Date('2026-06-23T10:00:00.000Z'),
+        updatedAt: new Date('2026-06-23T10:00:00.000Z'),
+      },
+    ]);
+
+    const response = await request(createApp()).get('/api/support/tickets');
+
+    expect(response.status).toBe(200);
+    expect(response.body[0].subject).toBe('Help');
+    expect(response.body[0].messagePreview).toBeDefined();
+  });
+
+  it('GET /tickets/:id returns ticket with messages', async () => {
+    prismaMock.supportTicket.findFirst.mockResolvedValue({
+      id: 'ticket-1',
+      subject: 'Help',
+      message: 'Need assistance with login today',
+      status: 'OPEN',
+      closedAt: null,
+      closeReason: null,
+      closeReasonText: null,
+      createdAt: new Date('2026-06-23T10:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T10:00:00.000Z'),
+      messages: [
+        {
+          id: 'msg-1',
+          authorId: 'user-1',
+          body: 'Need assistance with login today',
+          isStaffReply: false,
+          createdAt: new Date('2026-06-23T10:00:00.000Z'),
+          author: { username: 'agent' },
+        },
+      ],
+    });
+
+    const response = await request(createApp()).get('/api/support/tickets/ticket-1');
+
+    expect(response.status).toBe(200);
+    expect(response.body.messages).toHaveLength(1);
+  });
+
+  it('GET /tickets/:id returns 404 when ticket missing', async () => {
+    const response = await request(createApp()).get('/api/support/tickets/missing');
+
+    expect(response.status).toBe(404);
+  });
 });

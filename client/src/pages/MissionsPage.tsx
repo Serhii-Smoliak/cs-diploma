@@ -5,6 +5,11 @@ import { api, type MitreTechnique } from '../services/api';
 import type { Mission } from '@cybertactics/shared';
 import { motion } from 'framer-motion';
 import MitreTechniqueChip from '../components/mitre/MitreTechniqueChip';
+import {
+  getMissionDescription,
+  getMissionDifficultyLabel,
+  getMissionName,
+} from '../utils/missionText';
 
 type MissionStatus = 'none' | 'in_progress' | 'completed';
 
@@ -81,17 +86,11 @@ export default function MissionsPage() {
     );
   }
 
-  const getMissionName = (missionId: string, fallbackName: string): string => {
-    const translationKey = `${missionId}.name`;
-    const translated = t(translationKey, { ns: 'missions', defaultValue: fallbackName });
-    return translated !== translationKey ? translated : fallbackName;
-  };
+  const getMissionNameLocalized = (missionId: string, fallbackName: string) =>
+    getMissionName(t, missionId, fallbackName);
 
-  const getMissionDescription = (missionId: string, fallbackDescription: string): string => {
-    const translationKey = `${missionId}.description`;
-    const translated = t(translationKey, { ns: 'missions', defaultValue: fallbackDescription });
-    return translated !== translationKey ? translated : fallbackDescription;
-  };
+  const getMissionDescriptionLocalized = (missionId: string, fallbackDescription: string) =>
+    getMissionDescription(t, missionId, fallbackDescription);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
@@ -112,7 +111,7 @@ export default function MissionsPage() {
             >
               <div className="flex items-start justify-between gap-2 mb-2">
                 <h2 className="font-heading font-bold text-lg sm:text-xl text-cyber-primary leading-snug">
-                  {getMissionName(mission.id, mission.name)}
+                  {getMissionNameLocalized(mission.id, mission.name)}
                 </h2>
                 {status === 'completed' && (
                   <span
@@ -134,7 +133,7 @@ export default function MissionsPage() {
                 )}
               </div>
               <p className="text-sm text-gray-400 mb-4 leading-relaxed">
-                {getMissionDescription(mission.id, mission.description)}
+                {getMissionDescriptionLocalized(mission.id, mission.description)}
               </p>
 
               {mission.mitreTechniques.length > 0 && (
@@ -168,10 +167,7 @@ export default function MissionsPage() {
                         : 'bg-red-900/30 text-red-400'
                   }`}
                 >
-                  {t(`difficulty.${mission.difficulty}`, {
-                    ns: 'ui',
-                    defaultValue: mission.difficulty,
-                  })}
+                  {getMissionDifficultyLabel(t, mission.difficulty)}
                 </span>
                 <span className="text-xs text-gray-400">
                   {mission.mitreTechniques.length} {t('techniques', { ns: 'ui' })}

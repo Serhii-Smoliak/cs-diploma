@@ -106,11 +106,85 @@ describe('notifications routes', () => {
     expect(prismaMock.notification.update).toHaveBeenCalled();
   });
 
-  it('PATCH /read-all marks all notifications as read', async () => {
-    const response = await request(createApp()).patch('/api/notifications/read-all');
+  it('PATCH /:id/read returns existing notification when already read', async () => {
+    prismaMock.notification.findFirst.mockResolvedValue({
+      id: 'notif-1',
+      userId: 'user-1',
+      type: 'NEWS',
+      title: 'notification.news.title',
+      body: 'news-1',
+      link: '/news/news-1',
+      isRead: true,
+      createdAt: new Date('2026-06-23T10:00:00.000Z'),
+      supportMessage: null,
+      newsPost: { titleUk: 'Новина', titleEn: 'News' },
+    });
+
+    const response = await request(createApp()).patch('/api/notifications/notif-1/read');
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ success: true });
-    expect(prismaMock.notification.updateMany).toHaveBeenCalled();
+    expect(prismaMock.notification.update).not.toHaveBeenCalled();
+  });
+
+  it('PATCH /:id/read returns 404 when notification missing', async () => {
+    prismaMock.notification.findFirst.mockResolvedValue(null);
+
+    const response = await request(createApp()).patch('/api/notifications/missing/read');
+
+    expect(response.status).toBe(404);
+  });
+
+  it('GET / formats news notifications with locale', async () => {
+    prismaMock.notification.findMany.mockResolvedValue([
+      {
+        id: 'notif-2',
+        userId: 'user-1',
+        type: 'NEWS',
+        title: 'notification.news.title',
+        body: 'news-1',
+        link: '/news/news-1',
+        isRead: false,
+        createdAt: new Date('2026-06-23T10:00:00.000Z'),
+        supportMessage: null,
+        newsPost: { titleUk: 'Новина UA', titleEn: 'News EN' },
+      },
+    ]);
+
+    const response = await request(createApp()).get('/api/notifications');
+
+    expect(response.status).toBe(200);
+    expect(response.body[0].newsTitle).toBe('Новина UA');
+  });
+
+  it('returns 500 when listing notifications fails', async () => {
+    prismaMock.notification.findMany.mockRejectedValue(new Error('db'));
+
+    const response = await request(createApp()).get('/api/notifications');
+
+    expect(response.status).toBe(500);
+  });
+
+  it('returns 500 when unread count fails', async () => {
+    prismaMock.notification.count.mockRejectedValue(new Error('db'));
+
+    const response = await request(createApp()).get('/api/notifications/unread-count');
+
+    expect(response.status).toBe(500);
+  });
+
+  it('returns 500 when read-all fails', async () => {
+    prismaMock.notification.updateMany.mockRejectedValue(new Error('db'));
+
+    const response = await request(createApp()).patch('/api/notifications/read-all');
+
+    expect(response.status).toBe(500);
+  });
+
+  it('returns 500 when mark read fails', async () => {
+    prismaMock.notification.update.mockRejectedValue(new Error('db'));
+
+    const response = await request(createApp()).patch('/api/notifications/notif-1/read');
+
+    expect(response.status).toBe(500);
   });
 });

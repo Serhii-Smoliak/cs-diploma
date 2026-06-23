@@ -2,11 +2,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const authStoreState = vi.hoisted((): {
-  user: { id: string; role: 'USER' | 'ADMIN' } | null;
-} => ({
-  user: { id: 'admin-1', role: 'ADMIN' },
-}));
+const authStoreState = vi.hoisted(
+  (): {
+    user: { id: string; role: 'USER' | 'ADMIN' } | null;
+  } => ({
+    user: { id: 'admin-1', role: 'ADMIN' },
+  })
+);
 
 const refreshUserMock = vi.hoisted(() =>
   vi.fn().mockImplementation(async () => {
@@ -168,6 +170,73 @@ describe('SettingsPage', () => {
       expect(api.syncAdminMitre).toHaveBeenCalled();
     });
     expect(await screen.findByText('Synchronized 2 techniques')).toBeInTheDocument();
+  });
+
+  it('unblocks user without modal', async () => {
+    vi.mocked(api.getAdminUsers).mockResolvedValue([
+      {
+        id: 'user-1',
+        username: 'agent',
+        email: 'agent@test.com',
+        role: 'USER',
+        xp: 100,
+        rank: 'Novice Hacker',
+        isBlocked: true,
+        blockedAt: '2026-06-23T00:00:00.000Z',
+        blockedReason: 'abuse',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      },
+    ]);
+    vi.mocked(api.setAdminUserBlocked).mockResolvedValue({
+      id: 'user-1',
+      username: 'agent',
+      email: 'agent@test.com',
+      role: 'USER',
+      xp: 100,
+      rank: 'Novice Hacker',
+      isBlocked: false,
+      blockedAt: null,
+      blockedReason: null,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    render(<SettingsPage />);
+    await screen.findByText('agent');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Розблокувати' }));
+
+    await waitFor(() => {
+      expect(api.setAdminUserBlocked).toHaveBeenCalledWith('user-1', false, undefined);
+    });
+  });
+
+  it('shows load error', async () => {
+    vi.mocked(api.getAdminUsers).mockRejectedValue(new Error('Load failed'));
+    render(<SettingsPage />);
+
+    expect(await screen.findByText('Load failed')).toBeInTheDocument();
+  });
+
+  it('shows sync error when MITRE sync fails', async () => {
+    vi.mocked(api.syncAdminMitre).mockRejectedValue(new Error('Sync failed'));
+    render(<SettingsPage />);
+    await screen.findByText('agent');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Синхронізувати техніки' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Так, синхронізувати' }));
+
+    expect(await screen.findByText('Sync failed')).toBeInTheDocument();
+  });
+
+  it('cancels MITRE sync confirmation', async () => {
+    render(<SettingsPage />);
+    await screen.findByText('agent');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Синхронізувати техніки' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Скасувати' }));
+
+    expect(api.syncAdminMitre).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('does not sync when admin role check fails after refresh', async () => {

@@ -370,4 +370,393 @@ describe('admin routes', () => {
     expect(prismaMock.$transaction).toHaveBeenCalled();
     expect(prismaMock.notification.createMany).toHaveBeenCalled();
   });
+
+  it('GET /news returns admin news list', async () => {
+    prismaMock.newsPost.findMany.mockResolvedValue([
+      {
+        id: 'news-1',
+        titleUk: 'Новина',
+        titleEn: 'News',
+        bodyUk: 'Текст',
+        bodyEn: 'Text',
+        isPublished: false,
+        publishedAt: null,
+        authorId: 'admin-1',
+        createdAt: new Date('2026-06-23T12:00:00.000Z'),
+        updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+        author: { username: 'admin' },
+      },
+    ]);
+
+    const response = await request(createApp()).get('/api/admin/news');
+
+    expect(response.status).toBe(200);
+    expect(response.body[0].titleUk).toBe('Новина');
+  });
+
+  it('PATCH /news/:id publishes draft and notifies users', async () => {
+    prismaMock.newsPost.findUnique.mockResolvedValue({
+      id: 'news-1',
+      titleUk: 'Новина',
+      titleEn: 'News',
+      bodyUk: 'Текст',
+      bodyEn: 'Text',
+      isPublished: false,
+      publishedAt: null,
+      authorId: 'admin-1',
+      createdAt: new Date('2026-06-23T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+    });
+
+    const response = await request(createApp())
+      .patch('/api/admin/news/news-1')
+      .send({ isPublished: true });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.$transaction).toHaveBeenCalled();
+  });
+
+  it('PATCH /news/:id returns 404 for missing post', async () => {
+    prismaMock.newsPost.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp())
+      .patch('/api/admin/news/missing')
+      .send({ titleUk: 'Updated' });
+
+    expect(response.status).toBe(404);
+  });
+
+  it('DELETE /news/:id removes post', async () => {
+    prismaMock.newsPost.findUnique.mockResolvedValue({
+      id: 'news-1',
+      titleUk: 'Новина',
+      titleEn: 'News',
+      bodyUk: 'Текст',
+      bodyEn: 'Text',
+      isPublished: true,
+      publishedAt: new Date('2026-06-23T12:00:00.000Z'),
+      authorId: 'admin-1',
+      createdAt: new Date('2026-06-23T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+    });
+
+    const response = await request(createApp()).delete('/api/admin/news/news-1');
+
+    expect(response.status).toBe(204);
+    expect(prismaMock.newsPost.delete).toHaveBeenCalled();
+  });
+
+  it('GET /support/tickets/:id returns ticket detail', async () => {
+    const response = await request(createApp()).get('/api/admin/support/tickets/ticket-1');
+
+    expect(response.status).toBe(200);
+    expect(response.body.subject).toBe('Help');
+  });
+
+  it('POST /support/tickets/:id/close accepts custom reason text', async () => {
+    prismaMock.supportTicket.update.mockResolvedValueOnce({
+      id: 'ticket-1',
+      userId: 'user-1',
+      subject: 'Help',
+      message: 'Need help',
+      status: 'CLOSED',
+      closedAt: new Date('2026-06-23T12:00:00.000Z'),
+      closeReason: 'CUSTOM',
+      closeReasonText: 'Duplicate request already handled elsewhere',
+      createdAt: new Date('2026-06-23T10:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+      user: { username: 'agent', email: 'agent@test.com' },
+      messages: [],
+    });
+
+    const response = await request(createApp())
+      .post('/api/admin/support/tickets/ticket-1/close')
+      .send({ reason: 'CUSTOM', reasonText: 'Duplicate request already handled elsewhere' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.closeReason).toBe('CUSTOM');
+  });
+
+  it('POST /news rejects invalid payload', async () => {
+    const response = await request(createApp()).post('/api/admin/news').send({
+      titleUk: '',
+      titleEn: '',
+      bodyUk: '',
+      bodyEn: '',
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('DELETE /news/:id returns 404 for missing post', async () => {
+    prismaMock.newsPost.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp()).delete('/api/admin/news/missing');
+
+    expect(response.status).toBe(404);
+  });
+
+  it('GET /support/tickets/:id returns 404 when missing', async () => {
+    prismaMock.supportTicket.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp()).get('/api/admin/support/tickets/missing');
+
+    expect(response.status).toBe(404);
+  });
+
+  it('PATCH /users/:id/block returns 404 for missing user', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp())
+      .patch('/api/admin/users/missing/block')
+      .send({ blocked: true });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toBe('User not found');
+  });
+
+  it('PATCH /users/:id/block rejects blocking admin accounts', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 'admin-2',
+      role: UserRole.ADMIN,
+    });
+
+    const response = await request(createApp())
+      .patch('/api/admin/users/admin-2/block')
+      .send({ blocked: true });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Cannot block admin accounts');
+  });
+
+  it('PATCH /users/:id/block unblocks user', async () => {
+    prismaMock.user.update.mockResolvedValueOnce({
+      id: 'user-1',
+      username: 'agent',
+      email: 'agent@test.com',
+      role: UserRole.USER,
+      xp: 100,
+      rank: 'Novice Hacker',
+      isBlocked: false,
+      blockedAt: null,
+      blockedReason: null,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+    });
+
+    const response = await request(createApp())
+      .patch('/api/admin/users/user-1/block')
+      .send({ blocked: false });
+
+    expect(response.status).toBe(200);
+    expect(response.body.isBlocked).toBe(false);
+  });
+
+  it('PATCH /users/:id/block rejects invalid payload', async () => {
+    const response = await request(createApp())
+      .patch('/api/admin/users/user-1/block')
+      .send({ blocked: 'yes' });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('POST /support/tickets/:id/reply returns 404 for missing ticket', async () => {
+    prismaMock.supportTicket.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp())
+      .post('/api/admin/support/tickets/missing/reply')
+      .send({ body: 'Reply text' });
+
+    expect(response.status).toBe(404);
+  });
+
+  it('POST /support/tickets/:id/reply rejects closed ticket', async () => {
+    prismaMock.supportTicket.findUnique.mockResolvedValue({
+      id: 'ticket-1',
+      userId: 'user-1',
+      subject: 'Help',
+      status: 'CLOSED',
+    });
+
+    const response = await request(createApp())
+      .post('/api/admin/support/tickets/ticket-1/reply')
+      .send({ body: 'Reply text' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Ticket is closed');
+  });
+
+  it('POST /support/tickets/:id/reply rejects empty body', async () => {
+    const response = await request(createApp())
+      .post('/api/admin/support/tickets/ticket-1/reply')
+      .send({ body: '' });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('POST /support/tickets/:id/close returns 404 for missing ticket', async () => {
+    prismaMock.supportTicket.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp())
+      .post('/api/admin/support/tickets/missing/close')
+      .send({ reason: 'DECLINED' });
+
+    expect(response.status).toBe(404);
+  });
+
+  it('POST /support/tickets/:id/close rejects already closed ticket', async () => {
+    prismaMock.supportTicket.findUnique.mockResolvedValue({
+      id: 'ticket-1',
+      status: 'CLOSED',
+    });
+
+    const response = await request(createApp())
+      .post('/api/admin/support/tickets/ticket-1/close')
+      .send({ reason: 'DECLINED' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Ticket is already closed');
+  });
+
+  it('PATCH /support/messages/:messageId returns 404 for missing message', async () => {
+    prismaMock.supportMessage.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp())
+      .patch('/api/admin/support/messages/missing')
+      .send({ body: 'Updated reply' });
+
+    expect(response.status).toBe(404);
+  });
+
+  it('PATCH /support/messages/:messageId rejects user message', async () => {
+    prismaMock.supportMessage.findUnique.mockResolvedValue({
+      id: 'msg-1',
+      authorId: 'user-1',
+      body: 'User message',
+      isStaffReply: false,
+      createdAt: new Date('2026-06-23T10:00:00.000Z'),
+      ticket: { id: 'ticket-1', status: 'OPEN', userId: 'user-1', subject: 'Help' },
+      author: { username: 'agent' },
+    });
+
+    const response = await request(createApp())
+      .patch('/api/admin/support/messages/msg-1')
+      .send({ body: 'Updated reply' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe('Cannot modify user messages');
+  });
+
+  it('PATCH /support/messages/:messageId rejects closed ticket', async () => {
+    prismaMock.supportMessage.findUnique.mockResolvedValue({
+      id: 'msg-1',
+      authorId: 'admin-1',
+      body: 'Staff reply',
+      isStaffReply: true,
+      createdAt: new Date('2026-06-23T11:00:00.000Z'),
+      ticket: { id: 'ticket-1', status: 'CLOSED', userId: 'user-1', subject: 'Help' },
+      author: { username: 'admin' },
+    });
+
+    const response = await request(createApp())
+      .patch('/api/admin/support/messages/msg-1')
+      .send({ body: 'Updated reply' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe('Ticket is closed');
+  });
+
+  it('DELETE /support/messages/:messageId returns 404 for missing message', async () => {
+    prismaMock.supportMessage.findUnique.mockResolvedValue(null);
+
+    const response = await request(createApp()).delete('/api/admin/support/messages/missing');
+
+    expect(response.status).toBe(404);
+  });
+
+  it('DELETE /support/messages/:messageId reopens ticket when last staff reply removed', async () => {
+    prismaMock.supportMessage.count.mockResolvedValue(0);
+
+    const response = await request(createApp()).delete('/api/admin/support/messages/msg-1');
+
+    expect(response.status).toBe(204);
+    expect(prismaMock.supportTicket.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'ticket-1' },
+        data: { status: 'OPEN' },
+      })
+    );
+  });
+
+  it('POST /news creates draft without notifying users', async () => {
+    const response = await request(createApp()).post('/api/admin/news').send({
+      titleUk: 'Чернетка UA',
+      titleEn: 'Draft EN',
+      bodyUk: 'Текст чернетки українською',
+      bodyEn: 'Draft text in English',
+      isPublished: false,
+    });
+
+    expect(response.status).toBe(201);
+    expect(prismaMock.notification.createMany).not.toHaveBeenCalled();
+  });
+
+  it('PATCH /news/:id unpublishes post', async () => {
+    prismaMock.newsPost.findUnique.mockResolvedValue({
+      id: 'news-1',
+      titleUk: 'Новина',
+      titleEn: 'News',
+      bodyUk: 'Текст',
+      bodyEn: 'Text',
+      isPublished: true,
+      publishedAt: new Date('2026-06-23T12:00:00.000Z'),
+      authorId: 'admin-1',
+      createdAt: new Date('2026-06-23T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+    });
+    prismaMock.newsPost.update.mockResolvedValue({
+      id: 'news-1',
+      titleUk: 'Новина',
+      titleEn: 'News',
+      bodyUk: 'Текст',
+      bodyEn: 'Text',
+      isPublished: false,
+      publishedAt: null,
+      authorId: 'admin-1',
+      createdAt: new Date('2026-06-23T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+      author: { username: 'admin' },
+    });
+
+    const response = await request(createApp())
+      .patch('/api/admin/news/news-1')
+      .send({ isPublished: false });
+
+    expect(response.status).toBe(200);
+    expect(prismaMock.newsPost.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ isPublished: false, publishedAt: null }),
+      })
+    );
+  });
+
+  it('PATCH /news/:id rejects invalid payload', async () => {
+    prismaMock.newsPost.findUnique.mockResolvedValue({
+      id: 'news-1',
+      titleUk: 'Новина',
+      titleEn: 'News',
+      bodyUk: 'Текст',
+      bodyEn: 'Text',
+      isPublished: true,
+      publishedAt: new Date('2026-06-23T12:00:00.000Z'),
+      authorId: 'admin-1',
+      createdAt: new Date('2026-06-23T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+    });
+
+    const response = await request(createApp())
+      .patch('/api/admin/news/news-1')
+      .send({ titleUk: 'ab' });
+
+    expect(response.status).toBe(400);
+  });
 });

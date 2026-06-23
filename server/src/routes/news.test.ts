@@ -81,4 +81,21 @@ describe('news routes', () => {
     expect(response.status).toBe(200);
     expect(response.body.body).toBe('Новий контент');
   });
+
+  it('GET /:id returns 404 for missing post', async () => {
+    prismaMock.newsPost.findFirst.mockResolvedValue(null);
+
+    const response = await request(createApp()).get('/api/news/missing');
+
+    expect(response.status).toBe(404);
+  });
+
+  it('GET / returns english locale when preferred', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ preferredLocale: 'en' });
+
+    const response = await request(createApp()).get('/api/news');
+
+    expect(response.status).toBe(200);
+    expect(response.body[0].title).toBe('Platform update');
+  });
 });

@@ -177,4 +177,42 @@ describe('AdminTicketsPage', () => {
       expect(api.closeAdminSupportTicket).toHaveBeenCalledWith('ticket-1', 'ANSWERED', undefined);
     });
   });
+
+  it('closes ticket with custom reason text', async () => {
+    const userEvents = userEvent.setup();
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Закрити звернення' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Закрити звернення' }));
+    fireEvent.change(screen.getByLabelText('Причина'), { target: { value: 'CUSTOM' } });
+    await userEvents.type(
+      screen.getByPlaceholderText('3–500 символів'),
+      'Duplicate ticket already handled'
+    );
+    fireEvent.click(screen.getAllByRole('button', { name: 'Закрити звернення' })[1]);
+
+    await waitFor(() => {
+      expect(api.closeAdminSupportTicket).toHaveBeenCalledWith(
+        'ticket-1',
+        'CUSTOM',
+        'Duplicate ticket already handled'
+      );
+    });
+  });
+
+  it('deletes own staff reply', async () => {
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Видалити' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Видалити' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Видалити' })[1]!);
+
+    await waitFor(() => {
+      expect(api.deleteAdminSupportMessage).toHaveBeenCalledWith('msg-2');
+    });
+  });
 });

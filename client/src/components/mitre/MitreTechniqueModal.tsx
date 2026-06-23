@@ -4,6 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { MitreTechnique } from '@/services/api.ts';
 import { api } from '@/services/api.ts';
+import {
+  getMissionAssignmentsPath,
+  getMissionDescription,
+  getMissionDifficultyLabel,
+  getMissionName,
+} from '@/utils/missionText.ts';
 
 const KILL_CHAIN_STAGES = [
   { id: 'reconnaissance', icon: '🔍', color: 'blue' },
@@ -53,7 +59,7 @@ export default function MitreTechniqueModal({
   isCompleted,
 }: MitreTechniqueModalProps) {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation(['mitre', 'common']);
+  const { t, i18n } = useTranslation(['mitre', 'common', 'missions', 'ui']);
   const [relatedMissions, setRelatedMissions] = useState<RelatedMission[]>([]);
   const [selectedExample, setSelectedExample] = useState<number | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
@@ -591,13 +597,13 @@ export default function MitreTechniqueModal({
                           whileHover={{ scale: 1.02 }}
                           onClick={() => {
                             onClose();
-                            navigate('/missions');
+                            navigate(getMissionAssignmentsPath(mission.id));
                           }}
                           className="cyber-panel p-4 border border-cyber-border hover:border-cyber-primary cursor-pointer transition-colors"
                         >
                           <div className="flex items-start justify-between mb-2">
                             <h4 className="font-heading font-bold text-cyber-primary">
-                              {mission.name}
+                              {getMissionName(t, mission.id, mission.name)}
                             </h4>
                             <span
                               className={`text-xs px-2 py-1 rounded ${
@@ -608,12 +614,12 @@ export default function MitreTechniqueModal({
                                     : 'bg-red-900/30 text-red-400'
                               }`}
                             >
-                              {mission.difficulty}
+                              {getMissionDifficultyLabel(t, mission.difficulty)}
                             </span>
                           </div>
                           {mission.description && (
                             <p className="text-xs text-gray-400 line-clamp-2">
-                              {mission.description}
+                              {getMissionDescription(t, mission.id, mission.description)}
                             </p>
                           )}
                           <div className="mt-2 text-xs text-cyber-primary">

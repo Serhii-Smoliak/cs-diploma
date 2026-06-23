@@ -104,6 +104,83 @@ describe('SupportPage', () => {
     });
   });
 
+  it('shows load error', async () => {
+    vi.mocked(api.getSupportTickets).mockRejectedValue(new Error('Load failed'));
+    render(<SupportPage />);
+
+    expect(await screen.findByText('Load failed')).toBeInTheDocument();
+  });
+
+  it('shows error when ticket detail fails to load', async () => {
+    vi.mocked(api.getSupportTicket).mockRejectedValue(new Error('Detail failed'));
+    render(<SupportPage />);
+    await screen.findByText('Login issue');
+
+    fireEvent.click(screen.getByRole('button', { name: /Login issue/i }));
+
+    expect(await screen.findByText('Detail failed')).toBeInTheDocument();
+  });
+
+  it('shows daily limit error on 429 submit', async () => {
+    const { ApiError } = await import('../services/api');
+    vi.mocked(api.createSupportTicket).mockRejectedValue(new ApiError('Too many', 429));
+    const userEvents = userEvent.setup();
+    render(<SupportPage />);
+    await screen.findByText('Login issue');
+
+    await userEvents.type(screen.getByRole('textbox', { name: 'Тема' }), 'New issue');
+    await userEvents.type(
+      screen.getByRole('textbox', { name: 'Повідомлення' }),
+      'Need help please now'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Надіслати звернення' }));
+
+    expect(
+      await screen.findByText('Денний ліміт вичерпано (3 звернення на день).')
+    ).toBeInTheDocument();
+  });
+
+  it('shows closed ticket reason in expanded thread', async () => {
+    vi.mocked(api.getSupportTickets).mockResolvedValue([
+      {
+        id: 'ticket-1',
+        subject: 'Closed issue',
+        message: 'Please close',
+        status: 'CLOSED',
+        closedAt: '2026-06-23T12:00:00.000Z',
+        closeReason: 'DECLINED',
+        closeReasonText: null,
+        createdAt: '2026-06-23T10:00:00.000Z',
+        updatedAt: '2026-06-23T12:00:00.000Z',
+      },
+    ]);
+    vi.mocked(api.getSupportTicket).mockResolvedValue({
+      id: 'ticket-1',
+      subject: 'Closed issue',
+      message: 'Please close',
+      status: 'CLOSED',
+      closedAt: '2026-06-23T12:00:00.000Z',
+      closeReason: 'DECLINED',
+      closeReasonText: null,
+      createdAt: '2026-06-23T10:00:00.000Z',
+      updatedAt: '2026-06-23T12:00:00.000Z',
+      messages: [],
+    });
+
+    render(<SupportPage />);
+    await screen.findByText('Closed issue');
+    fireEvent.click(screen.getByRole('button', { name: /Closed issue/i }));
+
+    expect(await screen.findByText(/Причина закриття/)).toBeInTheDocument();
+  });
+
+  it('shows empty ticket list', async () => {
+    vi.mocked(api.getSupportTickets).mockResolvedValue([]);
+    render(<SupportPage />);
+
+    expect(await screen.findByText('Звернень поки немає.')).toBeInTheDocument();
+  });
+
   it('submits support ticket', async () => {
     const userEvents = userEvent.setup();
     render(<SupportPage />);
