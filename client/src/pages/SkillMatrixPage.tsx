@@ -6,6 +6,7 @@ import { api, type MitreTechnique } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import MitreTechniqueModal from '../components/mitre/MitreTechniqueModal';
 import { tacticSectionId } from '../utils/mitreLinks';
+import { matchesMitreTechniqueSearch } from '../utils/mitreSearch';
 
 interface TacticGroup {
   tactic: string;
@@ -129,14 +130,7 @@ export default function SkillMatrixPage() {
     let filtered = techniques;
 
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (tech) =>
-          tech.id.toLowerCase().includes(query) ||
-          tech.name.toLowerCase().includes(query) ||
-          tech.description?.toLowerCase().includes(query) ||
-          tech.tactic.toLowerCase().includes(query)
-      );
+      filtered = filtered.filter((tech) => matchesMitreTechniqueSearch(tech, searchQuery));
     }
 
     if (filterCompleted === 'completed') {

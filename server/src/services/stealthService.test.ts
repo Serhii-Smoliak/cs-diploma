@@ -52,7 +52,7 @@ describe('stealthService', () => {
     expect(result.change).toBe(-5);
   });
 
-  it('restores masking to configured floor', async () => {
+  it('adds masking restore amount up to max', async () => {
     prismaMock.userStats.findUnique.mockResolvedValue({
       stealth: 10,
       lastStealthUpdateAt: new Date(),
@@ -60,6 +60,16 @@ describe('stealthService', () => {
     });
 
     const restored = await restoreMasking('user-1');
-    expect(restored).toBe(50);
+    expect(restored).toBe(60);
+  });
+
+  it('rejects masking when it would exceed max', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      stealth: 60,
+      lastStealthUpdateAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await expect(restoreMasking('user-1')).rejects.toThrow('MASKING_WOULD_EXCEED_MAX');
   });
 });

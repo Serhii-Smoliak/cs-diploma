@@ -5,19 +5,22 @@ import Footer from './Footer';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, options?: { defaultValue?: string; year?: number }) =>
+      options?.defaultValue?.replace('{{year}}', String(options.year ?? '')) ?? key,
+    i18n: { resolvedLanguage: 'uk' },
   }),
 }));
 
 describe('Footer', () => {
-  it('links to agreement page', () => {
+  it('shows copyright, news and agreement links', () => {
     render(
       <MemoryRouter>
         <Footer />
       </MemoryRouter>
     );
 
-    const link = screen.getByRole('link', { name: 'footerLink' });
-    expect(link).toHaveAttribute('href', '/agreement');
+    expect(screen.getByText(/CyberTactics\. Усі права захищені\./)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Новини' })).toHaveAttribute('href', '/news');
+    expect(screen.getByRole('link', { name: 'footerLink' })).toHaveAttribute('href', '/agreement');
   });
 });

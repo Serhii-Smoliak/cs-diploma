@@ -12,7 +12,10 @@ const prismaMock = vi.hoisted(() => ({
     findUnique: vi.fn(),
     update: vi.fn(),
   },
-  $transaction: vi.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
+  notification: {
+    create: vi.fn(),
+  },
+  $transaction: vi.fn(),
 }));
 
 vi.mock('../db/database.js', () => ({ default: prismaMock }));
@@ -43,7 +46,11 @@ import { getCurrentStealth } from './stealthService.js';
 describe('levelService.submitAnswer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    prismaMock.user.findUnique.mockResolvedValue({ id: 'u1', xp: 100 });
+    prismaMock.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      xp: 100,
+      preferredLocale: 'uk',
+    });
     prismaMock.level.findFirst.mockResolvedValue({ levelId: 'ghost_recon_01' });
     prismaMock.userProgress.findUnique.mockResolvedValue(null);
     prismaMock.userProgress.create.mockResolvedValue({
@@ -53,8 +60,18 @@ describe('levelService.submitAnswer', () => {
       attempts: 1,
       lastAnswer: '.*',
     });
-    prismaMock.userStats.findUnique.mockResolvedValue({ xp: 100, mitreTechniques: [] });
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      totalXp: 100,
+      rank: 'Script Kiddie',
+    });
     prismaMock.userStats.update.mockResolvedValue({});
+    prismaMock.notification.create.mockResolvedValue({});
+    prismaMock.$transaction.mockImplementation(async (callback) =>
+      callback({
+        userStats: prismaMock.userStats,
+        notification: prismaMock.notification,
+      })
+    );
   });
 
   it('returns stealth depleted response without saving progress', async () => {
@@ -79,5 +96,35 @@ describe('levelService.submitAnswer', () => {
     await expect(submitAnswer('missing', 'ghost_recon_01', 'x')).rejects.toMatchObject({
       statusCode: 401,
     });
+  });
+
+  it('creates rank-up notification when rank increases', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValueOnce({
+      totalXp: 450,
+      rank: 'Script Kiddie',
+    });
+
+    await submitAnswer('u1', 'ghost_recon_01', '.*@.*');
+
+    expect(prismaMock.notification.create).toHaveBeenCalledWith({
+      data: {
+        userId: 'u1',
+        type: 'SYSTEM',
+        title: 'notification.rankUp.title',
+        body: 'Novice Hacker',
+        link: '/ranks',
+      },
+    });
+  });
+
+  it('does not create rank-up notification when rank stays the same', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValueOnce({
+      totalXp: 600,
+      rank: 'Novice Hacker',
+    });
+
+    await submitAnswer('u1', 'ghost_recon_01', '.*@.*');
+
+    expect(prismaMock.notification.create).not.toHaveBeenCalled();
   });
 });

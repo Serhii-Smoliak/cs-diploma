@@ -1,10 +1,12 @@
 import type { Level, SubmitAnswerRequest, SubmitAnswerResponse } from '@cybertactics/shared';
+import { NotificationType } from '@prisma/client';
 import { validateAnswer } from '../validators/AnswerValidator.js';
 import { HttpError } from '../errors/httpError.js';
 import prisma from '../db/database.js';
 import { mapPrismaLevelToLevel } from '../utils/levelMapper.js';
 import { changeStealth, getCurrentStealth } from './stealthService.js';
 import { getStealthConfig } from '../config/stealthConfig.js';
+import { getRankUpNotificationData } from './notificationService.js';
 
 export async function submitAnswer(
   userId: string,
@@ -122,20 +124,37 @@ export async function submitAnswer(
         where: { userId },
       });
 
+      const previousRank = stats?.rank ?? calculateRank(stats?.totalXp || 0);
       const newXp = (stats?.totalXp || 0) + level.rewards.xp;
       const rank = calculateRank(newXp);
+      const rankIncreased = rank !== previousRank;
 
       if (level.rewards.stealth_impact !== 0) {
         const { change } = await changeStealth(userId, level.rewards.stealth_impact);
         stealthChange = change;
       }
 
-      await prisma.userStats.update({
-        where: { userId },
-        data: {
-          totalXp: newXp,
-          rank,
-        },
+      await prisma.$transaction(async (tx) => {
+        await tx.userStats.update({
+          where: { userId },
+          data: {
+            totalXp: newXp,
+            rank,
+          },
+        });
+
+        if (rankIncreased) {
+          const content = getRankUpNotificationData(rank);
+          await tx.notification.create({
+            data: {
+              userId,
+              type: NotificationType.SYSTEM,
+              title: content.title,
+              body: content.body,
+              link: content.link,
+            },
+          });
+        }
       });
 
       xpGained = level.rewards.xp;

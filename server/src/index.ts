@@ -11,6 +11,10 @@ import levelsRoutes from './routes/levels.js';
 import usersRoutes from './routes/users.js';
 import mitreRoutes from './routes/mitre.js';
 import translationsRoutes from './routes/translations.js';
+import adminRoutes from './routes/admin.js';
+import supportRoutes from './routes/support.js';
+import notificationsRoutes from './routes/notifications.js';
+import newsRoutes from './routes/news.js';
 import { apiErrorHandler, apiNotFoundHandler } from './middleware/errorHandler.js';
 import { ensureAvatarsDir } from './services/avatarService.js';
 
@@ -51,6 +55,10 @@ app.use('/api/levels', levelsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/mitre', mitreRoutes);
 app.use('/api/translations', translationsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/support', supportRoutes);
+app.use('/api/notifications', notificationsRoutes);
+app.use('/api/news', newsRoutes);
 
 app.use(apiNotFoundHandler);
 app.use(apiErrorHandler);

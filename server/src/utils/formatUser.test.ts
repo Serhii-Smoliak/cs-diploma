@@ -23,6 +23,7 @@ describe('formatAuthUser', () => {
       id: 'u1',
       username: 'agent',
       email: 'agent@test.com',
+      role: UserRole.USER,
       xp: 100,
       rank: 'Script Kiddie',
       stealth: 80,

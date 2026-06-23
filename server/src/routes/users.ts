@@ -34,6 +34,10 @@ router.get('/me', authenticate, async (req: AuthRequest, res) => {
       return res.status(401).json({ error: 'Session expired. Please login again.' });
     }
 
+    if (user.isBlocked) {
+      return res.status(403).json({ error: 'Account blocked' });
+    }
+
     const stealth = await applyPassiveRegen(userId);
 
     res.json(
@@ -120,6 +124,9 @@ router.post('/me/stealth/masking', authenticate, async (req: AuthRequest, res) =
     const stealth = await restoreMasking(userId);
     res.json({ stealth, message: 'Masking purchased (mock).' });
   } catch (error) {
+    if (error instanceof Error && error.message === 'MASKING_WOULD_EXCEED_MAX') {
+      return res.status(400).json({ error: 'Masking would exceed maximum stealth.' });
+    }
     console.error('Stealth masking error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }

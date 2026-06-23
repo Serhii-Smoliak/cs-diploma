@@ -59,10 +59,26 @@
   }
 
   .cyber-input {
-    @apply bg-cyber-panel border border-cyber-border text-white px-4 py-2 rounded-lg 
+    @apply bg-cyber-panel border border-cyber-border text-white text-base font-body px-4 py-2 rounded-lg 
            focus:outline-none focus:border-cyber-primary;
     box-sizing: border-box;
     width: 100%;
+  }
+
+  .cyber-input:-webkit-autofill,
+  .cyber-input:-webkit-autofill:hover,
+  .cyber-input:-webkit-autofill:focus,
+  .cyber-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #fff;
+    caret-color: #fff;
+    border-color: #1e3a5f;
+    font: inherit;
+    transition: background-color 9999s ease-out 0s;
+    box-shadow: 0 0 0 1000px #111827 inset;
+  }
+
+  .cyber-input:-webkit-autofill:focus {
+    border-color: #00d9ff;
   }
 
   .cyber-scrollbar {

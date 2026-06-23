@@ -56,6 +56,7 @@ const mockUser = {
   avatarUrl: null,
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
   role: UserRole.USER,
+  isBlocked: false,
   stats: { totalXp: 100, rank: 'Novice Hacker', stealth: 80, completedLevels: 1 },
 };
 
@@ -118,6 +119,15 @@ describe('users routes', () => {
     const response = await request(createApp()).get('/api/users/me');
 
     expect(response.status).toBe(401);
+  });
+
+  it('GET /me returns 403 when user is blocked', async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({ ...mockUser, isBlocked: true });
+
+    const response = await request(createApp()).get('/api/users/me');
+
+    expect(response.status).toBe(403);
+    expect(response.body.error).toBe('Account blocked');
   });
 
   it('PUT /me/locale updates locale', async () => {

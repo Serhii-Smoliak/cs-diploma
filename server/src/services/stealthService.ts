@@ -75,9 +75,13 @@ export async function restoreMasking(userId: string): Promise<number> {
   const stats = await prisma.userStats.findUnique({ where: { userId } });
   const config = getStealthConfig();
   const current = stats?.stealth ?? 0;
-  const restored = Math.max(current, config.maskingRestore);
+  const next = current + config.maskingRestore;
 
-  return syncStealth(userId, restored);
+  if (next > config.max) {
+    throw new Error('MASKING_WOULD_EXCEED_MAX');
+  }
+
+  return syncStealth(userId, next);
 }
 
 export async function applyWaitRecovery(userId: string): Promise<{

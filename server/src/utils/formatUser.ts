@@ -8,6 +8,7 @@ export function formatAuthUser(
     id: user.id,
     username: user.username,
     email: user.email,
+    role: user.role,
     xp: options?.xp ?? user.xp,
     rank: options?.rank ?? user.rank,
     stealth: options?.stealth ?? user.stealth,

@@ -12,10 +12,15 @@ import RanksPage from './pages/RanksPage';
 import FaqPage from './pages/FaqPage';
 import CommunityPage from './pages/CommunityPage';
 import ProfilePage from './pages/ProfilePage';
-// import SettingsPage from './pages/SettingsPage'
+import SettingsPage from './pages/SettingsPage';
+import SupportPage from './pages/SupportPage';
+import AdminTicketsPage from './pages/AdminTicketsPage';
+import AdminNewsPage from './pages/AdminNewsPage';
+import NewsPage from './pages/NewsPage';
 import AgreementPage from './pages/AgreementPage';
 import GameLayout from './components/game/GameLayout';
 import LocaleSelectionGate from './components/auth/LocaleSelectionGate';
+import AdminRoute from './components/auth/AdminRoute';
 import { useGameStore } from './store/gameStore';
 import { api } from './services/api';
 import { registerSessionExpiredHandler } from './auth/sessionExpired';
@@ -189,8 +194,34 @@ function App() {
                   <Route path="/ranks" element={<RanksPage />} />
                   <Route path="/faq" element={<FaqPage />} />
                   <Route path="/community" element={<CommunityPage />} />
+                  <Route path="/support" element={<SupportPage />} />
+                  <Route path="/news" element={<NewsPage />} />
+                  <Route path="/news/:newsId" element={<NewsPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
-                  {/* <Route path="/settings" element={<SettingsPage />} /> */}
+                  <Route
+                    path="/admin/tickets"
+                    element={
+                      <AdminRoute>
+                        <AdminTicketsPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/news"
+                    element={
+                      <AdminRoute>
+                        <AdminNewsPage />
+                      </AdminRoute>
+                    }
+                  />
+                  <Route
+                    path="/settings"
+                    element={
+                      <AdminRoute>
+                        <SettingsPage />
+                      </AdminRoute>
+                    }
+                  />
                 </Routes>
               </Layout>
             </LocaleSelectionGate>
