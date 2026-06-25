@@ -214,8 +214,17 @@ describe('api client', () => {
         if (url.includes('/stealth/masking')) {
           return { ok: true, json: async () => ({ stealth: 30, message: 'Masked' }) };
         }
-        if (url.includes('/stealth/wait')) {
-          return { ok: true, json: async () => ({ stealth: 15, message: 'Recovered' }) };
+        if (url.includes('/stealth/recovery-status')) {
+          return {
+            ok: true,
+            json: async () => ({
+              stealth: 80,
+              ready: false,
+              alreadyAtMax: false,
+              retryAfterMs: 3_600_000,
+              regenAmount: 10,
+            }),
+          };
         }
         if (url.includes('/mitre/techniques/T1593')) {
           return {
@@ -243,9 +252,12 @@ describe('api client', () => {
       stealth: 30,
       message: 'Masked',
     });
-    await expect(api.waitForStealthRecovery()).resolves.toEqual({
-      stealth: 15,
-      message: 'Recovered',
+    await expect(api.getStealthRecoveryStatus()).resolves.toEqual({
+      stealth: 80,
+      ready: false,
+      alreadyAtMax: false,
+      retryAfterMs: 3_600_000,
+      regenAmount: 10,
     });
     await expect(api.getMitreTechniques()).resolves.toEqual([{ id: 'T1593', name: 'Search' }]);
     await expect(api.getMitreTechnique('T1593')).resolves.toMatchObject({ id: 'T1593' });

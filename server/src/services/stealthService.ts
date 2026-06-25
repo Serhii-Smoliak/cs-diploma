@@ -87,6 +87,7 @@ export async function restoreMasking(userId: string): Promise<number> {
 export async function getWaitRecoveryStatus(userId: string): Promise<{
   stealth: number;
   ready: boolean;
+  regenAmount: number;
   alreadyAtMax?: boolean;
   retryAfterMs?: number;
 }> {
@@ -94,17 +95,27 @@ export async function getWaitRecoveryStatus(userId: string): Promise<{
   const stats = await prisma.userStats.findUnique({ where: { userId } });
 
   if (!stats) {
-    return { stealth: config.max, ready: false, alreadyAtMax: true };
+    return {
+      stealth: config.max,
+      ready: false,
+      alreadyAtMax: true,
+      regenAmount: config.regenAmount,
+    };
   }
 
   const currentAfterPassive = await applyPassiveRegen(userId);
   const refreshed = await prisma.userStats.findUnique({ where: { userId } });
   if (!refreshed) {
-    return { stealth: currentAfterPassive, ready: false };
+    return { stealth: currentAfterPassive, ready: false, regenAmount: config.regenAmount };
   }
 
   if (refreshed.stealth >= config.max) {
-    return { stealth: refreshed.stealth, ready: false, alreadyAtMax: true };
+    return {
+      stealth: refreshed.stealth,
+      ready: false,
+      alreadyAtMax: true,
+      regenAmount: config.regenAmount,
+    };
   }
 
   const lastUpdate = refreshed.lastStealthUpdateAt ?? refreshed.updatedAt;
@@ -116,40 +127,11 @@ export async function getWaitRecoveryStatus(userId: string): Promise<{
       stealth: refreshed.stealth,
       ready: false,
       retryAfterMs: config.regenIntervalMs - msElapsed,
+      regenAmount: config.regenAmount,
     };
   }
 
-  return { stealth: refreshed.stealth, ready: true };
-}
-
-export async function applyWaitRecovery(userId: string): Promise<{
-  stealth: number;
-  applied: boolean;
-  alreadyAtMax?: boolean;
-  retryAfterMs?: number;
-}> {
-  const status = await getWaitRecoveryStatus(userId);
-
-  if (status.alreadyAtMax) {
-    return { stealth: status.stealth, applied: false, alreadyAtMax: true };
-  }
-
-  if (!status.ready) {
-    return {
-      stealth: status.stealth,
-      applied: false,
-      retryAfterMs: status.retryAfterMs,
-    };
-  }
-
-  const config = getStealthConfig();
-  const next = await syncStealth(
-    userId,
-    Math.min(config.max, status.stealth + config.regenAmount),
-    new Date()
-  );
-
-  return { stealth: next, applied: true };
+  return { stealth: refreshed.stealth, ready: true, regenAmount: config.regenAmount };
 }
 
 export async function getCurrentStealth(userId: string): Promise<number> {

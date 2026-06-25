@@ -3,29 +3,29 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { useGameStore } from '../../store/gameStore';
-import { api, ApiError } from '../../services/api';
+import { api } from '../../services/api';
 import { STEALTH_MASKING_RESTORE, wouldMaskingExceedMax } from '../../constants/stealth';
 import { formatStealthRetryAfter } from '../../utils/stealthRetry';
 
-interface WaitRecoveryStatus {
+interface StealthRecoveryStatus {
   ready: boolean;
   alreadyAtMax: boolean;
   retryAfterMs: number;
+  regenAmount: number;
 }
 
 export default function StealthDepletedModal() {
   const { t, i18n } = useTranslation(['ui', 'common']);
-  const { user, updateUser, refreshUser } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const stealthModalOpen = useGameStore((state) => state.stealthModalOpen);
   const closeStealthModal = useGameStore((state) => state.closeStealthModal);
-  const setStealthNotice = useGameStore((state) => state.setStealthNotice);
   const [isLoading, setIsLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [waitStatus, setWaitStatus] = useState<WaitRecoveryStatus | null>(null);
+  const [recoveryStatus, setRecoveryStatus] = useState<StealthRecoveryStatus | null>(null);
 
   useEffect(() => {
     if (!stealthModalOpen) {
-      setWaitStatus(null);
+      setRecoveryStatus(null);
       return;
     }
 
@@ -34,22 +34,22 @@ export default function StealthDepletedModal() {
 
     const loadStatus = async () => {
       try {
-        await refreshUser();
         const status = await api.getStealthRecoveryStatus();
         if (cancelled) {
           return;
         }
 
-        updateUser({ stealth: status.stealth });
-        setWaitStatus({
+        useAuthStore.getState().updateUser({ stealth: status.stealth });
+        setRecoveryStatus({
           ready: status.ready,
           alreadyAtMax: status.alreadyAtMax,
           retryAfterMs: status.retryAfterMs,
+          regenAmount: status.regenAmount,
         });
       } catch (error) {
         console.error('Failed to load stealth recovery status:', error);
         if (!cancelled) {
-          setWaitStatus({ ready: false, alreadyAtMax: false, retryAfterMs: 0 });
+          setRecoveryStatus(null);
         }
       }
     };
@@ -59,7 +59,7 @@ export default function StealthDepletedModal() {
     return () => {
       cancelled = true;
     };
-  }, [stealthModalOpen, refreshUser, updateUser]);
+  }, [stealthModalOpen]);
 
   useEffect(() => {
     if (!stealthModalOpen) return;
@@ -95,35 +95,6 @@ export default function StealthDepletedModal() {
     }
   };
 
-  const handleWait = async () => {
-    setIsLoading(true);
-    setNotice(null);
-    try {
-      const result = await api.waitForStealthRecovery();
-      updateUser({ stealth: result.stealth });
-      setStealthNotice(null);
-      closeStealthModal();
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 429) {
-        const retryAfterMs = Number(error.body.retryAfterMs ?? 0);
-        const stealth = Number(error.body.stealth ?? user?.stealth ?? 0);
-        updateUser({ stealth });
-        setStealthNotice(
-          t('stealthWaitNotReady', {
-            ns: 'ui',
-            time: formatStealthRetryAfter(retryAfterMs, i18n.language),
-          })
-        );
-        closeStealthModal();
-      } else {
-        console.error('Wait recovery failed:', error);
-        setNotice(t('stealthWaitFailed', { ns: 'ui' }));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handlePremium = () => {
     setNotice(t('stealthPremiumMock', { ns: 'ui' }));
   };
@@ -131,18 +102,21 @@ export default function StealthDepletedModal() {
   const stealth = user?.stealth ?? 100;
   const isDepleted = stealth <= 0;
   const isMaskingUnavailable = wouldMaskingExceedMax(stealth);
-  const isWaitUnavailable = waitStatus === null || waitStatus.alreadyAtMax || !waitStatus.ready;
-  const waitUnavailableMessage = waitStatus?.alreadyAtMax
-    ? t('stealthWaitAtMax', {
+  const passiveRecoveryMessage = recoveryStatus?.alreadyAtMax
+    ? t('stealthAtMax', {
         ns: 'ui',
         defaultValue: i18n.language.startsWith('en')
           ? 'Stealth is already at 100%.'
           : 'Стелс уже на рівні 100%.',
       })
-    : waitStatus && !waitStatus.ready && waitStatus.retryAfterMs > 0
-      ? t('stealthWaitNotReady', {
+    : recoveryStatus && recoveryStatus.retryAfterMs > 0
+      ? t('stealthPassiveRecoveryIn', {
           ns: 'ui',
-          time: formatStealthRetryAfter(waitStatus.retryAfterMs, i18n.language),
+          amount: recoveryStatus.regenAmount,
+          time: formatStealthRetryAfter(recoveryStatus.retryAfterMs, i18n.language),
+          defaultValue: i18n.language.startsWith('en')
+            ? `+${recoveryStatus.regenAmount}% stealth will recover automatically in ${formatStealthRetryAfter(recoveryStatus.retryAfterMs, i18n.language)}.`
+            : `+${recoveryStatus.regenAmount}% стелсу відновиться автоматично через ${formatStealthRetryAfter(recoveryStatus.retryAfterMs, i18n.language)}.`,
         })
       : null;
 
@@ -260,18 +234,9 @@ export default function StealthDepletedModal() {
                 >
                   {t('stealthUpgradePlan', { ns: 'ui' })}
                 </button>
-                <button
-                  type="button"
-                  disabled={isLoading || isWaitUnavailable}
-                  onClick={handleWait}
-                  title={waitUnavailableMessage ?? undefined}
-                  className="w-full border border-cyber-border text-gray-300 hover:border-cyber-primary hover:text-cyber-primary rounded-lg py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t('stealthWaitRecovery', { ns: 'ui' })}
-                </button>
-                {waitUnavailableMessage && (
-                  <p className="text-xs text-gray-500 -mt-1 text-center">
-                    {waitUnavailableMessage}
+                {passiveRecoveryMessage && (
+                  <p className="text-sm text-gray-400 rounded border border-cyber-border/60 bg-cyber-panel/40 px-3 py-3 leading-relaxed text-center">
+                    {passiveRecoveryMessage}
                   </p>
                 )}
               </div>

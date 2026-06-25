@@ -6,7 +6,6 @@ import { resolveOwnerUserId } from '../middleware/ownership.js';
 import prisma from '../db/database.js';
 import {
   applyPassiveRegen,
-  applyWaitRecovery,
   getWaitRecoveryStatus,
   restoreMasking,
 } from '../services/stealthService.js';
@@ -143,39 +142,10 @@ router.get('/me/stealth/recovery-status', authenticate, async (req: AuthRequest,
       ready: status.ready,
       alreadyAtMax: status.alreadyAtMax ?? false,
       retryAfterMs: status.retryAfterMs ?? 0,
+      regenAmount: status.regenAmount,
     });
   } catch (error) {
     console.error('Stealth recovery status error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-router.post('/me/stealth/wait', authenticate, async (req: AuthRequest, res) => {
-  try {
-    const userId = req.userId!;
-    const result = await applyWaitRecovery(userId);
-
-    if (!result.applied) {
-      if (result.alreadyAtMax) {
-        return res.json({
-          stealth: result.stealth,
-          message: 'Stealth is already at maximum.',
-        });
-      }
-
-      return res.status(429).json({
-        error: 'Stealth recovery is not ready yet.',
-        stealth: result.stealth,
-        retryAfterMs: result.retryAfterMs ?? 0,
-      });
-    }
-
-    res.json({
-      stealth: result.stealth,
-      message: 'Stealth partially restored after waiting.',
-    });
-  } catch (error) {
-    console.error('Stealth wait error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

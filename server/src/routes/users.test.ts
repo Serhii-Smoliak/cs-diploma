@@ -21,7 +21,6 @@ const prismaMock = vi.hoisted(() => ({
 const stealthMocks = vi.hoisted(() => ({
   applyPassiveRegen: vi.fn(),
   restoreMasking: vi.fn(),
-  applyWaitRecovery: vi.fn(),
   getWaitRecoveryStatus: vi.fn(),
 }));
 
@@ -74,16 +73,12 @@ describe('users routes', () => {
     vi.clearAllMocks();
     stealthMocks.applyPassiveRegen.mockResolvedValue(80);
     stealthMocks.restoreMasking.mockResolvedValue(50);
-    stealthMocks.applyWaitRecovery.mockResolvedValue({
-      applied: true,
-      stealth: 25,
-      retryAfterMs: 0,
-    });
     stealthMocks.getWaitRecoveryStatus.mockResolvedValue({
       stealth: 80,
       ready: true,
       alreadyAtMax: false,
       retryAfterMs: 0,
+      regenAmount: 10,
     });
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
     prismaMock.user.update.mockResolvedValue(mockUser);
@@ -180,6 +175,7 @@ describe('users routes', () => {
       ready: false,
       alreadyAtMax: false,
       retryAfterMs: 3_600_000,
+      regenAmount: 10,
     });
 
     const response = await request(createApp()).get('/api/users/me/stealth/recovery-status');
@@ -190,41 +186,8 @@ describe('users routes', () => {
       ready: false,
       alreadyAtMax: false,
       retryAfterMs: 3_600_000,
+      regenAmount: 10,
     });
-  });
-
-  it('POST /me/stealth/wait applies recovery', async () => {
-    const response = await request(createApp()).post('/api/users/me/stealth/wait');
-
-    expect(response.status).toBe(200);
-    expect(response.body.stealth).toBe(25);
-  });
-
-  it('POST /me/stealth/wait returns 429 when not ready', async () => {
-    stealthMocks.applyWaitRecovery.mockResolvedValueOnce({
-      applied: false,
-      stealth: 0,
-      retryAfterMs: 60000,
-    });
-
-    const response = await request(createApp()).post('/api/users/me/stealth/wait');
-
-    expect(response.status).toBe(429);
-    expect(response.body.retryAfterMs).toBe(60000);
-  });
-
-  it('POST /me/stealth/wait returns 200 when stealth is already at max', async () => {
-    stealthMocks.applyWaitRecovery.mockResolvedValueOnce({
-      applied: false,
-      stealth: 100,
-      alreadyAtMax: true,
-    });
-
-    const response = await request(createApp()).post('/api/users/me/stealth/wait');
-
-    expect(response.status).toBe(200);
-    expect(response.body.stealth).toBe(100);
-    expect(response.body.message).toBe('Stealth is already at maximum.');
   });
 
   it('GET /leaderboard returns sorted entries', async () => {

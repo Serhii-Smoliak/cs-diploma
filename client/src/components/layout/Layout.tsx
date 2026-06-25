@@ -4,7 +4,6 @@ import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import Footer from './Footer';
 import StealthDepletedModal from '../game/StealthDepletedModal';
-import { useAuthStore } from '../../store/authStore';
 import { useSidebarStore } from '../../store/sidebarStore';
 
 interface LayoutProps {
@@ -12,17 +11,9 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const refreshUser = useAuthStore((state) => state.refreshUser);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isMobileOpen = useSidebarStore((state) => state.isMobileOpen);
   const closeMobile = useSidebarStore((state) => state.closeMobile);
   const location = useLocation();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      refreshUser().catch((error) => console.error('Failed to refresh user on load:', error));
-    }
-  }, [isAuthenticated, refreshUser]);
 
   useEffect(() => {
     closeMobile();

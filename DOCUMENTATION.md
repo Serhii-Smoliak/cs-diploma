@@ -410,7 +410,7 @@ npm run seed-translations
 - **GET** `/users/:id/progress` **JWT** — _deprecated_; `id` має збігатися з JWT `userId`
 - **GET** `/users/:id/stats` **JWT** — _deprecated_; те саме правило власності
 - **POST** `/users/me/stealth/masking` **JWT** — mock «купити маскування»: **+STEALTH_MASKING_RESTORE** (cap `STEALTH_MAX`)
-- **POST** `/users/me/stealth/wait` **JWT** — mock «зачекати», часткове відновлення Stealth
+- **GET** `/users/me/stealth/recovery-status` **JWT** — час до наступного пасивного відновлення (`retryAfterMs`, `regenAmount`, `ready`, `alreadyAtMax`)
 
 ### Підтримка (`/support`, JWT)
 
@@ -489,7 +489,7 @@ npm run seed-translations
 
 | Змінна | За замовч. | Опис |
 |--------|------------|------|
-| `STEALTH_REGEN_INTERVAL_SECONDS` | 3600 | Інтервал відновлення Stealth (сек): пасивно та для mock «зачекати» |
+| `STEALTH_REGEN_INTERVAL_SECONDS` | 3600 | Інтервал пасивного відновлення Stealth (сек) |
 | `STEALTH_REGEN_AMOUNT` | 10 | Скільки Stealth додається за один інтервал |
 | `STEALTH_MAX` | 100 | Верхня межа Stealth |
 | `STEALTH_MASKING_RESTORE` | 50 | Скільки **додається** Stealth після mock «маскування» (cap — `STEALTH_MAX`) |
@@ -502,7 +502,7 @@ npm run seed-translations
 **Модалка Stealth:** відкривається кліком по смузі Stealth у **TopBar** (керування) або автоматично при `stealthDepleted`. Опції:
 - **Маскування** — `POST /users/me/stealth/masking` → `current + STEALTH_MASKING_RESTORE` (не більше 100); недоступно, якщо `current + restore > 100`;
 - **Платний тариф** — alert-заглушка (без API);
-- **Зачекати** — `POST /users/me/stealth/wait` → `+STEALTH_REGEN_AMOUNT`, якщо з `lastStealthUpdateAt` минуло ≥ `STEALTH_REGEN_INTERVAL_SECONDS`; інакше **429** з `retryAfterMs`.
+- **Пасивне відновлення** — без кнопки; модалка показує текст «+N% відновиться автоматично через …» на основі `GET /users/me/stealth/recovery-status`. Фактичне нарахування відбувається автоматично через `applyPassiveRegen` при `GET /users/me`, login тощо.
 
 **Frontend:** індикатор у `TopBar`; **NotificationsBell** (polling 60 с); модалка — `StealthDepletedModal` у `Layout`.
 
@@ -932,7 +932,7 @@ cd client && npm run dev
 | Прибрано early reveal правильної відповіді в UI | Витік навчальних даних до проходження рівня | Підказки по одній (`TaskHints`); без показу еталону в Context |
 | Прибрано `correctAnswer` з відповіді `POST /levels/:id/submit` | Розкриття `validation` через API | У відповіді лише `hint`, progress, XP; еталон лишається на сервері |
 | `sentence_constructor` замість вільного фішинг-тексту | Offensive / неетичний user-generated контент | Фіксований банк токенів у JSON; валідатор `sentence_combination` |
-| Stealth, regen з env, блок submit при 0 | Зловживання regen, обхід cooldown | `STEALTH_*` env, `getCurrentStealth`, `stealthDepleted` на submit; mock paywall (masking / wait) |
+| Stealth, regen з env, блок submit при 0 | Зловживання regen, обхід cooldown | `STEALTH_*` env, `getCurrentStealth`, `stealthDepleted` на submit; mock paywall (masking) |
 
 **Ризиковий профіль:** знижено витік «правильної відповіді» та неконтрольований текст від гравця; залишається залежність від якості seed JSON і відсутності повноцінного rate limit на submit (поза scope тижня 2).
 
@@ -1029,5 +1029,5 @@ cd client && npm run dev
 
 Документ описує поточний стан **CyberTactics MVP**: стек, інтеграцію MITRE CTI, локалізацію, API та межі реалізації.
 
-**Версія документації:** 2.5  
-**Оновлено:** 2026-06-23
+**Версія документації:** 2.6  
+**Оновлено:** 2026-06-25

@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import StealthDepletedModal from './StealthDepletedModal';
-import { ApiError } from '../../services/api';
 
 const {
   refreshUser,
@@ -10,22 +9,19 @@ const {
   closeStealthModal,
   purchaseStealthMasking,
   getStealthRecoveryStatus,
-  waitForStealthRecovery,
-  setStealthNotice,
   authState,
 } = vi.hoisted(() => ({
   refreshUser: vi.fn().mockResolvedValue(undefined),
   updateUser: vi.fn(),
   closeStealthModal: vi.fn(),
-  setStealthNotice: vi.fn(),
   purchaseStealthMasking: vi.fn().mockResolvedValue({ stealth: 30 }),
   getStealthRecoveryStatus: vi.fn().mockResolvedValue({
     stealth: 0,
-    ready: true,
+    ready: false,
     alreadyAtMax: false,
-    retryAfterMs: 0,
+    retryAfterMs: 3_600_000,
+    regenAmount: 10,
   }),
-  waitForStealthRecovery: vi.fn().mockResolvedValue({ stealth: 15 }),
   authState: {
     user: { stealth: 0, xp: 100 } as { stealth: number; xp: number } | null,
     language: 'en',
@@ -34,8 +30,12 @@ const {
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, options?: { time?: string; defaultValue?: string }) =>
-      options?.time ? `${key}:${options.time}` : (options?.defaultValue ?? key),
+    t: (key: string, options?: { time?: string; amount?: number; defaultValue?: string }) => {
+      if (options?.time && options?.amount !== undefined) {
+        return `${key}:${options.amount}:${options.time}`;
+      }
+      return options?.defaultValue ?? key;
+    },
     i18n: { language: authState.language },
   }),
 }));
@@ -52,14 +52,23 @@ vi.mock('framer-motion', () => ({
 }));
 
 vi.mock('../../store/authStore', () => ({
-  useAuthStore: (selector?: (state: Record<string, unknown>) => unknown) => {
-    const state = {
-      user: authState.user,
-      updateUser,
-      refreshUser,
-    };
-    return selector ? selector(state) : state;
-  },
+  useAuthStore: Object.assign(
+    (selector?: (state: Record<string, unknown>) => unknown) => {
+      const state = {
+        user: authState.user,
+        updateUser,
+        refreshUser,
+      };
+      return selector ? selector(state) : state;
+    },
+    {
+      getState: () => ({
+        user: authState.user,
+        updateUser,
+        refreshUser,
+      }),
+    }
+  ),
 }));
 
 vi.mock('../../store/gameStore', () => ({
@@ -67,7 +76,6 @@ vi.mock('../../store/gameStore', () => ({
     selector({
       stealthModalOpen: true,
       closeStealthModal,
-      setStealthNotice,
     }),
 }));
 
@@ -75,16 +83,6 @@ vi.mock('../../services/api', () => ({
   api: {
     purchaseStealthMasking,
     getStealthRecoveryStatus,
-    waitForStealthRecovery,
-  },
-  ApiError: class ApiError extends Error {
-    status: number;
-    body: Record<string, unknown>;
-    constructor(message: string, status: number, body: Record<string, unknown> = {}) {
-      super(message);
-      this.status = status;
-      this.body = body;
-    }
   },
 }));
 
@@ -100,21 +98,59 @@ describe('StealthDepletedModal', () => {
     getStealthRecoveryStatus.mockClear();
     getStealthRecoveryStatus.mockResolvedValue({
       stealth: authState.user?.stealth ?? 0,
-      ready: true,
+      ready: false,
       alreadyAtMax: false,
-      retryAfterMs: 0,
+      retryAfterMs: 3_600_000,
+      regenAmount: 10,
     });
-    waitForStealthRecovery.mockClear();
-    setStealthNotice.mockClear();
   });
 
-  it('refreshes user and purchases masking', async () => {
+  it('loads passive recovery status on open', async () => {
+    render(<StealthDepletedModal />);
+
+    await waitFor(() => {
+      expect(getStealthRecoveryStatus).toHaveBeenCalled();
+    });
+  });
+
+  it('shows passive recovery countdown', async () => {
+    authState.user = { stealth: 80, xp: 100 };
+    getStealthRecoveryStatus.mockResolvedValueOnce({
+      stealth: 80,
+      ready: false,
+      alreadyAtMax: false,
+      retryAfterMs: 2_400_000,
+      regenAmount: 10,
+    });
+
+    render(<StealthDepletedModal />);
+
+    expect(await screen.findByText('stealthPassiveRecoveryIn:10:40m')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'stealthWaitRecovery' })).not.toBeInTheDocument();
+  });
+
+  it('shows at-max message without wait button', async () => {
+    authState.user = { stealth: 100, xp: 100 };
+    getStealthRecoveryStatus.mockResolvedValueOnce({
+      stealth: 100,
+      ready: false,
+      alreadyAtMax: true,
+      retryAfterMs: 0,
+      regenAmount: 10,
+    });
+
+    render(<StealthDepletedModal />);
+
+    expect(await screen.findByText('Stealth is already at 100%.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'stealthWaitRecovery' })).not.toBeInTheDocument();
+  });
+
+  it('purchases masking', async () => {
     const user = userEvent.setup();
 
     render(<StealthDepletedModal />);
 
     await waitFor(() => {
-      expect(refreshUser).toHaveBeenCalled();
       expect(getStealthRecoveryStatus).toHaveBeenCalled();
     });
 
@@ -135,117 +171,6 @@ describe('StealthDepletedModal', () => {
     await user.click(await screen.findByRole('button', { name: /Buy 50% masking/i }));
 
     expect(await screen.findByText('stealthMaskingFailed')).toBeInTheDocument();
-  });
-
-  it('waits for stealth recovery', async () => {
-    const user = userEvent.setup();
-
-    render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
-
-    await waitFor(() => {
-      expect(waitForStealthRecovery).toHaveBeenCalled();
-      expect(updateUser).toHaveBeenCalledWith({ stealth: 15 });
-      expect(closeStealthModal).toHaveBeenCalled();
-    });
-  });
-
-  it('handles 429 wait recovery with retry notice', async () => {
-    waitForStealthRecovery.mockRejectedValueOnce(
-      new ApiError('Too many requests', 429, { retryAfterMs: 90000, stealth: 5 })
-    );
-    const user = userEvent.setup();
-
-    render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
-
-    await waitFor(() => {
-      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:2m');
-      expect(updateUser).toHaveBeenCalledWith({ stealth: 5 });
-      expect(closeStealthModal).toHaveBeenCalled();
-    });
-  });
-
-  it('formats retry time in ukrainian hours and minutes', async () => {
-    authState.language = 'uk';
-    waitForStealthRecovery.mockRejectedValueOnce(
-      new ApiError('Too many requests', 429, { retryAfterMs: 5400000, stealth: 0 })
-    );
-    const user = userEvent.setup();
-
-    render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
-
-    await waitFor(() => {
-      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:1 год 30 хв');
-    });
-  });
-
-  it('formats retry time in seconds when under one minute', async () => {
-    waitForStealthRecovery.mockRejectedValueOnce(
-      new ApiError('Too many requests', 429, { retryAfterMs: 45000, stealth: 0 })
-    );
-    const user = userEvent.setup();
-
-    render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
-
-    await waitFor(() => {
-      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:45s');
-    });
-  });
-
-  it('formats retry time in minutes only', async () => {
-    waitForStealthRecovery.mockRejectedValueOnce(
-      new ApiError('Too many requests', 429, { retryAfterMs: 120000, stealth: 0 })
-    );
-    const user = userEvent.setup();
-
-    render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
-
-    await waitFor(() => {
-      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:2m');
-    });
-  });
-
-  it('formats retry time in whole hours only', async () => {
-    waitForStealthRecovery.mockRejectedValueOnce(
-      new ApiError('Too many requests', 429, { retryAfterMs: 7200000, stealth: 0 })
-    );
-    const user = userEvent.setup();
-
-    render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
-
-    await waitFor(() => {
-      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:2h');
-    });
-  });
-
-  it('formats retry time in ukrainian whole hours only', async () => {
-    authState.language = 'uk';
-    waitForStealthRecovery.mockRejectedValueOnce(
-      new ApiError('Too many requests', 429, { retryAfterMs: 3600000, stealth: 0 })
-    );
-    const user = userEvent.setup();
-
-    render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
-
-    await waitFor(() => {
-      expect(setStealthNotice).toHaveBeenCalledWith('stealthWaitNotReady:1 год');
-    });
-  });
-
-  it('shows notice when wait recovery fails', async () => {
-    waitForStealthRecovery.mockRejectedValueOnce(new Error('network'));
-    const user = userEvent.setup();
-
-    render(<StealthDepletedModal />);
-    await user.click(await screen.findByRole('button', { name: 'stealthWaitRecovery' }));
-
-    expect(await screen.findByText('stealthWaitFailed')).toBeInTheDocument();
   });
 
   it('shows premium mock notice', async () => {
@@ -271,40 +196,9 @@ describe('StealthDepletedModal', () => {
 
     render(<StealthDepletedModal />);
 
-    expect(screen.getByText('Stealth')).toBeInTheDocument();
+    expect(await screen.findByText('Stealth')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Buy 50% masking/i })).toBeDisabled();
     expect(screen.getByText(/Masking \(\+50%\) would exceed 100%/)).toBeInTheDocument();
-  });
-
-  it('disables wait recovery when stealth is already at max', async () => {
-    authState.user = { stealth: 100, xp: 100 };
-    getStealthRecoveryStatus.mockResolvedValueOnce({
-      stealth: 100,
-      ready: false,
-      alreadyAtMax: true,
-      retryAfterMs: 0,
-    });
-
-    render(<StealthDepletedModal />);
-
-    expect(await screen.findByRole('button', { name: 'stealthWaitRecovery' })).toBeDisabled();
-    expect(await screen.findByText('Stealth is already at 100%.')).toBeInTheDocument();
-  });
-
-  it('disables wait recovery until regen interval elapses', async () => {
-    authState.user = { stealth: 85, xp: 100 };
-    getStealthRecoveryStatus.mockResolvedValueOnce({
-      stealth: 85,
-      ready: false,
-      alreadyAtMax: false,
-      retryAfterMs: 3_600_000,
-    });
-
-    render(<StealthDepletedModal />);
-
-    expect(await screen.findByRole('button', { name: 'stealthWaitRecovery' })).toBeDisabled();
-    expect(await screen.findByText('stealthWaitNotReady:1h')).toBeInTheDocument();
-    expect(waitForStealthRecovery).not.toHaveBeenCalled();
   });
 
   it('returns null without authenticated user', () => {

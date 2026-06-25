@@ -62,8 +62,9 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const profile = await api.getCurrentUser();
+          const previousLocale = get().user?.preferredLocale;
           set({ user: profile, isAuthenticated: true });
-          if (profile.preferredLocale) {
+          if (profile.preferredLocale && profile.preferredLocale !== previousLocale) {
             await applyLocale(profile.preferredLocale);
           }
         } catch (error) {
