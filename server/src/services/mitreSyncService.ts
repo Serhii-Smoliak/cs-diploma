@@ -184,11 +184,11 @@ function extractExamples(technique: StixObject): string[] {
 
   if (technique.description) {
     const subTechniqueMatches = technique.description.match(
-      /\[([^\]]+)\]\(https:\/\/attack\.mitre\.org\/[^)]+\)/g
+      /\[([^\][]+)\]\(https:\/\/attack\.mitre\.org\/[^()]+\)/g
     );
     if (subTechniqueMatches) {
       subTechniqueMatches.forEach((match) => {
-        const name = match.match(/\[([^\]]+)\]/)?.[1];
+        const name = match.match(/\[([^\][]+)\]/)?.[1];
         if (name && !name.startsWith('T')) {
           examples.push(name);
         }

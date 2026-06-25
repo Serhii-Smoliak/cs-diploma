@@ -112,7 +112,7 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
   const resetFields = () => {
     const initial: Record<string, (string | null)[]> = {};
     for (const field of fields) {
-      initial[field.id] = Array(field.slots).fill(null);
+      initial[field.id] = new Array(field.slots).fill(null);
     }
     setFieldSlots(initial);
   };
@@ -177,7 +177,7 @@ export default function SentenceConstructor({ level }: SentenceConstructorProps)
           key={field.id}
           field={field}
           label={getFieldLabel(field, t)}
-          slots={fieldSlots[field.id] || Array(field.slots).fill(null)}
+          slots={fieldSlots[field.id] || new Array(field.slots).fill(null)}
           onChange={(next) => setFieldSlots((prev) => ({ ...prev, [field.id]: next }))}
         />
       ))}

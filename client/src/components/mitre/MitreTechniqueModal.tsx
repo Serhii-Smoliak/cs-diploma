@@ -390,7 +390,9 @@ export default function MitreTechniqueModal({
               <div
                 className="flex-1 overflow-y-auto cyber-scrollbar p-6"
                 data-modal-content
+                role="presentation"
                 onClick={clearActiveTooltips}
+                onKeyDown={clearActiveTooltips}
               >
                 <div className="mb-6">
                   <h3 className="font-heading font-bold text-lg text-cyber-primary mb-3">
@@ -789,7 +791,7 @@ export default function MitreTechniqueModal({
                       <strong className="text-cyber-primary">
                         {getStageDescriptionTranslated(technique.tactic)}
                       </strong>
-                      {'.'}
+                      .
                     </p>
                   </motion.div>
                 </div>

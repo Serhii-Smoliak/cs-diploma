@@ -30,6 +30,24 @@ describe('getCroppedImage', () => {
     expect(drawImage).toHaveBeenCalled();
   });
 
+  it('rejects with Error when image fails to load', async () => {
+    class ErrorImage {
+      _handlers: Record<string, () => void> = {};
+      addEventListener(event: string, handler: () => void) {
+        this._handlers[event] = handler;
+      }
+      set src(_v: string) {
+        if (this._handlers['error']) this._handlers['error']();
+      }
+      setAttribute() {}
+    }
+    vi.stubGlobal('Image', ErrorImage);
+
+    await expect(getCroppedImage('bad.png', { x: 0, y: 0, width: 10, height: 10 })).rejects.toThrow(
+      'Failed to load image'
+    );
+  });
+
   it('throws when canvas is unavailable', async () => {
     vi.spyOn(document, 'createElement').mockReturnValue({
       getContext: () => null,
