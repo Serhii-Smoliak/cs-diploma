@@ -154,4 +154,83 @@ describe('SkillMatrixPage', () => {
     await userEvents.click(tacticButton);
     await userEvents.click(tacticButton);
   });
+
+  it('shows loading state before data arrives', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: async () => [],
+                }),
+              100
+            );
+          })
+      )
+    );
+
+    render(
+      <MemoryRouter>
+        <SkillMatrixPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('loading')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('loading')).not.toBeInTheDocument();
+    });
+  });
+
+  it('closes technique modal', async () => {
+    const userEvents = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <SkillMatrixPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('reconnaissance');
+    await userEvents.click(screen.getByTitle('expandAll'));
+    await userEvents.click(screen.getByText(testMitreTechnique.name));
+    await userEvents.click(screen.getByText('close-modal'));
+
+    expect(screen.queryByText('close-modal')).not.toBeInTheDocument();
+  });
+
+  it('shows only completed techniques when filter is completed', async () => {
+    const userEvents = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      createFetchMock({
+        techniques: [
+          testMitreTechnique,
+          {
+            ...testMitreTechnique,
+            id: 'T1005',
+            name: 'Data from Local System',
+            tactic: 'collection',
+          },
+        ],
+        stats: { mitreTechniques: ['T1593'] },
+      })
+    );
+
+    render(
+      <MemoryRouter>
+        <SkillMatrixPage />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('reconnaissance');
+    await userEvents.click(screen.getByTitle('expandAll'));
+    await userEvents.selectOptions(screen.getByRole('combobox'), 'completed');
+
+    expect(screen.getByText(testMitreTechnique.name)).toBeInTheDocument();
+    expect(screen.queryByText('Data from Local System')).not.toBeInTheDocument();
+  });
 });

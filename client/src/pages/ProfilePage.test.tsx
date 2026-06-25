@@ -105,4 +105,44 @@ describe('ProfilePage', () => {
       expect(updateUser).toHaveBeenCalled();
     });
   });
+
+  it('opens file picker from change photo button', async () => {
+    const userEvents = userEvent.setup();
+    const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click');
+
+    render(<ProfilePage />);
+    await userEvents.click(screen.getByText('changePhoto'));
+
+    expect(clickSpy).toHaveBeenCalled();
+    clickSpy.mockRestore();
+  });
+
+  it('rejects oversized avatar file', async () => {
+    render(<ProfilePage />);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['x'.repeat(6 * 1024 * 1024)], 'big.jpg', { type: 'image/jpeg' });
+    Object.defineProperty(file, 'size', { value: 6 * 1024 * 1024 });
+    fireEvent.change(input, { target: { files: [file] } });
+
+    expect(await screen.findByText('fileTooLarge')).toBeInTheDocument();
+  });
+
+  it('shows upload error and closes crop modal', async () => {
+    const userEvents = userEvent.setup();
+    uploadAvatar.mockRejectedValue('upload failed');
+
+    render(<ProfilePage />);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(input, {
+      target: { files: [new File(['avatar'], 'photo.jpg', { type: 'image/jpeg' })] },
+    });
+
+    await userEvents.click(await screen.findByRole('button', { name: 'save-crop' }));
+    expect(await screen.findByText('uploadFailed')).toBeInTheDocument();
+
+    await userEvents.click(screen.getByRole('button', { name: 'close-crop' }));
+    expect(screen.queryByRole('button', { name: 'save-crop' })).not.toBeInTheDocument();
+  });
 });
