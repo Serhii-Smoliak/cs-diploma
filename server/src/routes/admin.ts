@@ -540,11 +540,11 @@ router.patch('/news/:id', async (req: AuthRequest, res) => {
       const updated = await tx.newsPost.update({
         where: { id },
         data: {
-          ...(data.titleUk !== undefined ? { titleUk: data.titleUk } : {}),
-          ...(data.titleEn !== undefined ? { titleEn: data.titleEn } : {}),
-          ...(data.bodyUk !== undefined ? { bodyUk: data.bodyUk } : {}),
-          ...(data.bodyEn !== undefined ? { bodyEn: data.bodyEn } : {}),
-          ...(data.isPublished !== undefined ? { isPublished: data.isPublished } : {}),
+          ...(data.titleUk === undefined ? {} : { titleUk: data.titleUk }),
+          ...(data.titleEn === undefined ? {} : { titleEn: data.titleEn }),
+          ...(data.bodyUk === undefined ? {} : { bodyUk: data.bodyUk }),
+          ...(data.bodyEn === undefined ? {} : { bodyEn: data.bodyEn }),
+          ...(data.isPublished === undefined ? {} : { isPublished: data.isPublished }),
           ...(publishingNow ? { publishedAt: new Date() } : {}),
           ...(data.isPublished === false ? { publishedAt: null } : {}),
         },
