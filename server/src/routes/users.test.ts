@@ -187,6 +187,20 @@ describe('users routes', () => {
     expect(response.body.retryAfterMs).toBe(60000);
   });
 
+  it('POST /me/stealth/wait returns 200 when stealth is already at max', async () => {
+    stealthMocks.applyWaitRecovery.mockResolvedValueOnce({
+      applied: false,
+      stealth: 100,
+      alreadyAtMax: true,
+    });
+
+    const response = await request(createApp()).post('/api/users/me/stealth/wait');
+
+    expect(response.status).toBe(200);
+    expect(response.body.stealth).toBe(100);
+    expect(response.body.message).toBe('Stealth is already at maximum.');
+  });
+
   it('GET /leaderboard returns sorted entries', async () => {
     const response = await request(createApp()).get('/api/users/leaderboard');
 

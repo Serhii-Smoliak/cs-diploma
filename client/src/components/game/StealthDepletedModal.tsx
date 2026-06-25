@@ -4,7 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { useGameStore } from '../../store/gameStore';
 import { api, ApiError } from '../../services/api';
-import { STEALTH_MASKING_RESTORE, wouldMaskingExceedMax } from '../../constants/stealth';
+import {
+  STEALTH_MASKING_RESTORE,
+  isStealthAtMax,
+  wouldMaskingExceedMax,
+} from '../../constants/stealth';
 
 function formatRetryAfter(ms: number, locale: string): string {
   const totalSeconds = Math.max(1, Math.ceil(ms / 1000));
@@ -109,6 +113,7 @@ export default function StealthDepletedModal() {
   const stealth = user?.stealth ?? 100;
   const isDepleted = stealth <= 0;
   const isMaskingUnavailable = wouldMaskingExceedMax(stealth);
+  const isWaitUnavailable = isStealthAtMax(stealth);
 
   if (!user) {
     return null;
@@ -226,12 +231,32 @@ export default function StealthDepletedModal() {
                 </button>
                 <button
                   type="button"
-                  disabled={isLoading}
+                  disabled={isLoading || isWaitUnavailable}
                   onClick={handleWait}
-                  className="w-full border border-cyber-border text-gray-300 hover:border-cyber-primary hover:text-cyber-primary rounded-lg py-3 transition-colors disabled:opacity-50"
+                  title={
+                    isWaitUnavailable
+                      ? t('stealthWaitAtMax', {
+                          ns: 'ui',
+                          defaultValue: i18n.language.startsWith('en')
+                            ? 'Stealth is already at 100%.'
+                            : 'Стелс уже на рівні 100%.',
+                        })
+                      : undefined
+                  }
+                  className="w-full border border-cyber-border text-gray-300 hover:border-cyber-primary hover:text-cyber-primary rounded-lg py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('stealthWaitRecovery', { ns: 'ui' })}
                 </button>
+                {isWaitUnavailable && (
+                  <p className="text-xs text-gray-500 -mt-1 text-center">
+                    {t('stealthWaitAtMax', {
+                      ns: 'ui',
+                      defaultValue: i18n.language.startsWith('en')
+                        ? 'Stealth is already at 100%.'
+                        : 'Стелс уже на рівні 100%.',
+                    })}
+                  </p>
+                )}
               </div>
             </motion.div>
           </div>

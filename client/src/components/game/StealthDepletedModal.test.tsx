@@ -260,6 +260,15 @@ describe('StealthDepletedModal', () => {
     expect(screen.getByText(/Masking \(\+50%\) would exceed 100%/)).toBeInTheDocument();
   });
 
+  it('disables wait recovery when stealth is already at max', async () => {
+    authState.user = { stealth: 100, xp: 100 };
+
+    render(<StealthDepletedModal />);
+
+    expect(screen.getByRole('button', { name: 'stealthWaitRecovery' })).toBeDisabled();
+    expect(screen.getByText('Stealth is already at 100%.')).toBeInTheDocument();
+  });
+
   it('returns null without authenticated user', () => {
     authState.user = null;
 

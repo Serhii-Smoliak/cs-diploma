@@ -87,6 +87,7 @@ export async function restoreMasking(userId: string): Promise<number> {
 export async function applyWaitRecovery(userId: string): Promise<{
   stealth: number;
   applied: boolean;
+  alreadyAtMax?: boolean;
   retryAfterMs?: number;
 }> {
   const config = getStealthConfig();
@@ -100,6 +101,10 @@ export async function applyWaitRecovery(userId: string): Promise<{
   const refreshed = await prisma.userStats.findUnique({ where: { userId } });
   if (!refreshed) {
     return { stealth: currentAfterPassive, applied: false };
+  }
+
+  if (refreshed.stealth >= config.max) {
+    return { stealth: refreshed.stealth, applied: false, alreadyAtMax: true };
   }
 
   const lastUpdate = refreshed.lastStealthUpdateAt ?? refreshed.updatedAt;

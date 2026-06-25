@@ -5,3 +5,7 @@ export const STEALTH_MASKING_RESTORE = 50;
 export function wouldMaskingExceedMax(currentStealth: number): boolean {
   return currentStealth + STEALTH_MASKING_RESTORE > STEALTH_MAX;
 }
+
+export function isStealthAtMax(currentStealth: number): boolean {
+  return currentStealth >= STEALTH_MAX;
+}
