@@ -22,6 +22,7 @@ const stealthMocks = vi.hoisted(() => ({
   applyPassiveRegen: vi.fn(),
   restoreMasking: vi.fn(),
   applyWaitRecovery: vi.fn(),
+  getWaitRecoveryStatus: vi.fn(),
 }));
 
 const authState = vi.hoisted(() => ({ userId: 'user-1' as string | undefined }));
@@ -76,6 +77,12 @@ describe('users routes', () => {
     stealthMocks.applyWaitRecovery.mockResolvedValue({
       applied: true,
       stealth: 25,
+      retryAfterMs: 0,
+    });
+    stealthMocks.getWaitRecoveryStatus.mockResolvedValue({
+      stealth: 80,
+      ready: true,
+      alreadyAtMax: false,
       retryAfterMs: 0,
     });
     prismaMock.user.findUnique.mockResolvedValue(mockUser);
@@ -165,6 +172,25 @@ describe('users routes', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.stealth).toBe(50);
+  });
+
+  it('GET /me/stealth/recovery-status returns wait readiness', async () => {
+    stealthMocks.getWaitRecoveryStatus.mockResolvedValueOnce({
+      stealth: 85,
+      ready: false,
+      alreadyAtMax: false,
+      retryAfterMs: 3_600_000,
+    });
+
+    const response = await request(createApp()).get('/api/users/me/stealth/recovery-status');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      stealth: 85,
+      ready: false,
+      alreadyAtMax: false,
+      retryAfterMs: 3_600_000,
+    });
   });
 
   it('POST /me/stealth/wait applies recovery', async () => {

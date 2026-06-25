@@ -285,6 +285,20 @@ class ApiClient {
     });
   }
 
+  async getStealthRecoveryStatus(): Promise<{
+    stealth: number;
+    ready: boolean;
+    alreadyAtMax: boolean;
+    retryAfterMs: number;
+  }> {
+    return this.request<{
+      stealth: number;
+      ready: boolean;
+      alreadyAtMax: boolean;
+      retryAfterMs: number;
+    }>('/users/me/stealth/recovery-status');
+  }
+
   async waitForStealthRecovery(): Promise<{ stealth: number; message: string }> {
     return this.request<{ stealth: number; message: string }>('/users/me/stealth/wait', {
       method: 'POST',

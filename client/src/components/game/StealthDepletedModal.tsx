@@ -4,27 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { useGameStore } from '../../store/gameStore';
 import { api, ApiError } from '../../services/api';
-import {
-  STEALTH_MASKING_RESTORE,
-  isStealthAtMax,
-  wouldMaskingExceedMax,
-} from '../../constants/stealth';
+import { STEALTH_MASKING_RESTORE, wouldMaskingExceedMax } from '../../constants/stealth';
+import { formatStealthRetryAfter } from '../../utils/stealthRetry';
 
-function formatRetryAfter(ms: number, locale: string): string {
-  const totalSeconds = Math.max(1, Math.ceil(ms / 1000));
-  if (totalSeconds < 60) {
-    return locale.startsWith('uk') ? `${totalSeconds} сек` : `${totalSeconds}s`;
-  }
-  const totalMinutes = Math.ceil(totalSeconds / 60);
-  if (totalMinutes >= 60) {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    if (minutes === 0) {
-      return locale.startsWith('uk') ? `${hours} год` : `${hours}h`;
-    }
-    return locale.startsWith('uk') ? `${hours} год ${minutes} хв` : `${hours}h ${minutes}m`;
-  }
-  return locale.startsWith('uk') ? `${totalMinutes} хв` : `${totalMinutes}m`;
+interface WaitRecoveryStatus {
+  ready: boolean;
+  alreadyAtMax: boolean;
+  retryAfterMs: number;
 }
 
 export default function StealthDepletedModal() {
@@ -35,13 +21,45 @@ export default function StealthDepletedModal() {
   const setStealthNotice = useGameStore((state) => state.setStealthNotice);
   const [isLoading, setIsLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [waitStatus, setWaitStatus] = useState<WaitRecoveryStatus | null>(null);
 
   useEffect(() => {
-    if (stealthModalOpen) {
-      setNotice(null);
-      refreshUser().catch((error) => console.error('Failed to refresh user stealth:', error));
+    if (!stealthModalOpen) {
+      setWaitStatus(null);
+      return;
     }
-  }, [stealthModalOpen, refreshUser]);
+
+    setNotice(null);
+    let cancelled = false;
+
+    const loadStatus = async () => {
+      try {
+        await refreshUser();
+        const status = await api.getStealthRecoveryStatus();
+        if (cancelled) {
+          return;
+        }
+
+        updateUser({ stealth: status.stealth });
+        setWaitStatus({
+          ready: status.ready,
+          alreadyAtMax: status.alreadyAtMax,
+          retryAfterMs: status.retryAfterMs,
+        });
+      } catch (error) {
+        console.error('Failed to load stealth recovery status:', error);
+        if (!cancelled) {
+          setWaitStatus({ ready: false, alreadyAtMax: false, retryAfterMs: 0 });
+        }
+      }
+    };
+
+    void loadStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [stealthModalOpen, refreshUser, updateUser]);
 
   useEffect(() => {
     if (!stealthModalOpen) return;
@@ -93,7 +111,7 @@ export default function StealthDepletedModal() {
         setStealthNotice(
           t('stealthWaitNotReady', {
             ns: 'ui',
-            time: formatRetryAfter(retryAfterMs, i18n.language),
+            time: formatStealthRetryAfter(retryAfterMs, i18n.language),
           })
         );
         closeStealthModal();
@@ -113,7 +131,20 @@ export default function StealthDepletedModal() {
   const stealth = user?.stealth ?? 100;
   const isDepleted = stealth <= 0;
   const isMaskingUnavailable = wouldMaskingExceedMax(stealth);
-  const isWaitUnavailable = isStealthAtMax(stealth);
+  const isWaitUnavailable = waitStatus === null || waitStatus.alreadyAtMax || !waitStatus.ready;
+  const waitUnavailableMessage = waitStatus?.alreadyAtMax
+    ? t('stealthWaitAtMax', {
+        ns: 'ui',
+        defaultValue: i18n.language.startsWith('en')
+          ? 'Stealth is already at 100%.'
+          : 'Стелс уже на рівні 100%.',
+      })
+    : waitStatus && !waitStatus.ready && waitStatus.retryAfterMs > 0
+      ? t('stealthWaitNotReady', {
+          ns: 'ui',
+          time: formatStealthRetryAfter(waitStatus.retryAfterMs, i18n.language),
+        })
+      : null;
 
   if (!user) {
     return null;
@@ -233,28 +264,14 @@ export default function StealthDepletedModal() {
                   type="button"
                   disabled={isLoading || isWaitUnavailable}
                   onClick={handleWait}
-                  title={
-                    isWaitUnavailable
-                      ? t('stealthWaitAtMax', {
-                          ns: 'ui',
-                          defaultValue: i18n.language.startsWith('en')
-                            ? 'Stealth is already at 100%.'
-                            : 'Стелс уже на рівні 100%.',
-                        })
-                      : undefined
-                  }
+                  title={waitUnavailableMessage ?? undefined}
                   className="w-full border border-cyber-border text-gray-300 hover:border-cyber-primary hover:text-cyber-primary rounded-lg py-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t('stealthWaitRecovery', { ns: 'ui' })}
                 </button>
-                {isWaitUnavailable && (
+                {waitUnavailableMessage && (
                   <p className="text-xs text-gray-500 -mt-1 text-center">
-                    {t('stealthWaitAtMax', {
-                      ns: 'ui',
-                      defaultValue: i18n.language.startsWith('en')
-                        ? 'Stealth is already at 100%.'
-                        : 'Стелс уже на рівні 100%.',
-                    })}
+                    {waitUnavailableMessage}
                   </p>
                 )}
               </div>
