@@ -138,6 +138,13 @@ router.post('/me/stealth/wait', authenticate, async (req: AuthRequest, res) => {
     const result = await applyWaitRecovery(userId);
 
     if (!result.applied) {
+      if (result.alreadyAtMax) {
+        return res.json({
+          stealth: result.stealth,
+          message: 'Stealth is already at maximum.',
+        });
+      }
+
       return res.status(429).json({
         error: 'Stealth recovery is not ready yet.',
         stealth: result.stealth,
