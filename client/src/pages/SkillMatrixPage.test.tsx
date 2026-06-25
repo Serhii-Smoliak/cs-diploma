@@ -5,8 +5,9 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import SkillMatrixPage from './SkillMatrixPage';
 import { createFetchMock, testMitreTechnique } from '../test/fixtures';
 
-const { t, mockUser } = vi.hoisted(() => ({
+const { t, mockUser, i18n } = vi.hoisted(() => ({
   t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key,
+  i18n: { resolvedLanguage: 'uk', language: 'uk' },
   mockUser: {
     id: 'u1',
     username: 'agent',
@@ -19,7 +20,11 @@ const { t, mockUser } = vi.hoisted(() => ({
 }));
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t }),
+  useTranslation: () => ({ t, i18n }),
+}));
+
+vi.mock('../i18n/config', () => ({
+  loadMultipleNamespaces: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('../store/authStore', () => ({

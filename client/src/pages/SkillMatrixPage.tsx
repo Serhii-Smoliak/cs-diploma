@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import MitreTechniqueModal from '../components/mitre/MitreTechniqueModal';
 import { tacticSectionId } from '../utils/mitreLinks';
 import { matchesMitreTechniqueSearch } from '../utils/mitreSearch';
+import { loadMultipleNamespaces } from '../i18n/config';
 
 interface TacticGroup {
   tactic: string;
@@ -41,7 +42,7 @@ function saveExpandedTactics(tactics: Set<string>) {
 }
 
 export default function SkillMatrixPage() {
-  const { t } = useTranslation(['skillMatrix', 'common']);
+  const { t, i18n } = useTranslation(['skillMatrix', 'common', 'mitre']);
   const { user } = useAuthStore();
   const [techniques, setTechniques] = useState<MitreTechnique[]>([]);
   const [completedTechniques, setCompletedTechniques] = useState<string[]>([]);
@@ -53,7 +54,44 @@ export default function SkillMatrixPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lastViewedTechniqueId, setLastViewedTechniqueId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [translationsRevision, setTranslationsRevision] = useState(0);
   const pendingTechniqueIdRef = useRef<string | null>(null);
+
+  const getTechniqueName = useCallback(
+    (techniqueId: string, fallback: string): string => {
+      const key = `technique.name.${techniqueId}`;
+      const translated = t(key, { ns: 'mitre', defaultValue: fallback });
+      return translated === key ? fallback : translated;
+    },
+    [t, translationsRevision]
+  );
+
+  const getTechniqueDescription = useCallback(
+    (techniqueId: string, fallback: string | null): string => {
+      const key = `technique.description.${techniqueId}`;
+      const translated = t(key, { ns: 'mitre', defaultValue: fallback || '' });
+      return translated === key ? fallback || '' : translated;
+    },
+    [t, translationsRevision]
+  );
+
+  const getTacticLabel = useCallback(
+    (tactic: string): string => {
+      const key = `tactic.${tactic}`;
+      const translated = t(key, { ns: 'mitre', defaultValue: tactic });
+      return translated === key ? tactic : translated;
+    },
+    [t, translationsRevision]
+  );
+
+  useEffect(() => {
+    const locale = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'uk';
+    loadMultipleNamespaces(locale, ['mitre'])
+      .then(() => setTranslationsRevision((revision) => revision + 1))
+      .catch((error) => {
+        console.error('Failed to load skill matrix MITRE translations:', error);
+      });
+  }, [i18n.resolvedLanguage, i18n.language]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -64,6 +102,7 @@ export default function SkillMatrixPage() {
       ]);
 
       setTechniques(allTechniques);
+
       if (stats) {
         setCompletedTechniques(stats.mitreTechniques || []);
       }
@@ -199,7 +238,7 @@ export default function SkillMatrixPage() {
   const completionPercentage = getCompletionPercentage();
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden" key={translationsRevision}>
       <div className="flex-shrink-0 p-4 sm:p-6">
         <div className="max-w-3xl mx-auto w-full">
           <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-4 text-center">
@@ -315,7 +354,7 @@ export default function SkillMatrixPage() {
                         </motion.span>
                         <div className="flex-1 text-left min-w-0">
                           <h2 className="font-heading font-bold text-sm sm:text-base text-cyber-primary truncate">
-                            {group.tactic}
+                            {getTacticLabel(group.tactic)}
                           </h2>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                             <span className="text-xs text-gray-400">
@@ -352,7 +391,7 @@ export default function SkillMatrixPage() {
                         className="overflow-hidden"
                       >
                         <div className="w-full px-4 sm:px-6 pb-2 pt-3">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                          <div className="flex flex-wrap justify-center gap-2">
                             {group.techniques.map((technique) => {
                               const isCompleted = isTechniqueCompleted(technique.id);
                               const isLastViewed = lastViewedTechniqueId === technique.id;
@@ -367,7 +406,7 @@ export default function SkillMatrixPage() {
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                   onClick={() => handleTechniqueClick(technique)}
-                                  className={`p-3 rounded-lg border-2 transition-colors duration-200 cursor-pointer outline-none ${cardClass}`}
+                                  className={`w-full md:w-[calc(50%-0.25rem)] lg:w-[calc(33.333%-0.34rem)] xl:w-[calc(25%-0.375rem)] p-3 rounded-lg border-2 transition-colors duration-200 cursor-pointer outline-none ${cardClass}`}
                                 >
                                   <div className="flex items-start justify-between gap-2 mb-2">
                                     <span
@@ -388,11 +427,11 @@ export default function SkillMatrixPage() {
                                     )}
                                   </div>
                                   <h3 className="text-sm font-medium text-white mb-1 line-clamp-2">
-                                    {technique.name}
+                                    {getTechniqueName(technique.id, technique.name)}
                                   </h3>
                                   {technique.description && (
                                     <p className="text-xs text-gray-400 line-clamp-2 mb-2">
-                                      {technique.description}
+                                      {getTechniqueDescription(technique.id, technique.description)}
                                     </p>
                                   )}
                                 </motion.div>
