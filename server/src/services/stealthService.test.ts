@@ -26,7 +26,13 @@ vi.mock('../config/stealthConfig.js', () => ({
   }),
 }));
 
-import { changeStealth, applyWaitRecovery, restoreMasking, syncStealth } from './stealthService.js';
+import {
+  changeStealth,
+  applyWaitRecovery,
+  getWaitRecoveryStatus,
+  restoreMasking,
+  syncStealth,
+} from './stealthService.js';
 
 describe('stealthService', () => {
   beforeEach(() => {
@@ -84,6 +90,32 @@ describe('stealthService', () => {
 
     expect(result).toEqual({ stealth: 100, applied: false, alreadyAtMax: true });
     expect(prismaMock.userStats.update).not.toHaveBeenCalled();
+  });
+
+  it('returns wait recovery status when interval has not elapsed', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      stealth: 20,
+      lastStealthUpdateAt: new Date(Date.now() - 60_000),
+      updatedAt: new Date(Date.now() - 60_000),
+    });
+
+    const status = await getWaitRecoveryStatus('user-1');
+
+    expect(status.ready).toBe(false);
+    expect(status.stealth).toBe(20);
+    expect(status.retryAfterMs).toBeGreaterThan(0);
+  });
+
+  it('returns ready wait recovery status when interval has elapsed', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      stealth: 20,
+      lastStealthUpdateAt: new Date(Date.now() - 3_600_000),
+      updatedAt: new Date(Date.now() - 3_600_000),
+    });
+
+    const status = await getWaitRecoveryStatus('user-1');
+
+    expect(status).toEqual({ stealth: 20, ready: true });
   });
 
   it('returns retryAfterMs when wait recovery interval has not elapsed', async () => {

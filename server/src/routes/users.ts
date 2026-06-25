@@ -7,6 +7,7 @@ import prisma from '../db/database.js';
 import {
   applyPassiveRegen,
   applyWaitRecovery,
+  getWaitRecoveryStatus,
   restoreMasking,
 } from '../services/stealthService.js';
 import { saveAvatarFromDataUrl } from '../services/avatarService.js';
@@ -128,6 +129,23 @@ router.post('/me/stealth/masking', authenticate, async (req: AuthRequest, res) =
       return res.status(400).json({ error: 'Masking would exceed maximum stealth.' });
     }
     console.error('Stealth masking error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/me/stealth/recovery-status', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.userId!;
+    const status = await getWaitRecoveryStatus(userId);
+
+    res.json({
+      stealth: status.stealth,
+      ready: status.ready,
+      alreadyAtMax: status.alreadyAtMax ?? false,
+      retryAfterMs: status.retryAfterMs ?? 0,
+    });
+  } catch (error) {
+    console.error('Stealth recovery status error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
