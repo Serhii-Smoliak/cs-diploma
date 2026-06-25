@@ -1,6 +1,5 @@
 import type { TFunction } from 'i18next';
-import { motion } from 'framer-motion';
-import { AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TaskResultPanelProps {
   readonly result: string | null;

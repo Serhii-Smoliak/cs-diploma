@@ -123,9 +123,8 @@ function GameRoute() {
         await setMission(mission);
 
         const levels = await api.getMissionLevels(missionId);
-        const level = levels.find((l) => l.level_id === assignmentId);
 
-        if (!level) {
+        if (!levels.some((l) => l.level_id === assignmentId)) {
           setError('Завдання не знайдено');
           setIsRestoring(false);
           return;

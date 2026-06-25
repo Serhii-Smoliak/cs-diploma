@@ -20,6 +20,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('../mitre/MitreTechniqueChip', () => ({
   default: ({ techniqueId }: { techniqueId: string }) => <span>{techniqueId}</span>,
+  ExternalLinkIcon: () => <span aria-hidden>↗</span>,
 }));
 
 const baseLevel: Level = {

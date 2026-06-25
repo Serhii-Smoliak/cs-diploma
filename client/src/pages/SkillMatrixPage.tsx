@@ -41,6 +41,16 @@ function saveExpandedTactics(tactics: Set<string>) {
   }
 }
 
+function getTechniqueCardClass(isCompleted: boolean, isLastViewed: boolean): string {
+  if (isCompleted) {
+    return 'border-cyber-success bg-green-900/10 hover:bg-green-900/20';
+  }
+  if (isLastViewed) {
+    return 'border-cyber-primary bg-cyber-primary/10 hover:bg-cyber-primary/20 shadow-glow';
+  }
+  return 'border-cyber-border bg-cyber-panel/50 hover:border-cyber-primary/50 hover:bg-cyber-panel';
+}
+
 export default function SkillMatrixPage() {
   const { t, i18n } = useTranslation(['skillMatrix', 'common', 'mitre']);
   const { user } = useAuthStore();
@@ -57,32 +67,23 @@ export default function SkillMatrixPage() {
   const [translationsRevision, setTranslationsRevision] = useState(0);
   const pendingTechniqueIdRef = useRef<string | null>(null);
 
-  const getTechniqueName = useCallback(
-    (techniqueId: string, fallback: string): string => {
-      const key = `technique.name.${techniqueId}`;
-      const translated = t(key, { ns: 'mitre', defaultValue: fallback });
-      return translated === key ? fallback : translated;
-    },
-    [t, translationsRevision]
-  );
+  const getTechniqueName = (techniqueId: string, fallback: string): string => {
+    const key = `technique.name.${techniqueId}`;
+    const translated = t(key, { ns: 'mitre', defaultValue: fallback });
+    return translated === key ? fallback : translated;
+  };
 
-  const getTechniqueDescription = useCallback(
-    (techniqueId: string, fallback: string | null): string => {
-      const key = `technique.description.${techniqueId}`;
-      const translated = t(key, { ns: 'mitre', defaultValue: fallback || '' });
-      return translated === key ? fallback || '' : translated;
-    },
-    [t, translationsRevision]
-  );
+  const getTechniqueDescription = (techniqueId: string, fallback: string | null): string => {
+    const key = `technique.description.${techniqueId}`;
+    const translated = t(key, { ns: 'mitre', defaultValue: fallback || '' });
+    return translated === key ? fallback || '' : translated;
+  };
 
-  const getTacticLabel = useCallback(
-    (tactic: string): string => {
-      const key = `tactic.${tactic}`;
-      const translated = t(key, { ns: 'mitre', defaultValue: tactic });
-      return translated === key ? tactic : translated;
-    },
-    [t, translationsRevision]
-  );
+  const getTacticLabel = (tactic: string): string => {
+    const key = `tactic.${tactic}`;
+    const translated = t(key, { ns: 'mitre', defaultValue: tactic });
+    return translated === key ? tactic : translated;
+  };
 
   useEffect(() => {
     const locale = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'uk';
@@ -138,7 +139,7 @@ export default function SkillMatrixPage() {
 
     setExpandedTactics((prev) => new Set([...prev, technique.tactic]));
 
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       document.getElementById(tacticSectionId(technique.tactic))?.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
@@ -160,9 +161,18 @@ export default function SkillMatrixPage() {
     saveExpandedTactics(expandedTactics);
   }, [expandedTactics]);
 
-  const getCompletionPercentage = (): number => {
-    if (techniques.length === 0) return 0;
-    return Math.round((completedTechniques.length / techniques.length) * 100);
+  const getCompletionProgress = (): { displayPercent: string; barPercent: number } => {
+    if (techniques.length === 0) {
+      return { displayPercent: '0', barPercent: 0 };
+    }
+
+    const raw = (completedTechniques.length / techniques.length) * 100;
+    if (raw > 0 && raw < 1) {
+      return { displayPercent: raw.toFixed(1), barPercent: raw };
+    }
+
+    const rounded = Math.round(raw);
+    return { displayPercent: String(rounded), barPercent: rounded };
   };
 
   const tacticGroups = useMemo((): TacticGroup[] => {
@@ -235,7 +245,7 @@ export default function SkillMatrixPage() {
     );
   }
 
-  const completionPercentage = getCompletionPercentage();
+  const completionProgress = getCompletionProgress();
 
   return (
     <div className="h-full flex flex-col overflow-hidden" key={translationsRevision}>
@@ -251,12 +261,14 @@ export default function SkillMatrixPage() {
                 {t('progress', { ns: 'skillMatrix' })}
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                <div className="text-xl font-bold text-cyber-primary">{completionPercentage}%</div>
+                <div className="text-xl font-bold text-cyber-primary">
+                  {completionProgress.displayPercent}%
+                </div>
                 <div className="flex-1 w-full">
                   <div className="h-2 bg-cyber-panel rounded-full overflow-hidden border border-cyber-border">
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${completionPercentage}%` }}
+                      animate={{ width: `${completionProgress.barPercent}%` }}
                       transition={{ duration: 0.5 }}
                       className="h-full bg-cyber-success cyber-glow-green"
                     />
@@ -395,11 +407,7 @@ export default function SkillMatrixPage() {
                             {group.techniques.map((technique) => {
                               const isCompleted = isTechniqueCompleted(technique.id);
                               const isLastViewed = lastViewedTechniqueId === technique.id;
-                              const cardClass = isCompleted
-                                ? 'border-cyber-success bg-green-900/10 hover:bg-green-900/20'
-                                : isLastViewed
-                                  ? 'border-cyber-primary bg-cyber-primary/10 hover:bg-cyber-primary/20 shadow-glow'
-                                  : 'border-cyber-border bg-cyber-panel/50 hover:border-cyber-primary/50 hover:bg-cyber-panel';
+                              const cardClass = getTechniqueCardClass(isCompleted, isLastViewed);
                               return (
                                 <motion.div
                                   key={technique.id}

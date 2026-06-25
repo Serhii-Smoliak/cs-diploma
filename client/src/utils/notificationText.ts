@@ -27,70 +27,113 @@ function parseSupportReplySubject(notification: AppNotification): string {
   return notification.body;
 }
 
+function getSupportReplyDisplay(
+  notification: AppNotification,
+  t: TFunction,
+  isEn: boolean
+): { title: string; body: string } {
+  const subject = parseSupportReplySubject(notification);
+
+  return {
+    title: t(NOTIFICATION_I18N_KEYS.supportReplyTitle, {
+      ns: 'ui',
+      defaultValue: isEn ? 'Support reply' : 'Відповідь підтримки',
+    }),
+    body: t('notification.supportReply.body', {
+      ns: 'ui',
+      subject,
+      defaultValue: isEn ? `New reply on: ${subject}` : `Нова відповідь на: ${subject}`,
+    }),
+  };
+}
+
+function getNewsDisplay(
+  notification: AppNotification,
+  t: TFunction,
+  isEn: boolean
+): { title: string; body: string } {
+  const newsTitle = notification.newsTitle ?? notification.body;
+
+  return {
+    title: t(NOTIFICATION_I18N_KEYS.newsTitle, {
+      ns: 'ui',
+      defaultValue: isEn ? 'News' : 'Новина',
+    }),
+    body: t('notification.news.body', {
+      ns: 'ui',
+      title: newsTitle,
+      defaultValue: isEn ? `New article: ${newsTitle}` : `Нова публікація: ${newsTitle}`,
+    }),
+  };
+}
+
+function getRankUpDisplay(
+  notification: AppNotification,
+  t: TFunction,
+  isEn: boolean
+): { title: string; body: string } {
+  const rankLabel = getRankLabel(notification.body, t);
+
+  return {
+    title: t(NOTIFICATION_I18N_KEYS.rankUpTitle, {
+      ns: 'ui',
+      defaultValue: isEn ? 'Rank up!' : 'Нове звання!',
+    }),
+    body: t('notification.rankUp.body', {
+      ns: 'ui',
+      rank: rankLabel,
+      defaultValue: isEn ? `You reached the rank: ${rankLabel}` : `Ви досягли звання: ${rankLabel}`,
+    }),
+  };
+}
+
+function getLegacyRankUpDisplay(
+  notification: AppNotification,
+  t: TFunction,
+  isEn: boolean
+): { title: string; body: string } {
+  return {
+    title: t(NOTIFICATION_I18N_KEYS.rankUpTitle, {
+      ns: 'ui',
+      defaultValue: isEn ? 'Rank up!' : 'Нове звання!',
+    }),
+    body: notification.body,
+  };
+}
+
+function getSystemNotificationDisplay(
+  notification: AppNotification,
+  t: TFunction,
+  isEn: boolean
+): { title: string; body: string } | null {
+  if (notification.title === NOTIFICATION_I18N_KEYS.rankUpTitle) {
+    return getRankUpDisplay(notification, t, isEn);
+  }
+
+  if (LEGACY_RANK_UP_TITLES.has(notification.title)) {
+    return getLegacyRankUpDisplay(notification, t, isEn);
+  }
+
+  return null;
+}
+
 export function getNotificationDisplayText(
   notification: AppNotification,
   t: TFunction,
   isEn: boolean
 ): { title: string; body: string } {
   if (notification.type === 'SUPPORT_REPLY') {
-    const subject = parseSupportReplySubject(notification);
-
-    return {
-      title: t(NOTIFICATION_I18N_KEYS.supportReplyTitle, {
-        ns: 'ui',
-        defaultValue: isEn ? 'Support reply' : 'Відповідь підтримки',
-      }),
-      body: t('notification.supportReply.body', {
-        ns: 'ui',
-        subject,
-        defaultValue: isEn ? `New reply on: ${subject}` : `Нова відповідь на: ${subject}`,
-      }),
-    };
+    return getSupportReplyDisplay(notification, t, isEn);
   }
 
   if (notification.type === 'NEWS') {
-    const newsTitle = notification.newsTitle ?? notification.body;
-
-    return {
-      title: t(NOTIFICATION_I18N_KEYS.newsTitle, {
-        ns: 'ui',
-        defaultValue: isEn ? 'News' : 'Новина',
-      }),
-      body: t('notification.news.body', {
-        ns: 'ui',
-        title: newsTitle,
-        defaultValue: isEn ? `New article: ${newsTitle}` : `Нова публікація: ${newsTitle}`,
-      }),
-    };
+    return getNewsDisplay(notification, t, isEn);
   }
 
   if (notification.type === 'SYSTEM') {
-    if (notification.title === NOTIFICATION_I18N_KEYS.rankUpTitle) {
-      const rankLabel = getRankLabel(notification.body, t);
-
-      return {
-        title: t(NOTIFICATION_I18N_KEYS.rankUpTitle, {
-          ns: 'ui',
-          defaultValue: isEn ? 'Rank up!' : 'Нове звання!',
-        }),
-        body: t('notification.rankUp.body', {
-          ns: 'ui',
-          rank: rankLabel,
-          defaultValue: isEn
-            ? `You reached the rank: ${rankLabel}`
-            : `Ви досягли звання: ${rankLabel}`,
-        }),
-      };
-    }
-
-    if (LEGACY_RANK_UP_TITLES.has(notification.title)) {
-      return {
-        title: t(NOTIFICATION_I18N_KEYS.rankUpTitle, {
-          ns: 'ui',
-          defaultValue: isEn ? 'Rank up!' : 'Нове звання!',
-        }),
-        body: notification.body,
-      };
+    const systemDisplay = getSystemNotificationDisplay(notification, t, isEn);
+    if (systemDisplay) {
+      return systemDisplay;
     }
   }
 

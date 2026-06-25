@@ -17,6 +17,16 @@ export default function LoginPage() {
   const { login, register } = useAuthStore();
   const navigate = useNavigate();
 
+  const getSubmitButtonLabel = (): string => {
+    if (loading) {
+      return t('loading');
+    }
+    if (isLogin) {
+      return t('login');
+    }
+    return t('register');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -146,7 +156,7 @@ export default function LoginPage() {
               disabled={loading || (!isLogin && !agreementAccepted)}
               className="w-full cyber-button py-3 disabled:opacity-50"
             >
-              {loading ? t('loading') : isLogin ? t('login') : t('register')}
+              {getSubmitButtonLabel()}
             </motion.button>
           </form>
 

@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import type { Level } from '@cybertactics/shared';
-import MitreTechniqueChip from '../mitre/MitreTechniqueChip';
+import MitreTechniqueChip, { ExternalLinkIcon } from '../mitre/MitreTechniqueChip';
+import { getMitreTacticUrl } from '../../utils/mitreLinks';
 
 function getStealthImpactClass(impact: number): string {
   if (impact < 0) return 'text-orange-400';
@@ -25,7 +26,10 @@ interface AssignmentPanelProps {
   readonly getTechniqueDescription: (techniqueId: string, fallback: string | null) => string;
 }
 
-function AssignmentPanelEmpty({ className = '', isEn }: { className?: string; isEn: boolean }) {
+function AssignmentPanelEmpty({
+  className = '',
+  isEn,
+}: Readonly<{ className?: string; isEn: boolean }>) {
   const { t } = useTranslation(['ui']);
 
   return (
@@ -61,7 +65,7 @@ function AssignmentLearnSection({
   getTacticExplanation,
   getTechniqueDescription,
   isEn,
-}: {
+}: Readonly<{
   level: Level;
   isEn: boolean;
   getTaskTypeLabel: (taskType: Level['task_type']) => string;
@@ -69,7 +73,7 @@ function AssignmentLearnSection({
   getTacticLabel: (tactic: string) => string;
   getTacticExplanation: (tactic: string) => string;
   getTechniqueDescription: (techniqueId: string, fallback: string | null) => string;
-}) {
+}>) {
   const { t } = useTranslation(['ui']);
   const technique = level.mitre_technique;
   const tacticExplanation = technique ? getTacticExplanation(technique.tactic) : '';
@@ -90,9 +94,16 @@ function AssignmentLearnSection({
               techniqueId={technique.id}
               title={getTechniqueName(technique.id, technique.name)}
             />
-            <span className="text-xs px-2 py-1 rounded bg-cyber-panel border border-cyber-border text-gray-400">
+            <a
+              href={getMitreTacticUrl(technique.tactic)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={getTacticLabel(technique.tactic)}
+              className="text-xs px-2 py-1 rounded bg-cyber-panel border border-cyber-border text-gray-400 hover:border-cyber-primary hover:text-cyber-primary inline-flex items-center gap-1 transition-colors"
+            >
               {getTacticLabel(technique.tactic)}
-            </span>
+              <ExternalLinkIcon />
+            </a>
           </div>
           {tacticExplanation && (
             <p className="text-xs text-gray-400 mb-2 leading-relaxed">{tacticExplanation}</p>
@@ -111,10 +122,10 @@ function AssignmentLearnSection({
 function AssignmentStatsGrid({
   level,
   getTaskTypeLabel,
-}: {
+}: Readonly<{
   level: Level;
   getTaskTypeLabel: (taskType: Level['task_type']) => string;
-}) {
+}>) {
   const { t } = useTranslation(['ui']);
   const stealthImpact = level.rewards?.stealth_impact ?? 0;
 

@@ -137,7 +137,9 @@ export default function RanksPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] font-mono text-gray-500 mt-0.5">{formatXpRange(from, to)}</p>
+                  <p className="text-[11px] font-mono text-gray-500 mt-0.5">
+                    {formatXpRange(from, to)}
+                  </p>
                   {description && (
                     <p className="text-xs text-gray-400 leading-snug mt-2 pt-2 border-t border-cyber-border/60">
                       {description}

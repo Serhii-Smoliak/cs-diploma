@@ -40,8 +40,7 @@ export default function LanguageSwitcher() {
 
   useEffect(() => {
     if (!loading && languages.length > 0) {
-      const currentLang = languages.find((lang) => lang.code === i18n.language);
-      if (!currentLang) {
+      if (!languages.some((lang) => lang.code === i18n.language)) {
         i18n.changeLanguage('uk');
       }
     }

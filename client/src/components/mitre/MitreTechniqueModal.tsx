@@ -8,6 +8,7 @@ import {
   getMissionAssignmentsPath,
   getMissionDescription,
   getMissionDifficultyLabel,
+  getMissionDifficultyClass,
   getMissionName,
 } from '@/utils/missionText.ts';
 
@@ -38,6 +39,26 @@ function toClarification(text: string): string {
   return trimmed.charAt(0).toLocaleLowerCase() + trimmed.slice(1);
 }
 
+function getKillChainStageCircleClass(isCurrent: boolean, isBefore: boolean): string {
+  if (isCurrent) {
+    return 'border-cyber-primary bg-cyber-primary/20 cyber-glow shadow-lg shadow-cyber-primary/40';
+  }
+  if (isBefore) {
+    return 'border-green-500 bg-green-900/20';
+  }
+  return 'border-gray-600 bg-gray-800/50 opacity-60';
+}
+
+function getKillChainStageLabelClass(isCurrent: boolean, isBefore: boolean): string {
+  if (isCurrent) {
+    return 'text-cyber-primary font-bold';
+  }
+  if (isBefore) {
+    return 'text-green-400';
+  }
+  return 'text-gray-500';
+}
+
 interface MitreTechniqueModalProps {
   technique: MitreTechnique | null;
   isOpen: boolean;
@@ -61,7 +82,7 @@ export default function MitreTechniqueModal({
   const navigate = useNavigate();
   const { t, i18n } = useTranslation(['mitre', 'common', 'missions', 'ui']);
   const [relatedMissions, setRelatedMissions] = useState<RelatedMission[]>([]);
-  const [selectedExample, setSelectedExample] = useState<number | null>(null);
+  const [selectedExample, setSelectedExample] = useState<string | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
   const [idCopied, setIdCopied] = useState(false);
   const [idHovered, setIdHovered] = useState(false);
@@ -265,7 +286,7 @@ export default function MitreTechniqueModal({
     try {
       await navigator.clipboard.writeText(technique.id);
       setIdCopied(true);
-      window.setTimeout(() => setIdCopied(false), 1500);
+      globalThis.setTimeout(() => setIdCopied(false), 1500);
     } catch (error) {
       console.error('Failed to copy technique id:', error);
     }
@@ -387,9 +408,9 @@ export default function MitreTechniqueModal({
                         <span className="text-xs text-gray-500">
                           {t('modal.platforms', { ns: 'mitre' })}
                         </span>
-                        {technique.platforms.map((platform, idx) => (
+                        {technique.platforms.map((platform) => (
                           <span
-                            key={idx}
+                            key={platform}
                             className="text-xs px-2 py-1 rounded bg-cyber-panel border border-cyber-border text-cyber-primary"
                           >
                             {platform}
@@ -478,7 +499,7 @@ export default function MitreTechniqueModal({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {examples.map((example, idx) => (
                         <motion.div
-                          key={idx}
+                          key={example}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.1 }}
@@ -489,10 +510,10 @@ export default function MitreTechniqueModal({
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedStageId(null);
-                              setSelectedExample((prev) => (prev === idx ? null : idx));
+                              setSelectedExample((prev) => (prev === example ? null : example));
                             }}
                             className={`w-full text-left cyber-panel p-4 border transition-colors cursor-pointer ${
-                              selectedExample === idx
+                              selectedExample === example
                                 ? 'border-cyber-primary bg-cyber-primary/10'
                                 : 'border-cyber-border hover:border-cyber-primary'
                             }`}
@@ -510,7 +531,7 @@ export default function MitreTechniqueModal({
                           </button>
 
                           <AnimatePresence>
-                            {selectedExample === idx && (
+                            {selectedExample === example && (
                               <motion.div
                                 initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -542,11 +563,11 @@ export default function MitreTechniqueModal({
                       {t('modal.howToProtect', { ns: 'mitre' })}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {mitigationTips.map((tip, idx) => {
+                      {mitigationTips.map((tip) => {
                         const description = getMitigationTipDescriptionTranslated(tip);
                         return (
                           <div
-                            key={idx}
+                            key={tip}
                             className="cyber-panel p-3 border border-cyber-success/30 bg-green-900/10 flex items-start gap-3"
                           >
                             <span className="text-cyber-success font-bold flex-shrink-0">✓</span>
@@ -570,9 +591,9 @@ export default function MitreTechniqueModal({
                           {t('modal.dataSources', { ns: 'mitre' })}
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {technique.dataSources.map((ds, idx) => (
+                          {technique.dataSources.map((ds) => (
                             <span
-                              key={idx}
+                              key={`${ds.source}:${ds.component ?? ''}`}
                               className="text-xs px-2 py-1 rounded bg-cyber-panel border border-cyber-border text-cyber-primary"
                             >
                               {ds.source}
@@ -606,20 +627,14 @@ export default function MitreTechniqueModal({
                               {getMissionName(t, mission.id, mission.name)}
                             </h4>
                             <span
-                              className={`text-xs px-2 py-1 rounded ${
-                                mission.difficulty === 'beginner'
-                                  ? 'bg-green-900/30 text-green-400'
-                                  : mission.difficulty === 'intermediate'
-                                    ? 'bg-yellow-900/30 text-yellow-400'
-                                    : 'bg-red-900/30 text-red-400'
-                              }`}
+                              className={`text-xs px-2 py-1 rounded ${getMissionDifficultyClass(mission.difficulty)}`}
                             >
                               {getMissionDifficultyLabel(t, mission.difficulty)}
                             </span>
                           </div>
                           {mission.description && (
                             <p className="text-xs text-gray-400 line-clamp-2">
-                              {getMissionDescription(t, mission.id, mission.description)}
+                              {getMissionDescription(t, mission.id, mission.description ?? '')}
                             </p>
                           )}
                           <div className="mt-2 text-xs text-cyber-primary">
@@ -666,25 +681,13 @@ export default function MitreTechniqueModal({
                             }`}
                           >
                             <div
-                              className={`w-11 h-11 rounded-full border-2 flex items-center justify-center text-lg transition-all ${
-                                isCurrent
-                                  ? 'border-cyber-primary bg-cyber-primary/20 cyber-glow shadow-lg shadow-cyber-primary/40'
-                                  : isBefore
-                                    ? 'border-green-500 bg-green-900/20'
-                                    : 'border-gray-600 bg-gray-800/50 opacity-60'
-                              }`}
+                              className={`w-11 h-11 rounded-full border-2 flex items-center justify-center text-lg transition-all ${getKillChainStageCircleClass(isCurrent, isBefore)}`}
                             >
                               {stage.icon}
                             </div>
 
                             <div
-                              className={`text-[10px] text-center font-medium leading-tight line-clamp-2 ${
-                                isCurrent
-                                  ? 'text-cyber-primary font-bold'
-                                  : isBefore
-                                    ? 'text-green-400'
-                                    : 'text-gray-500'
-                              }`}
+                              className={`text-[10px] text-center font-medium leading-tight line-clamp-2 ${getKillChainStageLabelClass(isCurrent, isBefore)}`}
                             >
                               {stage.name}
                             </div>
@@ -786,7 +789,7 @@ export default function MitreTechniqueModal({
                       <strong className="text-cyber-primary">
                         {getStageDescriptionTranslated(technique.tactic)}
                       </strong>
-                      .
+                      {'.'}
                     </p>
                   </motion.div>
                 </div>

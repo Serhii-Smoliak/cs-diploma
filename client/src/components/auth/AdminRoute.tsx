@@ -5,7 +5,7 @@ interface AdminRouteProps {
   children: React.ReactNode;
 }
 
-export default function AdminRoute({ children }: AdminRouteProps) {
+export default function AdminRoute({ children }: Readonly<AdminRouteProps>) {
   const user = useAuthStore((state) => state.user);
 
   if (user?.role !== 'ADMIN') {

@@ -99,7 +99,7 @@ export default function MissionAssignmentsPage() {
   const [loading, setLoading] = useState(true);
   const [killChainOpen, setKillChainOpen] = useState(false);
   const [selectedLevelId, setSelectedLevelId] = useState<string | null>(null);
-  const [, setTranslationsTick] = useState(0);
+  const [translationsTick, setTranslationsTick] = useState(0);
 
   const getMissionName = (missionId: string, fallbackName: string): string => {
     const translationKey = `${missionId}.name`;
@@ -365,6 +365,7 @@ export default function MissionAssignmentsPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
+      <span hidden>{translationsTick}</span>
       {/* Header */}
       <div className="mb-6">
         <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-2">
