@@ -55,12 +55,12 @@ export default function NewsPage() {
     const path = `/news/${postId}`;
     navigate(path);
 
-    const url = `${window.location.origin}${path}`;
+    const url = `${globalThis.location.origin}${path}`;
 
     try {
       await navigator.clipboard.writeText(url);
       setCopiedPostId(postId);
-      window.setTimeout(() => {
+      globalThis.setTimeout(() => {
         setCopiedPostId((current) => (current === postId ? null : current));
       }, 2000);
     } catch {

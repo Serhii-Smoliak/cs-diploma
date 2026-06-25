@@ -290,19 +290,15 @@ class ApiClient {
     ready: boolean;
     alreadyAtMax: boolean;
     retryAfterMs: number;
+    regenAmount: number;
   }> {
     return this.request<{
       stealth: number;
       ready: boolean;
       alreadyAtMax: boolean;
       retryAfterMs: number;
+      regenAmount: number;
     }>('/users/me/stealth/recovery-status');
-  }
-
-  async waitForStealthRecovery(): Promise<{ stealth: number; message: string }> {
-    return this.request<{ stealth: number; message: string }>('/users/me/stealth/wait', {
-      method: 'POST',
-    });
   }
 
   async getMitreTechniques(): Promise<MitreTechnique[]> {

@@ -56,13 +56,13 @@ export default function NotificationsBell() {
       return undefined;
     }
 
-    const intervalId = window.setInterval(() => {
+    const intervalId = globalThis.setInterval(() => {
       refreshNotifications().catch(() => {
         // refreshNotifications already logs errors
       });
     }, POLL_INTERVAL_MS);
 
-    return () => window.clearInterval(intervalId);
+    return () => globalThis.clearInterval(intervalId);
   }, [isAuthenticated, refreshNotifications]);
 
   useEffect(() => {
@@ -129,6 +129,73 @@ export default function NotificationsBell() {
     }
   };
 
+  const renderNotificationsContent = () => {
+    if (loading) {
+      return (
+        <div className="px-4 py-6 text-center text-sm text-gray-500">
+          {t('loading', { ns: 'ui', defaultValue: isEn ? 'Loading...' : 'Завантаження...' })}
+        </div>
+      );
+    }
+
+    if (notifications.length === 0) {
+      return (
+        <div className="px-4 py-6 text-center text-sm text-gray-500">
+          {t('notificationsEmpty', {
+            ns: 'ui',
+            defaultValue: isEn ? 'No notifications yet.' : 'Сповіщень поки немає.',
+          })}
+        </div>
+      );
+    }
+
+    return (
+      <ul className="max-h-80 overflow-y-auto divide-y divide-cyber-border/60">
+        {notifications.map((notification) => {
+          const display = getNotificationDisplayText(notification, t, isEn);
+
+          return (
+            <li key={notification.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  handleNotificationClick(notification).catch(() => {
+                    // handleNotificationClick already logs errors
+                  });
+                }}
+                className={`w-full text-left px-4 py-3 transition-colors hover:bg-cyber-panel/70 ${
+                  notification.isRead ? 'opacity-80' : 'bg-cyber-primary/5'
+                }`}
+              >
+                <div className="flex items-start gap-2">
+                  {!notification.isRead && (
+                    <span
+                      className="mt-1.5 w-2 h-2 rounded-full bg-cyber-primary shrink-0"
+                      aria-hidden
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className={`text-sm truncate ${
+                        notification.isRead ? 'text-gray-300' : 'text-gray-100 font-medium'
+                      }`}
+                    >
+                      {display.title}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{display.body}</p>
+                    <div className="text-[11px] text-gray-600 mt-2">
+                      {new Date(notification.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
   if (!isAuthenticated) {
     return null;
   }
@@ -184,62 +251,7 @@ export default function NotificationsBell() {
             )}
           </div>
 
-          {loading ? (
-            <div className="px-4 py-6 text-center text-sm text-gray-500">
-              {t('loading', { ns: 'ui', defaultValue: isEn ? 'Loading...' : 'Завантаження...' })}
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="px-4 py-6 text-center text-sm text-gray-500">
-              {t('notificationsEmpty', {
-                ns: 'ui',
-                defaultValue: isEn ? 'No notifications yet.' : 'Сповіщень поки немає.',
-              })}
-            </div>
-          ) : (
-            <ul className="max-h-80 overflow-y-auto divide-y divide-cyber-border/60">
-              {notifications.map((notification) => {
-                const display = getNotificationDisplayText(notification, t, isEn);
-
-                return (
-                  <li key={notification.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleNotificationClick(notification).catch(() => {
-                          // handleNotificationClick already logs errors
-                        });
-                      }}
-                      className={`w-full text-left px-4 py-3 transition-colors hover:bg-cyber-panel/70 ${
-                        notification.isRead ? 'opacity-80' : 'bg-cyber-primary/5'
-                      }`}
-                    >
-                      <div className="flex items-start gap-2">
-                        {!notification.isRead && (
-                          <span
-                            className="mt-1.5 w-2 h-2 rounded-full bg-cyber-primary shrink-0"
-                            aria-hidden
-                          />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div
-                            className={`text-sm truncate ${
-                              notification.isRead ? 'text-gray-300' : 'text-gray-100 font-medium'
-                            }`}
-                          >
-                            {display.title}
-                          </div>
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{display.body}</p>
-                          <div className="text-[11px] text-gray-600 mt-2">
-                            {new Date(notification.createdAt).toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          {renderNotificationsContent()}
         </div>
       )}
     </div>

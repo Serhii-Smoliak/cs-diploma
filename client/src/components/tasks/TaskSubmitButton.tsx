@@ -10,7 +10,7 @@ export default function TaskSubmitButton({
   disabled = false,
   onClick,
   children,
-}: TaskSubmitButtonProps) {
+}: Readonly<TaskSubmitButtonProps>) {
   return (
     <button
       type="button"

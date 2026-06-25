@@ -78,74 +78,82 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
-      <h1 className="font-heading font-bold text-3xl text-cyber-primary mb-8">
-        {t('title', { ns: 'profile' })}
-      </h1>
+    <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
+      <div className="max-w-md mx-auto w-full">
+        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-6 text-center">
+          {t('title', { ns: 'profile' })}
+        </h1>
 
-      <div className="cyber-panel p-6 space-y-6 max-w-xl">
-        <div className="flex items-center gap-6">
-          <div className="relative">
-            <UserAvatar username={user?.username} avatarUrl={user?.avatarUrl} size="lg" />
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={handleFileChange}
-            />
+        <div className="cyber-panel p-6 space-y-6">
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="relative">
+              <UserAvatar username={user?.username} avatarUrl={user?.avatarUrl} size="lg" />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+            </div>
+
+            <div>
+              <h2 className="font-heading font-bold text-xl text-white">{user?.username}</h2>
+              <p className="text-sm text-gray-400 mt-1">{user?.email}</p>
+              <button
+                type="button"
+                onClick={handlePickPhoto}
+                className="mt-3 text-sm text-cyber-primary hover:underline"
+              >
+                {t('changePhoto', { ns: 'profile' })}
+              </button>
+            </div>
           </div>
 
-          <div>
-            <h2 className="font-heading font-bold text-xl text-white">{user?.username}</h2>
-            <p className="text-sm text-gray-400">{user?.email}</p>
-            <button
-              type="button"
-              onClick={handlePickPhoto}
-              className="mt-3 text-sm text-cyber-primary hover:underline"
+          {error && <p className="text-sm text-cyber-danger text-center">{error}</p>}
+
+          <div className="pt-4 border-t border-cyber-border">
+            <h3 className="font-heading font-bold text-lg text-cyber-primary mb-4 text-center">
+              {t('account', { ns: 'profile' })}
+            </h3>
+            <div className="space-y-3 text-sm text-center">
+              <div>
+                <span className="text-gray-400">{t('username', { ns: 'profile' })}:</span>{' '}
+                <span className="text-white">{user?.username}</span>
+              </div>
+              <div>
+                <span className="text-gray-400">{t('email', { ns: 'profile' })}:</span>{' '}
+                <span className="text-white">{user?.email}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto pt-1">
+                <div className="rounded-lg border border-cyber-border bg-cyber-panel/50 px-3 py-2">
+                  <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">
+                    {t('rank', { ns: 'ui' })}
+                  </div>
+                  <div className="text-cyber-primary font-medium leading-snug">
+                    {user?.rank ? getRankLabel(user.rank, t) : '—'}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-cyber-border bg-cyber-panel/50 px-3 py-2">
+                  <div className="text-[11px] uppercase tracking-wide text-gray-500 mb-1">
+                    {t('xp', { ns: 'ui' })}
+                  </div>
+                  <div className="text-cyber-success font-bold">{user?.xp ?? 0}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-cyber-border flex justify-center">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={logout}
+              className="cyber-button-danger"
             >
-              {t('changePhoto', { ns: 'profile' })}
-            </button>
+              {t('logout', { ns: 'profile' })}
+            </motion.button>
           </div>
-        </div>
-
-        {error && <p className="text-sm text-cyber-danger">{error}</p>}
-
-        <div className="pt-4 border-t border-cyber-border">
-          <h3 className="font-heading font-bold text-lg text-cyber-primary mb-4">
-            {t('account', { ns: 'profile' })}
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div>
-              <span className="text-gray-400">{t('username', { ns: 'profile' })}:</span>{' '}
-              <span className="text-white">{user?.username}</span>
-            </div>
-            <div>
-              <span className="text-gray-400">{t('email', { ns: 'profile' })}:</span>{' '}
-              <span className="text-white">{user?.email}</span>
-            </div>
-            <div>
-              <span className="text-gray-400">{t('rank', { ns: 'ui' })}:</span>{' '}
-              <span className="text-cyber-primary">
-                {user?.rank ? getRankLabel(user.rank, t) : ''}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-400">{t('xp', { ns: 'ui' })}:</span>{' '}
-              <span className="text-cyber-success">{user?.xp}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-cyber-border">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={logout}
-            className="cyber-button-danger"
-          >
-            {t('logout', { ns: 'profile' })}
-          </motion.button>
         </div>
       </div>
 

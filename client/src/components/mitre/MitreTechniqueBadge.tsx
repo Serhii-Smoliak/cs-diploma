@@ -18,9 +18,6 @@ export default function MitreTechniqueBadge({
   const translatedName = t(techniqueNameKey, { ns: 'mitre', defaultValue: technique.name });
   const displayName = translatedName !== techniqueNameKey ? translatedName : technique.name;
 
-  const tacticKey = `tactic.${technique.tactic}`;
-  const translatedTactic = t(tacticKey, { ns: 'mitre', defaultValue: technique.tactic });
-  const displayTactic = translatedTactic !== tacticKey ? translatedTactic : technique.tactic;
   const sizeClasses = {
     sm: 'text-xs px-2 py-1',
     md: 'text-sm px-3 py-1.5',
@@ -40,11 +37,6 @@ export default function MitreTechniqueBadge({
           <span className="text-xs opacity-70">→</span>
         </a>
         <span className={`${sizeClasses[size]} text-gray-300`}>{displayName}</span>
-        <span
-          className={`text-xs px-2 py-0.5 rounded bg-cyber-panel border border-cyber-border text-gray-400`}
-        >
-          {displayTactic}
-        </span>
       </div>
       {showDescription && technique.description && (
         <p className="text-xs text-gray-400 max-w-md line-clamp-2">{technique.description}</p>

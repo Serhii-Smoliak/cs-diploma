@@ -759,4 +759,48 @@ describe('admin routes', () => {
 
     expect(response.status).toBe(400);
   });
+
+  it('PATCH /news/:id returns 500 on update failure', async () => {
+    prismaMock.newsPost.findUnique.mockResolvedValue({
+      id: 'news-1',
+      titleUk: 'Новина',
+      titleEn: 'News',
+      bodyUk: 'Текст',
+      bodyEn: 'Text',
+      isPublished: false,
+      publishedAt: null,
+      authorId: 'admin-1',
+      createdAt: new Date('2026-06-23T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+    });
+    prismaMock.$transaction.mockRejectedValueOnce(new Error('db down'));
+
+    const response = await request(createApp())
+      .patch('/api/admin/news/news-1')
+      .send({ titleUk: 'Updated title here' });
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toBe('Internal server error');
+  });
+
+  it('DELETE /news/:id returns 500 on delete failure', async () => {
+    prismaMock.newsPost.findUnique.mockResolvedValue({
+      id: 'news-1',
+      titleUk: 'Новина',
+      titleEn: 'News',
+      bodyUk: 'Текст',
+      bodyEn: 'Text',
+      isPublished: true,
+      publishedAt: new Date('2026-06-23T12:00:00.000Z'),
+      authorId: 'admin-1',
+      createdAt: new Date('2026-06-23T12:00:00.000Z'),
+      updatedAt: new Date('2026-06-23T12:00:00.000Z'),
+    });
+    prismaMock.newsPost.delete.mockRejectedValueOnce(new Error('db down'));
+
+    const response = await request(createApp()).delete('/api/admin/news/news-1');
+
+    expect(response.status).toBe(500);
+    expect(response.body.error).toBe('Internal server error');
+  });
 });

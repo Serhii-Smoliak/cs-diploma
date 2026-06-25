@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import MitreTechniqueChip from '../components/mitre/MitreTechniqueChip';
 import {
   getMissionDescription,
+  getMissionDifficultyClass,
   getMissionDifficultyLabel,
   getMissionName,
 } from '../utils/missionText';
@@ -159,13 +160,7 @@ export default function MissionsPage() {
 
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-xs px-2 py-1 rounded ${
-                    mission.difficulty === 'beginner'
-                      ? 'bg-green-900/30 text-green-400'
-                      : mission.difficulty === 'intermediate'
-                        ? 'bg-yellow-900/30 text-yellow-400'
-                        : 'bg-red-900/30 text-red-400'
-                  }`}
+                  className={`text-xs px-2 py-1 rounded ${getMissionDifficultyClass(mission.difficulty)}`}
                 >
                   {getMissionDifficultyLabel(t, mission.difficulty)}
                 </span>

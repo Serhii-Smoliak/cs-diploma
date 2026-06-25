@@ -902,7 +902,7 @@ API повинно відкривати лише необхідні endpointʼи
 * `GET /api/users/me/stats`;
 * `POST /api/levels/:id/submit`;
 * `POST /api/users/me/stealth/masking`;
-* `POST /api/users/me/stealth/wait`.
+* `GET /api/users/me/stealth/recovery-status`.
 
 **Admin protected endpoints:**
 

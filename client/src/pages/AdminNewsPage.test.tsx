@@ -198,4 +198,48 @@ describe('AdminNewsPage', () => {
 
     expect(await screen.findByText('Save failed')).toBeInTheDocument();
   });
+
+  it('cancels delete confirmation', async () => {
+    const user = userEvent.setup();
+    render(<AdminNewsPage />);
+
+    await screen.findByText('Новина UA');
+    await user.click(screen.getByRole('button', { name: 'Видалити' }));
+    await user.click(screen.getByRole('button', { name: 'Скасувати' }));
+
+    expect(screen.queryByText('Видалити публікацію?')).not.toBeInTheDocument();
+    expect(api.deleteAdminNewsPost).not.toHaveBeenCalled();
+  });
+
+  it('resets edit form when deleting selected article', async () => {
+    const user = userEvent.setup();
+    render(<AdminNewsPage />);
+
+    await user.click(await screen.findByText('Новина UA'));
+    expect(await screen.findByDisplayValue('Новина UA')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Видалити' }));
+    await clickConfirmDelete(user);
+
+    await waitFor(() => {
+      expect(api.deleteAdminNewsPost).toHaveBeenCalledWith('news-1');
+    });
+    expect(screen.queryByDisplayValue('Новина UA')).not.toBeInTheDocument();
+  });
+
+  it('shows create error when save fails for new article', async () => {
+    vi.mocked(api.createAdminNewsPost).mockRejectedValue(new Error('Create failed'));
+    const user = userEvent.setup();
+    render(<AdminNewsPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Нова публікація' }));
+    const inputs = screen.getAllByRole('textbox');
+    await user.type(inputs[0]!, 'Заголовок UA');
+    await user.type(inputs[1]!, 'Title EN');
+    await user.type(inputs[2]!, 'Body UA long enough');
+    await user.type(inputs[3]!, 'Body EN long enough');
+    await user.click(screen.getByRole('button', { name: 'Зберегти' }));
+
+    expect(await screen.findByText('Create failed')).toBeInTheDocument();
+  });
 });

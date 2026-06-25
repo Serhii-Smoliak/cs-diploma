@@ -197,4 +197,77 @@ describe('SupportPage', () => {
       expect(api.createSupportTicket).toHaveBeenCalledWith('New issue', 'Need help please now');
     });
   });
+
+  it('shows answered ticket status styling', async () => {
+    vi.mocked(api.getSupportTickets).mockResolvedValue([
+      {
+        id: 'ticket-1',
+        subject: 'Answered issue',
+        message: 'Please answer',
+        status: 'ANSWERED',
+        closedAt: null,
+        closeReason: null,
+        closeReasonText: null,
+        createdAt: '2026-06-23T10:00:00.000Z',
+        updatedAt: '2026-06-23T11:00:00.000Z',
+      },
+    ]);
+
+    render(<SupportPage />);
+    expect(await screen.findByText('Answered issue')).toBeInTheDocument();
+  });
+
+  it('shows generic submit error', async () => {
+    vi.mocked(api.createSupportTicket).mockRejectedValue(new Error('Submit failed'));
+    const userEvents = userEvent.setup();
+    render(<SupportPage />);
+    await screen.findByText('Login issue');
+
+    await userEvents.type(screen.getByRole('textbox', { name: 'Тема' }), 'New issue');
+    await userEvents.type(
+      screen.getByRole('textbox', { name: 'Повідомлення' }),
+      'Need help please now'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Надіслати звернення' }));
+
+    expect(await screen.findByText('Submit failed')).toBeInTheDocument();
+  });
+
+  it('renders staff reply styling in expanded thread', async () => {
+    vi.mocked(api.getSupportTicket).mockResolvedValue({
+      id: 'ticket-1',
+      subject: 'Login issue',
+      message: 'Cannot login today',
+      status: 'OPEN',
+      closedAt: null,
+      closeReason: null,
+      closeReasonText: null,
+      createdAt: '2026-06-23T10:00:00.000Z',
+      updatedAt: '2026-06-23T10:00:00.000Z',
+      messages: [
+        {
+          id: 'msg-1',
+          authorId: 'user-1',
+          authorUsername: 'agent',
+          body: 'Cannot login today',
+          isStaffReply: false,
+          createdAt: '2026-06-23T10:00:00.000Z',
+        },
+        {
+          id: 'msg-2',
+          authorId: 'admin-1',
+          authorUsername: 'admin',
+          body: 'Staff reply here',
+          isStaffReply: true,
+          createdAt: '2026-06-23T11:00:00.000Z',
+        },
+      ],
+    });
+
+    render(<SupportPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByRole('button', { name: /Login issue/i }));
+
+    expect(await screen.findByText('Staff reply here')).toBeInTheDocument();
+  });
 });

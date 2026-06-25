@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { MITRE_TECHNIQUE_DESCRIPTIONS } from './mitre-technique-descriptions.ts';
+import { MITRE_TECHNIQUE_NAMES } from './mitre-technique-names.ts';
 
 const prisma = new PrismaClient();
 
@@ -162,15 +163,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       'example.description.data-from-local-system':
         "The attacker collects data from the victim's local system, including files, configurations, and other sensitive information.",
       'example.defaultDescription': 'This is an example of how {{example}} can be used in attacks.',
-      'technique.name.T1005': 'Data from Local System',
-      'technique.name.T1593': 'Search Open Websites/Domains',
-      'technique.name.T1583.001': 'Acquire Infrastructure: Domains',
-      'technique.name.T1566.001': 'Phishing: Spearphishing Attachment',
-      'technique.name.T1059.001': 'Command and Scripting Interpreter: PowerShell',
-      'technique.name.T1547.001':
-        'Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder',
-      'technique.description.T1025':
-        'Adversaries may search local system sources, such as file systems, configuration files, local databases, virtual machine files, or process memory, to find files of interest and sensitive data prior to Exfiltration. Adversaries may do this using a Command and Scripting Interpreter, such as cmd as well as a Network Device CLI, which have functionality to interact with the file system to gather information. Adversaries may also use Automated Collection on the local system.',
+      ...MITRE_TECHNIQUE_NAMES.en,
       ...MITRE_TECHNIQUE_DESCRIPTIONS.en,
       'tactic.Reconnaissance': 'Reconnaissance',
       'tactic.Resource Development': 'Resource Development',
@@ -377,8 +370,8 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       stealthMaskingUnavailable:
         'Masking (+{{amount}}%) would exceed 100% (current: {{stealth}}%).',
       stealthUpgradePlan: 'Upgrade to premium',
-      stealthWaitRecovery: 'Wait — partial stealth recovery',
-      stealthWaitNotReady: 'Stealth is not ready yet. Try again in {{time}}.',
+      stealthPassiveRecoveryIn: '+{{amount}}% stealth will recover automatically in {{time}}.',
+      stealthAtMax: 'Stealth is already at 100%.',
       stealthPremiumMock: 'Premium plan checkout is not connected yet.',
       yourPreviousCorrectAnswer: 'Your previous correct answer:',
       correctAnswerForTraining: 'Correct answer (for training):',
@@ -870,13 +863,7 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
         'Зловмисник збирає дані з локальної системи жертви, включаючи файли, конфігурації та іншу конфіденційну інформацію.',
       'example.defaultDescription':
         'Це приклад того, як {{example}} може використовуватися в атаках.',
-      'technique.name.T1005': 'Дані з локальної системи',
-      'technique.name.T1593': 'Пошук на відкритих веб-сайтах/доменах',
-      'technique.name.T1583.001': 'Отримання інфраструктури: домени',
-      'technique.name.T1566.001': 'Фішинг: цільовий фішинг з вкладенням',
-      'technique.name.T1059.001': 'Командний та скриптовий інтерпретатор: PowerShell',
-      'technique.name.T1547.001':
-        'Автозапуск при завантаженні: ключі реєстру Run / папка автозапуску',
+      ...MITRE_TECHNIQUE_NAMES.uk,
       ...MITRE_TECHNIQUE_DESCRIPTIONS.uk,
       'tactic.Reconnaissance': 'Розвідка',
       'tactic.Resource Development': 'Підготовка ресурсів',
@@ -1082,8 +1069,8 @@ const translations: Record<string, Record<string, Record<string, string>>> = {
       stealthBuyMasking: 'Купити {{amount}}% маскування — відновити стелс',
       stealthMaskingUnavailable: 'Маскування (+{{amount}}%) перевищить 100% (зараз: {{stealth}}%).',
       stealthUpgradePlan: 'Перейти на платний тариф',
-      stealthWaitRecovery: 'Зачекати — часткове відновлення стелсу',
-      stealthWaitNotReady: 'Stealth ще не відновився. Спробуйте через {{time}}.',
+      stealthPassiveRecoveryIn: '+{{amount}}% стелсу відновиться автоматично через {{time}}.',
+      stealthAtMax: 'Стелс уже на рівні 100%.',
       stealthPremiumMock: 'Оплата тарифу ще не підключена.',
       yourPreviousCorrectAnswer: 'Ваша попередня правильна відповідь:',
       correctAnswerForTraining: 'Правильна відповідь (для навчання):',

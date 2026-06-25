@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -70,5 +70,53 @@ describe('MissionsPage', () => {
     );
 
     expect(await screen.findByText('noMissionsAvailable')).toBeInTheDocument();
+  });
+
+  it('marks mission without levels as none', async () => {
+    vi.stubGlobal('fetch', createFetchMock({ levels: [], progress: [] }));
+
+    render(
+      <MemoryRouter>
+        <MissionsPage />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(testMission.name)).toBeInTheDocument();
+  });
+
+  it('marks mission as in progress when attempts exist', async () => {
+    vi.stubGlobal(
+      'fetch',
+      createFetchMock({
+        progress: [{ levelId: 'ghost_recon_01', completed: false, attempts: 2 }],
+      })
+    );
+
+    render(
+      <MemoryRouter>
+        <MissionsPage />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText(testMission.name)).toBeInTheDocument();
+  });
+
+  it('continues rendering when mission load fails', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('network down');
+      })
+    );
+
+    render(
+      <MemoryRouter>
+        <MissionsPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('noMissionsAvailable')).toBeInTheDocument();
+    });
   });
 });

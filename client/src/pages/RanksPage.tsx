@@ -79,14 +79,14 @@ export default function RanksPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto" key={translationsRevision}>
-      <div className="max-w-2xl mx-auto w-full text-center">
-        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-3">
+      <div className="max-w-lg mx-auto w-full text-center">
+        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-2">
           {t('ranks', {
             ns: 'ui',
             defaultValue: isEn ? 'Career Ranks' : 'Звання',
           })}
         </h1>
-        <p className="text-sm text-gray-400 max-w-3xl mx-auto leading-relaxed mb-8">
+        <p className="text-xs sm:text-sm text-gray-400 leading-relaxed mb-5 px-2">
           {t('ranksIntro', {
             ns: 'ui',
             defaultValue: isEn
@@ -95,45 +95,41 @@ export default function RanksPage() {
           })}
         </p>
 
-        <div className="space-y-0">
+        <div className="space-y-2 text-left">
           {RANK_TIERS.map((tier, index) => {
             const isCurrent = tier.id === currentRankId;
             const { from, to } = getRankXpRange(index);
-            const description = getRankDescription(tier.id);
+            const description = isCurrent ? getRankDescription(tier.id) : '';
 
             return (
               <motion.div
                 key={tier.id}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.06 }}
-                className="flex flex-col items-center"
+                transition={{ delay: index * 0.04 }}
+                className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
+                  isCurrent
+                    ? 'border-cyber-success/60 bg-green-900/15 shadow-[0_0_16px_rgba(34,197,94,0.12)]'
+                    : 'border-cyber-border/80 bg-cyber-panel/30 hover:border-cyber-border'
+                }`}
               >
                 <div
-                  className={`mb-2 w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg ${
+                  className={`shrink-0 w-9 h-9 rounded-full border flex items-center justify-center text-base ${
                     isCurrent
-                      ? 'border-cyber-success bg-green-900/20 cyber-glow-green'
-                      : 'border-cyber-border bg-cyber-panel'
+                      ? 'border-cyber-success bg-green-900/30 cyber-glow-green'
+                      : 'border-cyber-border bg-cyber-panel/80'
                   }`}
                 >
                   {tier.icon}
                 </div>
 
-                <div
-                  className={`w-full rounded-lg border p-4 transition-colors ${
-                    index < RANK_TIERS.length - 1 ? 'mb-2' : 'mb-8'
-                  } ${
-                    isCurrent
-                      ? 'border-cyber-success/50 bg-green-900/10'
-                      : 'border-cyber-border bg-cyber-panel/40'
-                  }`}
-                >
-                  <div className="flex flex-wrap items-center justify-center gap-2 mb-1">
-                    <h2 className="font-heading font-bold text-base text-cyber-primary">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <h2 className="font-heading font-bold text-sm sm:text-base text-cyber-primary leading-tight">
                       {getRankLabel(tier.id, t)}
                     </h2>
                     {isCurrent && (
-                      <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border border-cyber-success text-cyber-success">
+                      <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-cyber-success text-cyber-success">
                         {t('ranksCurrent', {
                           ns: 'ui',
                           defaultValue: isEn ? 'Your rank' : 'Ваше звання',
@@ -141,15 +137,15 @@ export default function RanksPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs font-mono text-gray-500 mb-2">{formatXpRange(from, to)}</p>
+                  <p className="text-[11px] font-mono text-gray-500 mt-0.5">
+                    {formatXpRange(from, to)}
+                  </p>
                   {description && (
-                    <p className="text-sm text-gray-300 leading-relaxed">{description}</p>
+                    <p className="text-xs text-gray-400 leading-snug mt-2 pt-2 border-t border-cyber-border/60">
+                      {description}
+                    </p>
                   )}
                 </div>
-
-                {index < RANK_TIERS.length - 1 && (
-                  <div className="w-0.5 h-8 bg-cyber-border mb-2" aria-hidden="true" />
-                )}
               </motion.div>
             );
           })}

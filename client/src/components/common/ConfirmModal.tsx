@@ -47,7 +47,7 @@ export default function ConfirmModal({
   onConfirm,
   variant = 'primary',
   children,
-}: ConfirmModalProps) {
+}: Readonly<ConfirmModalProps>) {
   if (!isOpen) {
     return null;
   }
@@ -57,17 +57,15 @@ export default function ConfirmModal({
   return (
     <>
       <div
-        role="presentation"
         aria-hidden="true"
         onClick={onCancel}
         className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div
-          role="dialog"
-          aria-modal="true"
+        <dialog
+          open
           aria-labelledby={titleId}
-          className={`cyber-panel border-2 ${styles.panel} p-6 max-w-md w-full pointer-events-auto`}
+          className={`cyber-panel border-2 ${styles.panel} p-6 max-w-md w-full pointer-events-auto m-0 max-h-[calc(100vh-2rem)] overflow-y-auto`}
         >
           <h2 id={titleId} className={`font-heading font-bold text-xl mb-3 ${styles.title}`}>
             {title}
@@ -92,7 +90,7 @@ export default function ConfirmModal({
               {isLoading && loadingLabel ? loadingLabel : confirmLabel}
             </button>
           </div>
-        </div>
+        </dialog>
       </div>
     </>
   );

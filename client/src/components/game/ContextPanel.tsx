@@ -16,6 +16,16 @@ function wrapAnswerBlock(content: string): string {
   return `\`\`\`\n${trimmed}\n\`\`\``;
 }
 
+function getSentenceFieldLabel(field: { id: string; label?: string }): string {
+  if (field.id === 'subject') {
+    return 'Тема';
+  }
+  if (field.id === 'body') {
+    return 'Текст';
+  }
+  return field.label || field.id;
+}
+
 function formatLastAnswer(level: Level | null, lastAnswer: string): string {
   if (level?.task_type === 'tactical_choice' && level?.work_area?.choices) {
     const choice = level.work_area.choices.find((c) => c.id === lastAnswer);
@@ -60,12 +70,7 @@ function formatLastAnswer(level: Level | null, lastAnswer: string): string {
           .map((id) => field.tokens.find((token) => token.id === id)?.text || id)
           .join(' ');
         if (text) {
-          const label =
-            field.id === 'subject'
-              ? 'Тема'
-              : field.id === 'body'
-                ? 'Текст'
-                : field.label || field.id;
+          const label = getSentenceFieldLabel(field);
           parts.push(`${label}: ${text}`);
         }
       }

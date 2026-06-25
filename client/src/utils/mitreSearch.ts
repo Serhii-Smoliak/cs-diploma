@@ -1,8 +1,10 @@
 import type { MitreTechnique } from '../services/api';
 
+const MITRE_ID_PATTERN = /^t?(\d+(?:\.\d+)*)$/;
+
 function normalizeMitreIdQuery(query: string): string | null {
   const trimmed = query.trim().toLowerCase();
-  const match = trimmed.match(/^t?(\d+(?:\.\d+)*)$/);
+  const match = MITRE_ID_PATTERN.exec(trimmed);
   if (!match) {
     return null;
   }

@@ -70,14 +70,7 @@ const CodeEditor = memo(
     const isRegexTask = level.work_area.input_type === 'regex';
 
     return (
-      <div
-        className="space-y-4"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && e.target instanceof HTMLInputElement) {
-            e.preventDefault();
-          }
-        }}
-      >
+      <div className="space-y-4">
         {level.work_area.code_snippet && (
           <div className="bg-black rounded-lg p-4 border border-cyber-border">
             <Editor

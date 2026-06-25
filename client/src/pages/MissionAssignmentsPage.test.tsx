@@ -68,6 +68,7 @@ vi.mock('../config/apiOrigin', () => ({
 
 vi.mock('../components/mitre/MitreTechniqueChip', () => ({
   default: ({ techniqueId }: { techniqueId: string }) => <span>{techniqueId}</span>,
+  ExternalLinkIcon: () => <span aria-hidden>↗</span>,
 }));
 
 function renderPage() {

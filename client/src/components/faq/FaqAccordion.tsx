@@ -8,7 +8,11 @@ interface FaqAccordionProps {
   onToggle: (id: string) => void;
 }
 
-export default function FaqAccordion({ sections, expandedIds, onToggle }: FaqAccordionProps) {
+export default function FaqAccordion({
+  sections,
+  expandedIds,
+  onToggle,
+}: Readonly<FaqAccordionProps>) {
   const { t } = useTranslation(['faq']);
 
   return (

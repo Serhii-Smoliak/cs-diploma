@@ -34,6 +34,7 @@ import AdminTicketsPage from './AdminTicketsPage';
 
 describe('AdminTicketsPage', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.mocked(api.getAdminSupportTickets).mockResolvedValue([
       {
         id: 'ticket-1',
@@ -214,5 +215,50 @@ describe('AdminTicketsPage', () => {
     await waitFor(() => {
       expect(api.deleteAdminSupportMessage).toHaveBeenCalledWith('msg-2');
     });
+  });
+
+  it('shows load error for ticket list', async () => {
+    vi.mocked(api.getAdminSupportTickets).mockRejectedValue(new Error('List failed'));
+    render(<AdminTicketsPage />);
+
+    expect(await screen.findByText('List failed')).toBeInTheDocument();
+  });
+
+  it('cancels close ticket modal', async () => {
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Закрити звернення' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Закрити звернення' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Скасувати' }));
+
+    expect(api.closeAdminSupportTicket).not.toHaveBeenCalled();
+  });
+
+  it('cancels delete reply confirmation', async () => {
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Видалити' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Видалити' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Скасувати' }));
+
+    expect(api.deleteAdminSupportMessage).not.toHaveBeenCalled();
+  });
+
+  it('shows error when reply fails', async () => {
+    vi.mocked(api.replyAdminSupportTicket).mockRejectedValue(new Error('Reply failed'));
+    const userEvents = userEvent.setup();
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByLabelText('Відповідь');
+
+    await userEvents.type(screen.getByLabelText('Відповідь'), 'We are checking');
+    fireEvent.click(screen.getByRole('button', { name: 'Надіслати відповідь' }));
+
+    expect(await screen.findByText('Reply failed')).toBeInTheDocument();
   });
 });

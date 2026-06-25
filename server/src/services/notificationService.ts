@@ -39,6 +39,19 @@ export function getNewsNotificationData(newsId: string) {
   };
 }
 
+function getLocalizedNewsTitle(
+  newsPost: { titleUk: string; titleEn: string } | null | undefined,
+  locale: 'uk' | 'en'
+): string | undefined {
+  if (newsPost == null) {
+    return undefined;
+  }
+  if (locale === 'en') {
+    return newsPost.titleEn;
+  }
+  return newsPost.titleUk;
+}
+
 export function formatNotification(
   notification: {
     id: string;
@@ -59,12 +72,7 @@ export function formatNotification(
       ? parseLegacySupportReplySubject(notification.body)
       : undefined);
 
-  const newsTitle =
-    notification.newsPost != null
-      ? locale === 'en'
-        ? notification.newsPost.titleEn
-        : notification.newsPost.titleUk
-      : undefined;
+  const newsTitle = getLocalizedNewsTitle(notification.newsPost, locale);
 
   return {
     id: notification.id,

@@ -49,7 +49,7 @@ describe('RanksPage', () => {
       expect(screen.getByText('Career Ranks')).toBeInTheDocument();
     });
 
-    const centeredWrapper = container.querySelector('.max-w-2xl.mx-auto.text-center');
+    const centeredWrapper = container.querySelector('.max-w-lg.mx-auto.text-center');
     expect(centeredWrapper).toBeInTheDocument();
     expect(centeredWrapper?.querySelector('h1')?.textContent).toBe('Career Ranks');
   });

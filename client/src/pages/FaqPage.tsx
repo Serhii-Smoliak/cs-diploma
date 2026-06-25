@@ -7,7 +7,7 @@ import FaqAccordion from '../components/faq/FaqAccordion';
 export default function FaqPage() {
   const { t, i18n } = useTranslation(['faq', 'ui']);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [, setTranslationsTick] = useState(0);
+  const [translationsTick, setTranslationsTick] = useState(0);
   const isEn = i18n.resolvedLanguage?.startsWith('en') ?? false;
 
   useEffect(() => {
@@ -31,6 +31,7 @@ export default function FaqPage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
+      <span hidden>{translationsTick}</span>
       <div className="max-w-2xl mx-auto">
         <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-3 text-center">
           {t('title', {

@@ -47,9 +47,14 @@ export default function Sidebar() {
     };
 
     const fallback = defaults[labelKey];
+    let defaultValue = labelKey;
+    if (fallback) {
+      defaultValue = isEn ? fallback.en : fallback.uk;
+    }
+
     return t(labelKey, {
       ns: 'ui',
-      defaultValue: fallback ? (isEn ? fallback.en : fallback.uk) : labelKey,
+      defaultValue,
     });
   };
 
@@ -96,7 +101,7 @@ export default function Sidebar() {
               key={item.path}
               to={item.path}
               className="block"
-              title={!showLabels ? getNavLabel(item.labelKey) : undefined}
+              title={showLabels ? undefined : getNavLabel(item.labelKey)}
               onClick={closeMobile}
             >
               <motion.div
@@ -125,7 +130,7 @@ export default function Sidebar() {
         })}
 
         {adminMenuItems.length > 0 && (
-          <div className="border-t border-cyber-border/80 my-2" role="separator" aria-hidden />
+          <hr className="border-0 border-t border-cyber-border/80 my-2" aria-hidden />
         )}
 
         {adminMenuItems.map((item) => {
@@ -136,7 +141,7 @@ export default function Sidebar() {
               key={item.path}
               to={item.path}
               className="block"
-              title={!showLabels ? getNavLabel(item.labelKey) : undefined}
+              title={showLabels ? undefined : getNavLabel(item.labelKey)}
               onClick={closeMobile}
             >
               <motion.div

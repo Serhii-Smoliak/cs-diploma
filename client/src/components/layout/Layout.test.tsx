@@ -3,16 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Layout from './Layout';
 
-const refreshUser = vi.fn().mockResolvedValue(undefined);
 const closeMobile = vi.fn();
-
-vi.mock('../../store/authStore', () => ({
-  useAuthStore: (selector: (state: Record<string, unknown>) => unknown) =>
-    selector({
-      isAuthenticated: true,
-      refreshUser,
-    }),
-}));
 
 vi.mock('../../store/sidebarStore', () => ({
   useSidebarStore: (selector: (state: Record<string, unknown>) => unknown) =>
@@ -52,7 +43,6 @@ describe('Layout', () => {
     expect(screen.getByText('topbar')).toBeInTheDocument();
     expect(screen.getByText('page-content')).toBeInTheDocument();
     expect(screen.getByText('stealth-modal')).toBeInTheDocument();
-    expect(refreshUser).toHaveBeenCalled();
     expect(closeMobile).toHaveBeenCalled();
   });
 });

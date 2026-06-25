@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { TFunction } from 'i18next';
-import { getSupportCloseReasonLabel, SUPPORT_CLOSE_REASON_OPTIONS } from './supportTicketText';
+import {
+  getSupportCloseReasonLabel,
+  getSupportCloseReasonOptionLabel,
+  getSupportStatusLabel,
+  SUPPORT_CLOSE_REASON_OPTIONS,
+} from './supportTicketText';
 
 const t = vi.fn((key: string, options?: { ns?: string; defaultValue?: string }) => {
   return options?.defaultValue ?? key;
@@ -24,6 +29,15 @@ describe('supportTicketText', () => {
     expect(getSupportCloseReasonLabel('DECLINED', null, t, true)).toBe(
       'Request does not meet requirements'
     );
+  });
+
+  it('returns support status labels', () => {
+    expect(getSupportStatusLabel('OPEN', t, false)).toBe('Відкрито');
+    expect(getSupportStatusLabel('ANSWERED', t, true)).toBe('Answered');
+  });
+
+  it('returns close reason option labels', () => {
+    expect(getSupportCloseReasonOptionLabel('CUSTOM', t, false)).toBe('Інша причина');
   });
 
   it('exports all close reason options', () => {

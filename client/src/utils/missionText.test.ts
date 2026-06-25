@@ -3,6 +3,7 @@ import type { TFunction } from 'i18next';
 import {
   getMissionAssignmentsPath,
   getMissionDescription,
+  getMissionDifficultyClass,
   getMissionDifficultyLabel,
   getMissionName,
 } from './missionText';
@@ -42,6 +43,12 @@ describe('missionText', () => {
     }) as unknown as TFunction;
 
     expect(getMissionDifficultyLabel(t, 'intermediate')).toBe('Середній');
+  });
+
+  it('returns difficulty badge classes', () => {
+    expect(getMissionDifficultyClass('beginner')).toContain('green');
+    expect(getMissionDifficultyClass('intermediate')).toContain('yellow');
+    expect(getMissionDifficultyClass('advanced')).toContain('red');
   });
 
   it('returns translated description', () => {
