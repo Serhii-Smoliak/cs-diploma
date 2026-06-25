@@ -156,9 +156,18 @@ jobs:
 
       - name: Run Snyk
         working-directory: ${{ matrix.package }}
-        run: npx snyk test --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if npx --yes snyk@1.1294.3 test --severity-threshold=high; then
+              exit 0
+            fi
+            echo "Snyk attempt ${attempt} failed, retrying in 15s..."
+            sleep 15
+          done
+          exit 1
 
   container-scan:
     name: Container scan (Trivy)
