@@ -32,7 +32,7 @@
 
 - Браузерна симуляція без окремого клієнтського застосунку
 - XP, ранги, метрика Stealth; таблиця лідерів і сторінка кар’єрних рангів
-- Три типи завдань: редактор коду, тактичний вибір, конструктор фішингу (+ `sentence_constructor`)
+- Типи завдань: редактор коду, тактичний вибір, конструктор фішингу, `sentence_constructor`
 - Дані MITRE ATT&CK з офіційної колекції STIX (MITRE CTI) і збереження в БД
 - Skill Matrix з пошуком (ID MITRE / текст), модальні вікна технік, Kill Chain
 - Місії та рівні в **PostgreSQL** (JSONB для гнучких полів)
@@ -909,7 +909,7 @@ cd client && npm run dev
 
 ## Threat model
 
-Модель загроз для MVP будується **ітеративно**: базові припущення (тиждень 1 — auth, JWT, публічні read API), потім **delta** після змін функціоналу та безпеки. Нижче — зафіксовані оновлення; детальний план тижнів — [PLAN.md](./PLAN.md).
+Модель загроз для MVP будується **ітеративно**: базові припущення (тиждень 1 — auth, JWT, публічні read API), потім **delta** після змін функціоналу та безпеки. Нижче — зафіксовані оновлення; хронологія робіт — у [weekly-report.md](./weekly-report.md).
 
 ### Базовий контекст (MVP)
 
@@ -925,7 +925,7 @@ cd client && npm run dev
 
 ### Delta, тиждень 2 (навчальний контент і Stealth)
 
-Після реалізації підказок, submit API, sentence constructor і Stealth economy (PLAN.md §2.2–2.4):
+Після реалізації підказок, submit API, sentence constructor і Stealth economy (тиждень 2):
 
 | Зміна функціоналу | Threat | Control / зміна ризику |
 |-------------------|--------|-------------------------|
@@ -977,7 +977,7 @@ cd client && npm run dev
 
 ## Перевірка безпеки
 
-Розділ описує, **як підтвердити безпеку** CyberTactics для дипломної роботи. Детальний план робіт — **тиждень 6** у [PLAN.md](./PLAN.md). Модель загроз і контролі після тижнів 2–3 — у розділі [Threat model](#threat-model).
+Розділ описує, **як підтвердити безпеку** CyberTactics для дипломної роботи. План робіт по тижнях — у [weekly-report.md](./weekly-report.md) (тиждень 6 — security testing). Модель загроз і контролі після тижнів 2–3 — у розділі [Threat model](#threat-model).
 
 ### Підхід
 
@@ -994,7 +994,7 @@ cd client && npm run dev
 ### SonarCloud (SAST)
 
 1. Підключити GitHub-репозиторій на [sonarcloud.io](https://sonarcloud.io).
-2. Додати `sonar-project.properties` (див. PLAN.md §6.1).
+2. Використати `sonar-project.properties` у корені репозиторію (див. також [ci-cd-pipeline.md](./ci-cd-pipeline.md)).
 3. Запустити аналіз (CI або `npx sonarqube-scanner`).
 4. Досягти **Quality Gate**; виправити Critical/High або задокументувати accepted risk.
 
@@ -1003,22 +1003,22 @@ cd client && npm run dev
 ### OWASP ZAP (DAST)
 
 1. Запустити `server` + `client` (або staging).
-2. **Baseline** (passive) по URL фронтенду:
+2. **Baseline** (passive) по URL фронтенду (приклад команди):
    ```bash
    docker run -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-     -t http://localhost:5173 -r docs/security/zap-baseline-report.html
+     -t http://localhost:5173 -r zap-baseline-report.html
    ```
 3. **Authenticated API scan:** login → JWT у ZAP Context → spider/active scan по `/api/*` (обмежена інтенсивність).
-4. Зберегти HTML-звіт у `docs/security/`.
+4. HTML-звіти ZAP зберігаються в **пояснювальній записці** (не в репозиторії).
 
-**Артефакт:** `zap-baseline-report.html`, `zap-api-report.html` (або еквівалент).
+**Артефакт для захисту:** скріншоти та HTML-звіти ZAP у пояснювальній записці.
 
 ### Звіт для захисту (шаблон)
 
 | Інструмент | Тип | Дата | Результат | Звіт |
 |------------|-----|------|-----------|------|
 | SonarCloud | SAST | _заповнити_ | Quality Gate: passed / failed | скриншот / посилання |
-| OWASP ZAP | DAST | _заповнити_ | High: 0 open | `docs/security/*.html` |
+| OWASP ZAP | DAST | _заповнити_ | High: 0 open | пояснювальна записка (HTML / скріни) |
 | npm audit | SCA | _заповнити_ | critical: 0 | лог CI |
 
 Короткий висновок для тексту диплому: *«Threat model (тиждень 3) визначив контролі; Sonar перевірив код статично; OWASP ZAP — поведінку live API; manual testing — сценарії зловживання progress/auth.»*
@@ -1029,5 +1029,5 @@ cd client && npm run dev
 
 Документ описує поточний стан **CyberTactics MVP**: стек, інтеграцію MITRE CTI, локалізацію, API та межі реалізації.
 
-**Версія документації:** 2.6  
-**Оновлено:** 2026-06-25
+**Версія документації:** 2.7  
+**Оновлено:** 2026-06-26

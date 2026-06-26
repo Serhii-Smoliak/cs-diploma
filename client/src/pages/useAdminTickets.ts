@@ -37,17 +37,20 @@ export function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: stri
     'Failed to load support tickets.'
   );
 
-  const loadTickets = useCallback(async () => {
+  const handleLoadError = useCallback(
+    (err: unknown) => setError(toErrorMessage(err, loadErrorMessage)),
+    [loadErrorMessage]
+  );
+
+  const loadTickets = useCallback(() => {
     setLoading(true);
     setError(null);
-    try {
-      setTickets(await api.getAdminSupportTickets());
-    } catch (err) {
-      setError(toErrorMessage(err, loadErrorMessage));
-    } finally {
-      setLoading(false);
-    }
-  }, [loadErrorMessage]);
+    return api
+      .getAdminSupportTickets()
+      .then(setTickets)
+      .catch(handleLoadError)
+      .finally(() => setLoading(false));
+  }, [handleLoadError]);
 
   useEffect(() => {
     loadTickets();
@@ -60,20 +63,20 @@ export function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: stri
   };
 
   const loadTicketDetail = useCallback(
-    async (ticketId: string) => {
+    (ticketId: string) => {
       setError(null);
       setEditingMessageId(null);
       setEditingBody('');
       resetCloseModal();
-      try {
-        const detail = await api.getAdminSupportTicket(ticketId);
-        setSelectedTicket(detail);
-        setReplyBody('');
-      } catch (err) {
-        setError(toErrorMessage(err, loadErrorMessage));
-      }
+      return api
+        .getAdminSupportTicket(ticketId)
+        .then((detail) => {
+          setSelectedTicket(detail);
+          setReplyBody('');
+        })
+        .catch(handleLoadError);
     },
-    [loadErrorMessage]
+    [handleLoadError]
   );
 
   const handleReply = async (event: FormEvent) => {
