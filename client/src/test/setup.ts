@@ -26,6 +26,13 @@ function polyfillHTMLDialogElement() {
       this.dispatchEvent(new Event('close', { bubbles: false, cancelable: false }));
     };
   }
+
+  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
+    configurable: true,
+    get(this: HTMLDialogElement) {
+      return this.hasAttribute('open');
+    },
+  });
 }
 
 polyfillHTMLDialogElement();

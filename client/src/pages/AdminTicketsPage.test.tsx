@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, renderHook, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { TFunction } from 'i18next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { t, i18n } = vi.hoisted(() => ({
@@ -31,6 +32,7 @@ vi.mock('../store/authStore', () => ({
 
 import { api } from '../services/api';
 import AdminTicketsPage from './AdminTicketsPage';
+import { useAdminTickets } from './useAdminTickets';
 
 describe('AdminTicketsPage', () => {
   beforeEach(() => {
@@ -326,6 +328,118 @@ describe('AdminTicketsPage', () => {
     expect(await screen.findByText('Detail failed')).toBeInTheDocument();
   });
 
+  it('ignores empty reply submission', async () => {
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    const replyField = await screen.findByLabelText('Відповідь');
+
+    fireEvent.submit(replyField.closest('form')!);
+
+    expect(api.replyAdminSupportTicket).not.toHaveBeenCalled();
+  });
+
+  it('ignores empty edit submission', async () => {
+    const { result } = renderHook(() => useAdminTickets(t as TFunction, false, 'admin-1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      result.current.handleSelectTicket('ticket-1');
+    });
+    await waitFor(() => expect(result.current.selectedTicket).not.toBeNull());
+
+    act(() => {
+      result.current.startEditingMessage('msg-2', 'We are checking');
+      result.current.setEditingBody('');
+    });
+
+    await act(async () => {
+      await result.current.handleSaveEdit('msg-2');
+    });
+
+    expect(api.updateAdminSupportMessage).not.toHaveBeenCalled();
+  });
+
+  it('ignores close modal cancel while closing', async () => {
+    vi.mocked(api.closeAdminSupportTicket).mockImplementation(() => new Promise(() => undefined));
+    const { result } = renderHook(() => useAdminTickets(t as TFunction, false, 'admin-1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      result.current.handleSelectTicket('ticket-1');
+    });
+    await waitFor(() => expect(result.current.selectedTicket).not.toBeNull());
+
+    act(() => {
+      result.current.setIsCloseModalOpen(true);
+      result.current.handleCloseConfirm();
+    });
+
+    await waitFor(() => expect(result.current.closing).toBe(true));
+
+    act(() => {
+      result.current.handleCloseModalCancel();
+    });
+
+    expect(result.current.isCloseModalOpen).toBe(true);
+  });
+
+  it('does not close ticket when custom reason is too short', async () => {
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Закрити звернення' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Закрити звернення' }));
+    fireEvent.change(screen.getByLabelText('Причина'), { target: { value: 'CUSTOM' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Закрити звернення' })[1]!);
+
+    expect(api.closeAdminSupportTicket).not.toHaveBeenCalled();
+  });
+
+  it('shows error when edit fails', async () => {
+    vi.mocked(api.updateAdminSupportMessage).mockRejectedValue(new Error('Edit failed'));
+    const user = userEvent.setup();
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Редагувати' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Редагувати' }));
+    const editField = screen.getByDisplayValue('We are checking');
+    await user.clear(editField);
+    await user.type(editField, 'Updated reply');
+    fireEvent.click(screen.getByRole('button', { name: 'Зберегти' }));
+
+    expect(await screen.findByText('Edit failed')).toBeInTheDocument();
+  });
+
+  it('shows error when close fails', async () => {
+    vi.mocked(api.closeAdminSupportTicket).mockRejectedValue(new Error('Close failed'));
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Закрити звернення' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Закрити звернення' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Закрити звернення' })[1]!);
+
+    expect(await screen.findByText('Close failed')).toBeInTheDocument();
+  });
+
+  it('shows error when delete fails', async () => {
+    vi.mocked(api.deleteAdminSupportMessage).mockRejectedValue(new Error('Delete failed'));
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Видалити' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Видалити' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Видалити' })[1]!);
+
+    expect(await screen.findByText('Delete failed')).toBeInTheDocument();
+  });
+
   it('renders english page shell when locale is en', async () => {
     i18n.resolvedLanguage = 'en';
     render(<AdminTicketsPage />);
@@ -335,10 +449,63 @@ describe('AdminTicketsPage', () => {
     expect(screen.getByText('Select a ticket to view details.')).toBeInTheDocument();
   });
 
+  it('hides edit actions for replies from other admins', async () => {
+    vi.mocked(api.getAdminSupportTicket).mockResolvedValue({
+      id: 'ticket-1',
+      subject: 'Login issue',
+      message: 'Cannot login today',
+      status: 'OPEN',
+      closedAt: null,
+      closeReason: null,
+      closeReasonText: null,
+      createdAt: '2026-06-23T10:00:00.000Z',
+      updatedAt: '2026-06-23T10:00:00.000Z',
+      username: 'agent',
+      email: 'agent@test.com',
+      messages: [
+        {
+          id: 'msg-2',
+          authorId: 'admin-2',
+          authorUsername: 'other-admin',
+          body: 'Other admin reply',
+          isStaffReply: true,
+          createdAt: '2026-06-23T11:00:00.000Z',
+        },
+      ],
+    });
+
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+
+    expect(await screen.findByText('Other admin reply')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Редагувати' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Видалити' })).not.toBeInTheDocument();
+  });
+
+  it('defaults locale to ukrainian labels when resolvedLanguage is missing', async () => {
+    i18n.resolvedLanguage = undefined as unknown as string;
+    render(<AdminTicketsPage />);
+
+    expect(await screen.findByRole('heading', { name: 'Звернення' })).toBeInTheDocument();
+    expect(screen.getByText('Оберіть звернення.')).toBeInTheDocument();
+  });
+
   it('renders master-detail list heading', async () => {
     render(<AdminTicketsPage />);
 
     expect(await screen.findByRole('heading', { name: 'Усі звернення' })).toBeInTheDocument();
+  });
+
+  it('ignores delete confirm when message id is missing', async () => {
+    const { result } = renderHook(() => useAdminTickets(t as TFunction, false, 'admin-1'));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.handleDeleteConfirm();
+    });
+
+    expect(api.deleteAdminSupportMessage).not.toHaveBeenCalled();
   });
 
   it('shows closed ticket closure reason in detail panel', async () => {
