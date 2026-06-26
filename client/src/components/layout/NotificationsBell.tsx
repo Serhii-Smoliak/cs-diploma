@@ -158,11 +158,7 @@ export default function NotificationsBell() {
             <li key={notification.id}>
               <button
                 type="button"
-                onClick={() => {
-                  handleNotificationClick(notification).catch(() => {
-                    // handleNotificationClick already logs errors
-                  });
-                }}
+                onClick={() => void handleNotificationClick(notification)}
                 className={`w-full text-left px-4 py-3 transition-colors hover:bg-cyber-panel/70 ${
                   notification.isRead ? 'opacity-80' : 'bg-cyber-primary/5'
                 }`}

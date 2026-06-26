@@ -183,16 +183,15 @@ function extractExamples(technique: StixObject): string[] {
   const examples: string[] = [];
 
   if (technique.description) {
-    const subTechniqueMatches = technique.description.match(
-      /\[([^\][]+)\]\(https:\/\/attack\.mitre\.org\/[^()]+\)/g
-    );
-    if (subTechniqueMatches) {
-      subTechniqueMatches.forEach((match) => {
-        const name = match.match(/\[([^\][]+)\]/)?.[1];
-        if (name && !name.startsWith('T')) {
-          examples.push(name);
-        }
-      });
+    const mitreLinkPrefix = '](https://attack.mitre.org/';
+    const parts = technique.description.split('[').slice(1);
+    for (const part of parts) {
+      const bracketEnd = part.indexOf(']');
+      if (bracketEnd === -1) continue;
+      const name = part.slice(0, bracketEnd);
+      if (part.slice(bracketEnd).startsWith(mitreLinkPrefix) && !name.startsWith('T')) {
+        examples.push(name);
+      }
     }
   }
 
