@@ -189,4 +189,24 @@ describe('syncMitreTechniques', () => {
     expect(examples).not.toContain('T1234');
     expect(examples).not.toContain('unclosed bracket text');
   });
+
+  it('skips malformed links and falls back to technique name', async () => {
+    fetchMock.mockResolvedValue(
+      createBundle([
+        createTechnique({
+          name: 'Fallback Name',
+          external_references: [{ source_name: 'mitre-attack', external_id: 'T1598' }],
+          description:
+            '[unclosed text and [Google](https://google.com) and [T1234](https://attack.mitre.org/techniques/T1234/)',
+        }),
+      ])
+    );
+
+    const result = await syncMitreTechniques();
+
+    expect(result.synced).toBe(1);
+    const examples = prismaMock.mitreTechnique.upsert.mock.calls[0]?.[0]?.create
+      ?.examples as string[];
+    expect(examples).toEqual(['Fallback Name']);
+  });
 });

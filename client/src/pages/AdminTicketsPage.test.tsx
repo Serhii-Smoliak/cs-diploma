@@ -277,4 +277,34 @@ describe('AdminTicketsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Скасувати' }));
     expect(screen.getByText('Закрити звернення?')).toBeInTheDocument();
   });
+
+  it('shows loading state while tickets are fetched', async () => {
+    vi.mocked(api.getAdminSupportTickets).mockImplementation(() => new Promise(() => undefined));
+
+    render(<AdminTicketsPage />);
+
+    expect(screen.getByText('Завантаження...')).toBeInTheDocument();
+  });
+
+  it('shows empty ticket selection prompt', async () => {
+    render(<AdminTicketsPage />);
+
+    expect(await screen.findByText('Login issue')).toBeInTheDocument();
+    expect(screen.getByText('Оберіть звернення.')).toBeInTheDocument();
+  });
+
+  it('clears custom close reason when switching away from CUSTOM', async () => {
+    const user = userEvent.setup();
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Закрити звернення' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Закрити звернення' }));
+    fireEvent.change(screen.getByLabelText('Причина'), { target: { value: 'CUSTOM' } });
+    await user.type(screen.getByPlaceholderText('3–500 символів'), 'Duplicate ticket');
+
+    fireEvent.change(screen.getByLabelText('Причина'), { target: { value: 'ANSWERED' } });
+    expect(screen.queryByPlaceholderText('3–500 символів')).not.toBeInTheDocument();
+  });
 });

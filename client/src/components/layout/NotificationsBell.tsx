@@ -14,6 +14,47 @@ function formatBadgeCount(count: number): string {
   return String(count);
 }
 
+function NotificationListItem({
+  notification,
+  display,
+  onSelect,
+}: Readonly<{
+  notification: AppNotification;
+  display: { title: string; body: string };
+  onSelect: (notification: AppNotification) => void;
+}>) {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelect(notification)}
+        className={`w-full text-left px-4 py-3 transition-colors hover:bg-cyber-panel/70 ${
+          notification.isRead ? 'opacity-80' : 'bg-cyber-primary/5'
+        }`}
+      >
+        <div className="flex items-start gap-2">
+          {!notification.isRead && (
+            <span className="mt-1.5 w-2 h-2 rounded-full bg-cyber-primary shrink-0" aria-hidden />
+          )}
+          <div className="min-w-0 flex-1">
+            <div
+              className={`text-sm truncate ${
+                notification.isRead ? 'text-gray-300' : 'text-gray-100 font-medium'
+              }`}
+            >
+              {display.title}
+            </div>
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{display.body}</p>
+            <div className="text-[11px] text-gray-600 mt-2">
+              {new Date(notification.createdAt).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      </button>
+    </li>
+  );
+}
+
 export default function NotificationsBell() {
   const { t, i18n } = useTranslation(['ui']);
   const isEn = i18n.resolvedLanguage?.startsWith('en') ?? false;
@@ -151,43 +192,14 @@ export default function NotificationsBell() {
 
     return (
       <ul className="max-h-80 overflow-y-auto divide-y divide-cyber-border/60">
-        {notifications.map((notification) => {
-          const display = getNotificationDisplayText(notification, t, isEn);
-
-          return (
-            <li key={notification.id}>
-              <button
-                type="button"
-                onClick={() => void handleNotificationClick(notification)}
-                className={`w-full text-left px-4 py-3 transition-colors hover:bg-cyber-panel/70 ${
-                  notification.isRead ? 'opacity-80' : 'bg-cyber-primary/5'
-                }`}
-              >
-                <div className="flex items-start gap-2">
-                  {!notification.isRead && (
-                    <span
-                      className="mt-1.5 w-2 h-2 rounded-full bg-cyber-primary shrink-0"
-                      aria-hidden
-                    />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div
-                      className={`text-sm truncate ${
-                        notification.isRead ? 'text-gray-300' : 'text-gray-100 font-medium'
-                      }`}
-                    >
-                      {display.title}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">{display.body}</p>
-                    <div className="text-[11px] text-gray-600 mt-2">
-                      {new Date(notification.createdAt).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            </li>
-          );
-        })}
+        {notifications.map((notification) => (
+          <NotificationListItem
+            key={notification.id}
+            notification={notification}
+            display={getNotificationDisplayText(notification, t, isEn)}
+            onSelect={handleNotificationClick}
+          />
+        ))}
       </ul>
     );
   };
@@ -200,11 +212,7 @@ export default function NotificationsBell() {
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        onClick={() => {
-          handleToggle().catch(() => {
-            // handleToggle already handles errors
-          });
-        }}
+        onClick={() => void handleToggle()}
         className="relative w-10 h-10 flex items-center justify-center rounded-lg border border-cyber-border text-gray-300 hover:border-cyber-primary hover:text-cyber-primary transition-colors"
         aria-label={t('notificationsOpen', {
           ns: 'ui',
@@ -232,11 +240,7 @@ export default function NotificationsBell() {
             {unreadCount > 0 && (
               <button
                 type="button"
-                onClick={() => {
-                  handleMarkAllRead().catch(() => {
-                    // handleMarkAllRead already logs errors
-                  });
-                }}
+                onClick={() => void handleMarkAllRead()}
                 className="text-xs text-cyber-primary hover:underline shrink-0"
               >
                 {t('notificationsMarkAllRead', {

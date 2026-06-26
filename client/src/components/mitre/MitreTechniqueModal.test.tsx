@@ -210,4 +210,21 @@ describe('MitreTechniqueModal', () => {
     expect(dialog).toHaveAttribute('aria-modal', 'true');
     expect(dialog).toHaveAttribute('aria-label', 'MITRE technique details');
   });
+
+  it('clears tooltips on dialog click and non-Escape keydown', async () => {
+    const onClose = vi.fn();
+    getMitreTechnique.mockResolvedValue({ ...technique, relatedMissions: [] });
+
+    render(
+      <MemoryRouter>
+        <MitreTechniqueModal technique={technique} isOpen isCompleted={false} onClose={onClose} />
+      </MemoryRouter>
+    );
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.click(dialog);
+    fireEvent.keyDown(dialog, { key: 'Tab' });
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
 });

@@ -641,6 +641,220 @@ function AdminTicketDetailPanel({
   );
 }
 
+function AdminTicketsPageContent({
+  loading,
+  error,
+  isEn,
+  t,
+  tickets,
+  selectedTicket,
+  selectedCloseReasonLabel,
+  replyBody,
+  replying,
+  editingMessageId,
+  editingBody,
+  savingEdit,
+  canManageMessage,
+  onSelectTicket,
+  onReplyBodyChange,
+  onReplySubmit,
+  onOpenCloseModal,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
+  onDeleteMessage,
+  onEditingBodyChange,
+}: Readonly<{
+  loading: boolean;
+  error: string | null;
+  isEn: boolean;
+  t: TFunction;
+  tickets: SupportTicketSummary[];
+  selectedTicket: SupportTicketDetail | null;
+  selectedCloseReasonLabel: string | null;
+  replyBody: string;
+  replying: boolean;
+  editingMessageId: string | null;
+  editingBody: string;
+  savingEdit: boolean;
+  canManageMessage: (entry: SupportTicketDetail['messages'][number]) => boolean;
+  onSelectTicket: (ticketId: string) => void;
+  onReplyBodyChange: (value: string) => void;
+  onReplySubmit: (event: FormEvent) => void;
+  onOpenCloseModal: () => void;
+  onStartEdit: (messageId: string, body: string) => void;
+  onCancelEdit: () => void;
+  onSaveEdit: (messageId: string) => void;
+  onDeleteMessage: (messageId: string) => void;
+  onEditingBodyChange: (value: string) => void;
+}>) {
+  if (loading) {
+    return (
+      <div className="cyber-panel p-6 text-center text-gray-400 text-sm">
+        {t('loading', { ns: 'ui', defaultValue: isEn ? 'Loading...' : 'Завантаження...' })}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="cyber-panel p-4 border border-red-500/40 text-red-400 text-sm">{error}</div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section className="cyber-panel border border-cyber-border rounded-lg overflow-hidden">
+        <div className="px-4 py-3 border-b border-cyber-border bg-cyber-panel/80">
+          <h2 className="font-heading text-lg text-cyber-primary">
+            {t('adminTicketsList', {
+              ns: 'ui',
+              defaultValue: isEn ? 'All requests' : 'Усі звернення',
+            })}
+          </h2>
+        </div>
+        <AdminTicketsList
+          tickets={tickets}
+          selectedTicketId={selectedTicket?.id ?? null}
+          isEn={isEn}
+          t={t}
+          onSelect={onSelectTicket}
+        />
+      </section>
+
+      <section className="cyber-panel border border-cyber-border rounded-lg p-4 sm:p-6 min-h-[20rem]">
+        {selectedTicket ? (
+          <AdminTicketDetailPanel
+            ticket={selectedTicket}
+            selectedCloseReasonLabel={selectedCloseReasonLabel}
+            replyBody={replyBody}
+            replying={replying}
+            editingMessageId={editingMessageId}
+            editingBody={editingBody}
+            savingEdit={savingEdit}
+            isEn={isEn}
+            t={t}
+            canManageMessage={canManageMessage}
+            onReplyBodyChange={onReplyBodyChange}
+            onReplySubmit={onReplySubmit}
+            onOpenCloseModal={onOpenCloseModal}
+            onStartEdit={onStartEdit}
+            onCancelEdit={onCancelEdit}
+            onSaveEdit={onSaveEdit}
+            onDeleteMessage={onDeleteMessage}
+            onEditingBodyChange={onEditingBodyChange}
+          />
+        ) : (
+          <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+            {t('adminTicketsSelect', {
+              ns: 'ui',
+              defaultValue: isEn ? 'Select a ticket to view details.' : 'Оберіть звернення.',
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function AdminTicketsModals({
+  isEn,
+  t,
+  isCloseModalOpen,
+  closeReason,
+  closeReasonText,
+  closing,
+  deletingMessageId,
+  deleting,
+  onCloseModalCancel,
+  onCloseConfirm,
+  onReasonChange,
+  onReasonTextChange,
+  onDeleteCancel,
+  onDeleteConfirm,
+}: Readonly<{
+  isEn: boolean;
+  t: TFunction;
+  isCloseModalOpen: boolean;
+  closeReason: SupportTicketCloseReason;
+  closeReasonText: string;
+  closing: boolean;
+  deletingMessageId: string | null;
+  deleting: boolean;
+  onCloseModalCancel: () => void;
+  onCloseConfirm: () => void;
+  onReasonChange: (reason: SupportTicketCloseReason) => void;
+  onReasonTextChange: (value: string) => void;
+  onDeleteCancel: () => void;
+  onDeleteConfirm: () => void;
+}>) {
+  return (
+    <>
+      <ConfirmModal
+        isOpen={isCloseModalOpen}
+        titleId="admin-ticket-close-title"
+        title={t('adminTicketsCloseTitle', {
+          ns: 'ui',
+          defaultValue: isEn ? 'Close ticket?' : 'Закрити звернення?',
+        })}
+        message={t('adminTicketsCloseMessage', {
+          ns: 'ui',
+          defaultValue: isEn
+            ? 'The ticket will be closed and no further replies can be sent.'
+            : 'Звернення буде закрито, і на нього більше не можна буде відповісти.',
+        })}
+        cancelLabel={t('cancel', { ns: 'ui', defaultValue: isEn ? 'Cancel' : 'Скасувати' })}
+        confirmLabel={t('adminTicketsCloseSubmit', {
+          ns: 'ui',
+          defaultValue: isEn ? 'Close ticket' : 'Закрити звернення',
+        })}
+        loadingLabel={t('adminTicketsCloseClosing', {
+          ns: 'ui',
+          defaultValue: isEn ? 'Closing...' : 'Закриття...',
+        })}
+        isLoading={closing}
+        onCancel={onCloseModalCancel}
+        onConfirm={onCloseConfirm}
+      >
+        <AdminTicketCloseReasonFields
+          closeReason={closeReason}
+          closeReasonText={closeReasonText}
+          closing={closing}
+          isEn={isEn}
+          t={t}
+          onReasonChange={onReasonChange}
+          onReasonTextChange={onReasonTextChange}
+        />
+      </ConfirmModal>
+
+      <ConfirmModal
+        isOpen={deletingMessageId !== null}
+        titleId="admin-ticket-delete-title"
+        title={t('adminTicketsDeleteTitle', {
+          ns: 'ui',
+          defaultValue: isEn ? 'Delete reply?' : 'Видалити відповідь?',
+        })}
+        message={t('adminTicketsDeleteMessage', {
+          ns: 'ui',
+          defaultValue: isEn
+            ? 'This reply will be removed from the ticket.'
+            : 'Цю відповідь буде видалено зі звернення.',
+        })}
+        cancelLabel={t('cancel', { ns: 'ui', defaultValue: isEn ? 'Cancel' : 'Скасувати' })}
+        confirmLabel={t('delete', { ns: 'ui', defaultValue: isEn ? 'Delete' : 'Видалити' })}
+        loadingLabel={t('deleting', {
+          ns: 'ui',
+          defaultValue: isEn ? 'Deleting...' : 'Видалення...',
+        })}
+        isLoading={deleting}
+        variant="danger"
+        onCancel={onDeleteCancel}
+        onConfirm={onDeleteConfirm}
+      />
+    </>
+  );
+}
+
 export default function AdminTicketsPage() {
   const { t, i18n: i18nInstance } = useTranslation(['ui']);
   const isEn = i18nInstance.resolvedLanguage?.startsWith('en') ?? false;
@@ -712,133 +926,47 @@ export default function AdminTicketsPage() {
           })}
         </h1>
 
-        {loading && (
-          <div className="cyber-panel p-6 text-center text-gray-400 text-sm">
-            {t('loading', { ns: 'ui', defaultValue: isEn ? 'Loading...' : 'Завантаження...' })}
-          </div>
-        )}
-
-        {!loading && error && (
-          <div className="cyber-panel p-4 border border-red-500/40 text-red-400 text-sm">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <section className="cyber-panel border border-cyber-border rounded-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-cyber-border bg-cyber-panel/80">
-                <h2 className="font-heading text-lg text-cyber-primary">
-                  {t('adminTicketsList', {
-                    ns: 'ui',
-                    defaultValue: isEn ? 'All requests' : 'Усі звернення',
-                  })}
-                </h2>
-              </div>
-              <AdminTicketsList
-                tickets={tickets}
-                selectedTicketId={selectedTicket?.id ?? null}
-                isEn={isEn}
-                t={t}
-                onSelect={handleSelectTicket}
-              />
-            </section>
-
-            <section className="cyber-panel border border-cyber-border rounded-lg p-4 sm:p-6 min-h-[20rem]">
-              {selectedTicket ? (
-                <AdminTicketDetailPanel
-                  ticket={selectedTicket}
-                  selectedCloseReasonLabel={selectedCloseReasonLabel}
-                  replyBody={replyBody}
-                  replying={replying}
-                  editingMessageId={editingMessageId}
-                  editingBody={editingBody}
-                  savingEdit={savingEdit}
-                  isEn={isEn}
-                  t={t}
-                  canManageMessage={canManageMessage}
-                  onReplyBodyChange={setReplyBody}
-                  onReplySubmit={handleReply}
-                  onOpenCloseModal={() => setIsCloseModalOpen(true)}
-                  onStartEdit={startEditingMessage}
-                  onCancelEdit={cancelEditingMessage}
-                  onSaveEdit={handleSaveEdit}
-                  onDeleteMessage={setDeletingMessageId}
-                  onEditingBodyChange={setEditingBody}
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                  {t('adminTicketsSelect', {
-                    ns: 'ui',
-                    defaultValue: isEn ? 'Select a ticket to view details.' : 'Оберіть звернення.',
-                  })}
-                </div>
-              )}
-            </section>
-          </div>
-        )}
-      </div>
-
-      <ConfirmModal
-        isOpen={isCloseModalOpen}
-        titleId="admin-ticket-close-title"
-        title={t('adminTicketsCloseTitle', {
-          ns: 'ui',
-          defaultValue: isEn ? 'Close ticket?' : 'Закрити звернення?',
-        })}
-        message={t('adminTicketsCloseMessage', {
-          ns: 'ui',
-          defaultValue: isEn
-            ? 'The ticket will be closed and no further replies can be sent.'
-            : 'Звернення буде закрито, і на нього більше не можна буде відповісти.',
-        })}
-        cancelLabel={t('cancel', { ns: 'ui', defaultValue: isEn ? 'Cancel' : 'Скасувати' })}
-        confirmLabel={t('adminTicketsCloseSubmit', {
-          ns: 'ui',
-          defaultValue: isEn ? 'Close ticket' : 'Закрити звернення',
-        })}
-        loadingLabel={t('adminTicketsCloseClosing', {
-          ns: 'ui',
-          defaultValue: isEn ? 'Closing...' : 'Закриття...',
-        })}
-        isLoading={closing}
-        onCancel={handleCloseModalCancel}
-        onConfirm={handleCloseConfirm}
-      >
-        <AdminTicketCloseReasonFields
-          closeReason={closeReason}
-          closeReasonText={closeReasonText}
-          closing={closing}
+        <AdminTicketsPageContent
+          loading={loading}
+          error={error}
           isEn={isEn}
           t={t}
-          onReasonChange={handleReasonChange}
-          onReasonTextChange={setCloseReasonText}
+          tickets={tickets}
+          selectedTicket={selectedTicket}
+          selectedCloseReasonLabel={selectedCloseReasonLabel}
+          replyBody={replyBody}
+          replying={replying}
+          editingMessageId={editingMessageId}
+          editingBody={editingBody}
+          savingEdit={savingEdit}
+          canManageMessage={canManageMessage}
+          onSelectTicket={handleSelectTicket}
+          onReplyBodyChange={setReplyBody}
+          onReplySubmit={handleReply}
+          onOpenCloseModal={() => setIsCloseModalOpen(true)}
+          onStartEdit={startEditingMessage}
+          onCancelEdit={cancelEditingMessage}
+          onSaveEdit={handleSaveEdit}
+          onDeleteMessage={setDeletingMessageId}
+          onEditingBodyChange={setEditingBody}
         />
-      </ConfirmModal>
+      </div>
 
-      <ConfirmModal
-        isOpen={deletingMessageId !== null}
-        titleId="admin-ticket-delete-title"
-        title={t('adminTicketsDeleteTitle', {
-          ns: 'ui',
-          defaultValue: isEn ? 'Delete reply?' : 'Видалити відповідь?',
-        })}
-        message={t('adminTicketsDeleteMessage', {
-          ns: 'ui',
-          defaultValue: isEn
-            ? 'This reply will be removed from the ticket.'
-            : 'Цю відповідь буде видалено зі звернення.',
-        })}
-        cancelLabel={t('cancel', { ns: 'ui', defaultValue: isEn ? 'Cancel' : 'Скасувати' })}
-        confirmLabel={t('delete', { ns: 'ui', defaultValue: isEn ? 'Delete' : 'Видалити' })}
-        loadingLabel={t('deleting', {
-          ns: 'ui',
-          defaultValue: isEn ? 'Deleting...' : 'Видалення...',
-        })}
-        isLoading={deleting}
-        variant="danger"
-        onCancel={() => setDeletingMessageId(null)}
-        onConfirm={handleDeleteConfirm}
+      <AdminTicketsModals
+        isEn={isEn}
+        t={t}
+        isCloseModalOpen={isCloseModalOpen}
+        closeReason={closeReason}
+        closeReasonText={closeReasonText}
+        closing={closing}
+        deletingMessageId={deletingMessageId}
+        deleting={deleting}
+        onCloseModalCancel={handleCloseModalCancel}
+        onCloseConfirm={handleCloseConfirm}
+        onReasonChange={handleReasonChange}
+        onReasonTextChange={setCloseReasonText}
+        onDeleteCancel={() => setDeletingMessageId(null)}
+        onDeleteConfirm={handleDeleteConfirm}
       />
     </div>
   );

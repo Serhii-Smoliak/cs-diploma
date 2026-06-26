@@ -14,6 +14,10 @@ const emptyForm = {
 
 type NewsFormState = typeof emptyForm;
 
+function localizedDefault(isEn: boolean, uk: string, en: string): string {
+  return isEn ? en : uk;
+}
+
 function toErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
 }
@@ -213,7 +217,7 @@ function AdminNewsPostList({
   );
 }
 
-function AdminNewsEditorForm({
+function AdminNewsFormFields({
   form,
   isEditing,
   isEn,
@@ -222,6 +226,8 @@ function AdminNewsEditorForm({
   onChange,
   onSubmit,
   onCancel,
+  editorTitle,
+  saveButtonText,
 }: Readonly<{
   form: NewsFormState;
   isEditing: boolean;
@@ -231,15 +237,9 @@ function AdminNewsEditorForm({
   onChange: (next: NewsFormState) => void;
   onSubmit: (event: FormEvent) => void;
   onCancel: () => void;
+  editorTitle: string;
+  saveButtonText: string;
 }>) {
-  const editorTitle = isEditing
-    ? t('adminNewsEdit', { ns: 'ui', defaultValue: isEn ? 'Edit article' : 'Редагування' })
-    : t('adminNewsCreate', { ns: 'ui', defaultValue: isEn ? 'New article' : 'Нова публікація' });
-
-  const saveButtonText = saving
-    ? t('saving', { ns: 'ui', defaultValue: isEn ? 'Saving...' : 'Збереження...' })
-    : t('save', { ns: 'ui', defaultValue: isEn ? 'Save' : 'Зберегти' });
-
   return (
     <>
       <h2 className="font-heading text-lg text-cyber-primary mb-4">{editorTitle}</h2>
@@ -249,7 +249,7 @@ function AdminNewsEditorForm({
           <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
             {t('adminNewsTitleUk', {
               ns: 'ui',
-              defaultValue: isEn ? 'Title (UK)' : 'Заголовок (UK)',
+              defaultValue: localizedDefault(isEn, 'Заголовок (UK)', 'Title (UK)'),
             })}
           </span>
           <input
@@ -265,7 +265,7 @@ function AdminNewsEditorForm({
           <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
             {t('adminNewsTitleEn', {
               ns: 'ui',
-              defaultValue: isEn ? 'Title (EN)' : 'Заголовок (EN)',
+              defaultValue: localizedDefault(isEn, 'Заголовок (EN)', 'Title (EN)'),
             })}
           </span>
           <input
@@ -281,7 +281,7 @@ function AdminNewsEditorForm({
           <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
             {t('adminNewsBodyUk', {
               ns: 'ui',
-              defaultValue: isEn ? 'Text (UK)' : 'Текст (UK)',
+              defaultValue: localizedDefault(isEn, 'Текст (UK)', 'Text (UK)'),
             })}
           </span>
           <textarea
@@ -298,7 +298,7 @@ function AdminNewsEditorForm({
           <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
             {t('adminNewsBodyEn', {
               ns: 'ui',
-              defaultValue: isEn ? 'Text (EN)' : 'Текст (EN)',
+              defaultValue: localizedDefault(isEn, 'Текст (EN)', 'Text (EN)'),
             })}
           </span>
           <textarea
@@ -319,7 +319,7 @@ function AdminNewsEditorForm({
           />
           {t('adminNewsPublish', {
             ns: 'ui',
-            defaultValue: isEn ? 'Publish' : 'Опублікувати',
+            defaultValue: localizedDefault(isEn, 'Опублікувати', 'Publish'),
           })}
         </label>
 
@@ -338,12 +338,64 @@ function AdminNewsEditorForm({
               onClick={onCancel}
               className="px-4 py-2 rounded border border-cyber-border text-gray-400 text-sm hover:text-gray-200 transition-colors disabled:opacity-50"
             >
-              {t('cancel', { ns: 'ui', defaultValue: isEn ? 'Cancel' : 'Скасувати' })}
+              {t('cancel', {
+                ns: 'ui',
+                defaultValue: localizedDefault(isEn, 'Скасувати', 'Cancel'),
+              })}
             </button>
           )}
         </div>
       </form>
     </>
+  );
+}
+
+function AdminNewsEditorForm({
+  form,
+  isEditing,
+  isEn,
+  saving,
+  t,
+  onChange,
+  onSubmit,
+  onCancel,
+}: Readonly<{
+  form: NewsFormState;
+  isEditing: boolean;
+  isEn: boolean;
+  saving: boolean;
+  t: TFunction;
+  onChange: (next: NewsFormState) => void;
+  onSubmit: (event: FormEvent) => void;
+  onCancel: () => void;
+}>) {
+  const editorTitle = isEditing
+    ? t('adminNewsEdit', {
+        ns: 'ui',
+        defaultValue: localizedDefault(isEn, 'Редагування', 'Edit article'),
+      })
+    : t('adminNewsCreate', {
+        ns: 'ui',
+        defaultValue: localizedDefault(isEn, 'Нова публікація', 'New article'),
+      });
+
+  const saveButtonText = saving
+    ? t('saving', { ns: 'ui', defaultValue: localizedDefault(isEn, 'Збереження...', 'Saving...') })
+    : t('save', { ns: 'ui', defaultValue: localizedDefault(isEn, 'Зберегти', 'Save') });
+
+  return (
+    <AdminNewsFormFields
+      form={form}
+      isEditing={isEditing}
+      isEn={isEn}
+      saving={saving}
+      t={t}
+      onChange={onChange}
+      onSubmit={onSubmit}
+      onCancel={onCancel}
+      editorTitle={editorTitle}
+      saveButtonText={saveButtonText}
+    />
   );
 }
 
