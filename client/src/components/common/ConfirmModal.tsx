@@ -62,10 +62,11 @@ export default function ConfirmModal({
         className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <dialog
-          open
+        <div
+          role="dialog"
+          aria-modal="true"
           aria-labelledby={titleId}
-          className={`cyber-panel border-2 ${styles.panel} p-6 max-w-md w-full pointer-events-auto m-0 max-h-[calc(100vh-2rem)] overflow-y-auto`}
+          className={`cyber-panel border-2 ${styles.panel} p-6 max-w-md w-full pointer-events-auto max-h-[calc(100vh-2rem)] overflow-y-auto`}
         >
           <h2 id={titleId} className={`font-heading font-bold text-xl mb-3 ${styles.title}`}>
             {title}
@@ -90,7 +91,7 @@ export default function ConfirmModal({
               {isLoading && loadingLabel ? loadingLabel : confirmLabel}
             </button>
           </div>
-        </dialog>
+        </div>
       </div>
     </>
   );

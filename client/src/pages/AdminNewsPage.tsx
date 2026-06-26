@@ -232,19 +232,17 @@ function AdminNewsEditorForm({
   onSubmit: (event: FormEvent) => void;
   onCancel: () => void;
 }>) {
+  const editorTitle = isEditing
+    ? t('adminNewsEdit', { ns: 'ui', defaultValue: isEn ? 'Edit article' : 'Редагування' })
+    : t('adminNewsCreate', { ns: 'ui', defaultValue: isEn ? 'New article' : 'Нова публікація' });
+
+  const saveButtonText = saving
+    ? t('saving', { ns: 'ui', defaultValue: isEn ? 'Saving...' : 'Збереження...' })
+    : t('save', { ns: 'ui', defaultValue: isEn ? 'Save' : 'Зберегти' });
+
   return (
     <>
-      <h2 className="font-heading text-lg text-cyber-primary mb-4">
-        {isEditing
-          ? t('adminNewsEdit', {
-              ns: 'ui',
-              defaultValue: isEn ? 'Edit article' : 'Редагування',
-            })
-          : t('adminNewsCreate', {
-              ns: 'ui',
-              defaultValue: isEn ? 'New article' : 'Нова публікація',
-            })}
-      </h2>
+      <h2 className="font-heading text-lg text-cyber-primary mb-4">{editorTitle}</h2>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <label className="block">
@@ -331,12 +329,7 @@ function AdminNewsEditorForm({
             disabled={saving}
             className="px-4 py-2 rounded border border-cyber-primary text-cyber-primary text-sm hover:bg-cyber-primary/10 transition-colors disabled:opacity-50"
           >
-            {saving
-              ? t('saving', {
-                  ns: 'ui',
-                  defaultValue: isEn ? 'Saving...' : 'Збереження...',
-                })
-              : t('save', { ns: 'ui', defaultValue: isEn ? 'Save' : 'Зберегти' })}
+            {saveButtonText}
           </button>
           {isEditing && (
             <button

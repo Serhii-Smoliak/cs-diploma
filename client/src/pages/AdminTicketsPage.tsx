@@ -686,6 +686,22 @@ export default function AdminTicketsPage() {
     }
   };
 
+  const handleSelectTicket = (ticketId: string) => {
+    void loadTicketDetail(ticketId);
+  };
+
+  const handleCloseModalCancel = () => {
+    if (!closing) resetCloseModal();
+  };
+
+  const handleCloseConfirm = () => {
+    void handleCloseTicket();
+  };
+
+  const handleDeleteConfirm = () => {
+    void handleDeleteMessage();
+  };
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -724,11 +740,7 @@ export default function AdminTicketsPage() {
                 selectedTicketId={selectedTicket?.id ?? null}
                 isEn={isEn}
                 t={t}
-                onSelect={(ticketId) => {
-                  loadTicketDetail(ticketId).catch(() => {
-                    // loadTicketDetail already sets error state
-                  });
-                }}
+                onSelect={handleSelectTicket}
               />
             </section>
 
@@ -790,16 +802,8 @@ export default function AdminTicketsPage() {
           defaultValue: isEn ? 'Closing...' : 'Закриття...',
         })}
         isLoading={closing}
-        onCancel={() => {
-          if (!closing) {
-            resetCloseModal();
-          }
-        }}
-        onConfirm={() => {
-          handleCloseTicket().catch(() => {
-            // handleCloseTicket already sets error state
-          });
-        }}
+        onCancel={handleCloseModalCancel}
+        onConfirm={handleCloseConfirm}
       >
         <AdminTicketCloseReasonFields
           closeReason={closeReason}
@@ -834,11 +838,7 @@ export default function AdminTicketsPage() {
         isLoading={deleting}
         variant="danger"
         onCancel={() => setDeletingMessageId(null)}
-        onConfirm={() => {
-          handleDeleteMessage().catch(() => {
-            // handleDeleteMessage already sets error state
-          });
-        }}
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );

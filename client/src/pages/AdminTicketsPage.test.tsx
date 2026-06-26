@@ -261,4 +261,20 @@ describe('AdminTicketsPage', () => {
 
     expect(await screen.findByText('Reply failed')).toBeInTheDocument();
   });
+
+  it('blocks close modal cancel while closing is in progress', async () => {
+    vi.mocked(api.closeAdminSupportTicket).mockImplementation(
+      () => new Promise((resolve) => setTimeout(resolve, 500))
+    );
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+    await screen.findByRole('button', { name: 'Закрити звернення' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Закрити звернення' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Закрити звернення' })[1]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Скасувати' }));
+    expect(screen.getByText('Закрити звернення?')).toBeInTheDocument();
+  });
 });

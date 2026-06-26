@@ -32,6 +32,40 @@ export default function Sidebar() {
 
   const showLabels = isMobileOpen || !isCollapsed;
 
+  type MenuItem = (typeof regularMenuItems)[number] | (typeof adminMenuItems)[number];
+
+  const renderMenuItem = (item: MenuItem, isActive: boolean) => (
+    <Link
+      key={item.path}
+      to={item.path}
+      className="block"
+      title={showLabels ? undefined : getNavLabel(item.labelKey)}
+      onClick={closeMobile}
+    >
+      <motion.div
+        whileHover={{ x: showLabels ? 4 : 0 }}
+        whileTap={{ scale: 0.98 }}
+        className={`flex items-center gap-3 py-3 rounded-lg transition-all duration-200 ${
+          isActive
+            ? 'bg-cyber-primary text-cyber-background cyber-glow'
+            : 'text-gray-300 hover:bg-cyber-panel hover:text-cyber-primary'
+        }`}
+      >
+        <span className="text-xl flex-shrink-0 w-6 text-center ml-2">{item.icon}</span>
+        {showLabels && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="font-medium whitespace-nowrap"
+          >
+            {getNavLabel(item.labelKey)}
+          </motion.span>
+        )}
+      </motion.div>
+    </Link>
+  );
+
   const getNavLabel = (labelKey: string) => {
     const defaults: Record<string, { uk: string; en: string }> = {
       missions: { uk: 'Місії', en: 'Missions' },
@@ -91,83 +125,19 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex-1 py-4 px-4 space-y-2 overflow-y-auto">
-        {regularMenuItems.map((item) => {
-          const isActive =
+        {regularMenuItems.map((item) =>
+          renderMenuItem(
+            item,
             location.pathname === item.path ||
-            (item.path === '/missions' && location.pathname === '/');
-
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="block"
-              title={showLabels ? undefined : getNavLabel(item.labelKey)}
-              onClick={closeMobile}
-            >
-              <motion.div
-                whileHover={{ x: showLabels ? 4 : 0 }}
-                whileTap={{ scale: 0.98 }}
-                className={`flex items-center gap-3 py-3 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? 'bg-cyber-primary text-cyber-background cyber-glow'
-                    : 'text-gray-300 hover:bg-cyber-panel hover:text-cyber-primary'
-                }`}
-              >
-                <span className="text-xl flex-shrink-0 w-6 text-center ml-2">{item.icon}</span>
-                {showLabels && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="font-medium whitespace-nowrap"
-                  >
-                    {getNavLabel(item.labelKey)}
-                  </motion.span>
-                )}
-              </motion.div>
-            </Link>
-          );
-        })}
+              (item.path === '/missions' && location.pathname === '/')
+          )
+        )}
 
         {adminMenuItems.length > 0 && (
           <hr className="border-0 border-t border-cyber-border/80 my-2" aria-hidden />
         )}
 
-        {adminMenuItems.map((item) => {
-          const isActive = location.pathname === item.path;
-
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="block"
-              title={showLabels ? undefined : getNavLabel(item.labelKey)}
-              onClick={closeMobile}
-            >
-              <motion.div
-                whileHover={{ x: showLabels ? 4 : 0 }}
-                whileTap={{ scale: 0.98 }}
-                className={`flex items-center gap-3 py-3 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? 'bg-cyber-primary text-cyber-background cyber-glow'
-                    : 'text-gray-300 hover:bg-cyber-panel hover:text-cyber-primary'
-                }`}
-              >
-                <span className="text-xl flex-shrink-0 w-6 text-center ml-2">{item.icon}</span>
-                {showLabels && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="font-medium whitespace-nowrap"
-                  >
-                    {getNavLabel(item.labelKey)}
-                  </motion.span>
-                )}
-              </motion.div>
-            </Link>
-          );
-        })}
+        {adminMenuItems.map((item) => renderMenuItem(item, location.pathname === item.path))}
       </nav>
 
       <div className="shrink-0 h-11 border-t border-cyber-border hidden lg:flex items-center px-3">

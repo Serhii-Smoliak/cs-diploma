@@ -307,12 +307,19 @@ export default function MitreTechniqueModal({
 
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="MITRE technique details"
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', duration: 0.4 }}
               onClick={(e) => {
                 e.stopPropagation();
+                clearActiveTooltips();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') handleClose();
                 clearActiveTooltips();
               }}
               className={`cyber-panel border-2 w-full max-w-[95vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-7xl max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto ${
