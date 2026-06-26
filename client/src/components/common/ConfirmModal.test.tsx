@@ -2,6 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ConfirmModal from './ConfirmModal';
 
+function getDialog(options?: { hidden?: boolean }): HTMLDialogElement {
+  return screen.getByRole('dialog', options) as HTMLDialogElement;
+}
+
 describe('ConfirmModal', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -113,7 +117,7 @@ describe('ConfirmModal', () => {
     };
 
     const { rerender } = render(<ConfirmModal {...props} />);
-    screen.getByRole('dialog', { hidden: true }).showModal();
+    getDialog({ hidden: true }).showModal();
     expect(showModalSpy).toHaveBeenCalledTimes(1);
 
     rerender(<ConfirmModal {...props} isOpen />);
@@ -135,7 +139,7 @@ describe('ConfirmModal', () => {
       />
     );
 
-    screen.getByRole('dialog').close();
+    getDialog().close();
 
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
@@ -176,7 +180,7 @@ describe('ConfirmModal', () => {
       />
     );
 
-    const dialog = screen.getByRole('dialog');
+    const dialog = getDialog();
     fireEvent(dialog, new Event('cancel', { cancelable: true }));
     dialog.close();
 

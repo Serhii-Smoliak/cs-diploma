@@ -993,7 +993,7 @@ Security by Design для навчальної платформи CyberTactics.
 
 Було підготовлено окрему security requirements документацію для платформи CyberTactics:
 
-<https://github.com/Serhii-Smoliak/cs-diploma/blob/main/Security-requirements.md>
+<https://github.com/Serhii-Smoliak/cs-diploma/blob/main/docs/security-requirements.md>
 
 У документі описано основні вимоги безпеки для платформи:
 
@@ -1228,7 +1228,7 @@ Definition of Done для тижня 5 виконано:
 * Backend API (Railway): <https://cs-diploma-be-production.up.railway.app/>
 * Репозиторій: <https://github.com/Serhii-Smoliak/cs-diploma>
 * GitHub Actions workflow: <https://github.com/Serhii-Smoliak/cs-diploma/blob/main/.github/workflows/security-ci.yml>
-* CI/CD документація: <https://github.com/Serhii-Smoliak/cs-diploma/blob/main/diploma-docs/ci-cd-pipeline.md>
+* CI/CD документація: <https://github.com/Serhii-Smoliak/cs-diploma/blob/main/docs/ci-cd-pipeline.md>
 * SonarCloud project: <https://sonarcloud.io/project/overview?id=Serhii-Smoliak_cs-diploma>
 * Dependabot: <https://github.com/Serhii-Smoliak/cs-diploma/network/updates>
 * PR #16 (CI/CD security pipeline): <https://github.com/Serhii-Smoliak/cs-diploma/pull/16>
@@ -1274,7 +1274,7 @@ Definition of Done для тижня 5 виконано:
 * Пояснювальна записка (файл диплому / .docx)
 * Сайт: <https://cs-diploma-fe-production.up.railway.app/>
 * Backend API: <https://cs-diploma-be-production.up.railway.app/>
-* Документація: <https://github.com/Serhii-Smoliak/cs-diploma/blob/main/DOCUMENTATION.md>
+* Документація: <https://github.com/Serhii-Smoliak/cs-diploma/blob/main/docs/documentation.md>
 * SonarCloud: <https://sonarcloud.io/project/overview?id=Serhii-Smoliak_cs-diploma>
 * Репозиторій: <https://github.com/Serhii-Smoliak/cs-diploma>
 

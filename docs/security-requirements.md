@@ -1227,6 +1227,6 @@ GET /api/translations/namespaces?namespaces=...
 | Snyk | high/critical vulnerabilities в dependencies |
 | Trivy | CRITICAL/HIGH CVE в Docker image backend |
 
-Deploy: merge в `main` лише після green checks → Railway auto-deploy. Деталі: [diploma-docs/ci-cd-pipeline.md](./diploma-docs/ci-cd-pipeline.md).
+Deploy: merge в `main` лише після green checks → Railway auto-deploy. Деталі: [ci-cd-pipeline.md](./ci-cd-pipeline.md).
 | Secure Error Handling   | API не повертає stack trace, Prisma details, SQL, env, debug/TODO-коментарі або внутрішні шляхи.                            | Знижує ризик information disclosure.                                               |
 | Security Validation     | OWASP ZAP використовується для перевірки реалізованих controls, але не як єдиний метод безпеки.                             | Підтверджує remediation і доповнює threat modeling, manual testing та code review. |
