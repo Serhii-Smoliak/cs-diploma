@@ -50,7 +50,7 @@ export function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: stri
   }, [loadErrorMessage]);
 
   useEffect(() => {
-    void loadTickets();
+    loadTickets();
   }, [loadTickets]);
 
   const resetCloseModal = () => {
@@ -59,19 +59,22 @@ export function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: stri
     setCloseReasonText('');
   };
 
-  const loadTicketDetail = async (ticketId: string) => {
-    setError(null);
-    setEditingMessageId(null);
-    setEditingBody('');
-    resetCloseModal();
-    try {
-      const detail = await api.getAdminSupportTicket(ticketId);
-      setSelectedTicket(detail);
-      setReplyBody('');
-    } catch (err) {
-      setError(toErrorMessage(err, loadErrorMessage));
-    }
-  };
+  const loadTicketDetail = useCallback(
+    async (ticketId: string) => {
+      setError(null);
+      setEditingMessageId(null);
+      setEditingBody('');
+      resetCloseModal();
+      try {
+        const detail = await api.getAdminSupportTicket(ticketId);
+        setSelectedTicket(detail);
+        setReplyBody('');
+      } catch (err) {
+        setError(toErrorMessage(err, loadErrorMessage));
+      }
+    },
+    [loadErrorMessage]
+  );
 
   const handleReply = async (event: FormEvent) => {
     event.preventDefault();
@@ -238,19 +241,13 @@ export function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: stri
     handleSaveEdit,
     canManageMessage,
     handleReasonChange,
-    handleSelectTicket: (ticketId: string) => {
-      void loadTicketDetail(ticketId);
-    },
+    handleSelectTicket: loadTicketDetail,
     handleCloseModalCancel: () => {
       if (!closing) {
         resetCloseModal();
       }
     },
-    handleCloseConfirm: () => {
-      void handleCloseTicket();
-    },
-    handleDeleteConfirm: () => {
-      void handleDeleteMessage();
-    },
+    handleCloseConfirm: handleCloseTicket,
+    handleDeleteConfirm: handleDeleteMessage,
   };
 }
