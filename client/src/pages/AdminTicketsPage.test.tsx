@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { t, i18n } = vi.hoisted(() => ({
   t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key,
-  i18n: { resolvedLanguage: 'uk' },
+  i18n: { resolvedLanguage: 'uk' as string },
 }));
 
 vi.mock('react-i18next', () => ({
@@ -34,6 +34,7 @@ import AdminTicketsPage from './AdminTicketsPage';
 
 describe('AdminTicketsPage', () => {
   beforeEach(() => {
+    i18n.resolvedLanguage = 'uk';
     vi.clearAllMocks();
     vi.mocked(api.getAdminSupportTickets).mockResolvedValue([
       {
@@ -306,5 +307,70 @@ describe('AdminTicketsPage', () => {
 
     fireEvent.change(screen.getByLabelText('Причина'), { target: { value: 'ANSWERED' } });
     expect(screen.queryByPlaceholderText('3–500 символів')).not.toBeInTheDocument();
+  });
+
+  it('shows empty ticket list message', async () => {
+    vi.mocked(api.getAdminSupportTickets).mockResolvedValue([]);
+    render(<AdminTicketsPage />);
+
+    expect(await screen.findByText('Звернень поки немає.')).toBeInTheDocument();
+  });
+
+  it('shows error when ticket detail fails to load', async () => {
+    vi.mocked(api.getAdminSupportTicket).mockRejectedValue(new Error('Detail failed'));
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+
+    fireEvent.click(screen.getByText('Login issue'));
+
+    expect(await screen.findByText('Detail failed')).toBeInTheDocument();
+  });
+
+  it('renders english page shell when locale is en', async () => {
+    i18n.resolvedLanguage = 'en';
+    render(<AdminTicketsPage />);
+
+    expect(await screen.findByRole('heading', { name: 'Support tickets' })).toBeInTheDocument();
+    expect(screen.getByText('All requests')).toBeInTheDocument();
+    expect(screen.getByText('Select a ticket to view details.')).toBeInTheDocument();
+  });
+
+  it('shows closed ticket closure reason in detail panel', async () => {
+    vi.mocked(api.getAdminSupportTickets).mockResolvedValue([
+      {
+        id: 'ticket-1',
+        subject: 'Login issue',
+        message: 'Cannot login today',
+        status: 'CLOSED',
+        closedAt: '2026-06-23T12:00:00.000Z',
+        closeReason: 'DECLINED',
+        closeReasonText: null,
+        createdAt: '2026-06-23T10:00:00.000Z',
+        updatedAt: '2026-06-23T12:00:00.000Z',
+        username: 'agent',
+        email: 'agent@test.com',
+      },
+    ]);
+    vi.mocked(api.getAdminSupportTicket).mockResolvedValue({
+      id: 'ticket-1',
+      subject: 'Login issue',
+      message: 'Cannot login today',
+      status: 'CLOSED',
+      closedAt: '2026-06-23T12:00:00.000Z',
+      closeReason: 'DECLINED',
+      closeReasonText: null,
+      createdAt: '2026-06-23T10:00:00.000Z',
+      updatedAt: '2026-06-23T12:00:00.000Z',
+      username: 'agent',
+      email: 'agent@test.com',
+      messages: [],
+    });
+
+    render(<AdminTicketsPage />);
+    await screen.findByText('Login issue');
+    fireEvent.click(screen.getByText('Login issue'));
+
+    expect(await screen.findByText(/не відповідає вимогам/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Закрити звернення' })).not.toBeInTheDocument();
   });
 });

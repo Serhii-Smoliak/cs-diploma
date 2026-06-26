@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import ConfirmModal from '../components/common/ConfirmModal';
 import {
-  AdminErrorPanel,
+  AdminAsyncState,
+  AdminDangerConfirmModal,
+  AdminDetailSection,
   AdminListSection,
-  AdminLoadingPanel,
-  adminCancelLabel,
-  adminDeleteLabels,
-  adminLoadingLabel,
-  localizedDefault,
+  AdminPageShell,
+  AdminTwoColumnGrid,
 } from '../components/admin/adminPageUi';
+import {
+  adminUiText,
+  localizedDefault,
+  toErrorMessage,
+} from '../components/admin/adminPageUiHelpers';
 import { api, type NewsPost } from '../services/api';
 
 const emptyForm = {
@@ -22,10 +25,6 @@ const emptyForm = {
 };
 
 type NewsFormState = typeof emptyForm;
-
-function toErrorMessage(err: unknown, fallback: string): string {
-  return err instanceof Error ? err.message : fallback;
-}
 
 function useAdminNews(t: TFunction, isEn: boolean) {
   const [posts, setPosts] = useState<NewsPost[]>([]);
@@ -424,93 +423,83 @@ export default function AdminNewsPage() {
     handleSubmit,
     handleDelete,
   } = useAdminNews(t, isEn);
-  const deleteLabels = adminDeleteLabels(t, isEn);
+
+  const createButton = (
+    <button
+      type="button"
+      onClick={startCreate}
+      className="px-4 py-2 rounded border border-cyber-primary text-cyber-primary text-sm hover:bg-cyber-primary/10 transition-colors"
+    >
+      {adminUiText(t, isEn, 'adminNewsCreate', 'Нова публікація', 'New article')}
+    </button>
+  );
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary">
-            {t('adminNews', {
-              ns: 'ui',
-              defaultValue: isEn ? 'News management' : 'Керування новинами',
-            })}
-          </h1>
-          <button
-            type="button"
-            onClick={startCreate}
-            className="px-4 py-2 rounded border border-cyber-primary text-cyber-primary text-sm hover:bg-cyber-primary/10 transition-colors"
+    <AdminPageShell
+      title={adminUiText(t, isEn, 'adminNews', 'Керування новинами', 'News management')}
+      headerAction={createButton}
+    >
+      <AdminAsyncState
+        loading={loading}
+        error={error}
+        loadingLabel={adminUiText(t, isEn, 'loading', 'Завантаження...', 'Loading...')}
+      >
+        <AdminTwoColumnGrid>
+          <AdminListSection
+            title={adminUiText(t, isEn, 'adminNewsList', 'Усі публікації', 'All articles')}
           >
-            {t('adminNewsCreate', {
-              ns: 'ui',
-              defaultValue: isEn ? 'New article' : 'Нова публікація',
-            })}
-          </button>
-        </div>
+            <AdminNewsPostList
+              posts={posts}
+              selectedId={selectedId}
+              isEn={isEn}
+              t={t}
+              onEdit={startEdit}
+              onDelete={setDeletingId}
+            />
+          </AdminListSection>
 
-        {loading && <AdminLoadingPanel label={adminLoadingLabel(t, isEn)} />}
+          <AdminDetailSection>
+            <AdminNewsEditorForm
+              form={form}
+              isEditing={isEditing}
+              isEn={isEn}
+              saving={saving}
+              t={t}
+              onChange={setForm}
+              onSubmit={handleSubmit}
+              onCancel={resetForm}
+            />
+          </AdminDetailSection>
+        </AdminTwoColumnGrid>
+      </AdminAsyncState>
 
-        {!loading && error && <AdminErrorPanel message={error} />}
-
-        {!loading && !error && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <AdminListSection
-              title={t('adminNewsList', {
-                ns: 'ui',
-                defaultValue: localizedDefault(isEn, 'Усі публікації', 'All articles'),
-              })}
-            >
-              <AdminNewsPostList
-                posts={posts}
-                selectedId={selectedId}
-                isEn={isEn}
-                t={t}
-                onEdit={startEdit}
-                onDelete={setDeletingId}
-              />
-            </AdminListSection>
-
-            <section className="cyber-panel border border-cyber-border rounded-lg p-4 sm:p-6">
-              <AdminNewsEditorForm
-                form={form}
-                isEditing={isEditing}
-                isEn={isEn}
-                saving={saving}
-                t={t}
-                onChange={setForm}
-                onSubmit={handleSubmit}
-                onCancel={resetForm}
-              />
-            </section>
-          </div>
-        )}
-      </div>
-
-      <ConfirmModal
+      <AdminDangerConfirmModal
         isOpen={deletingId !== null}
         titleId="admin-news-delete-title"
-        title={t('adminNewsDeleteTitle', {
-          ns: 'ui',
-          defaultValue: isEn ? 'Delete article?' : 'Видалити публікацію?',
-        })}
-        message={t('adminNewsDeleteMessage', {
-          ns: 'ui',
-          defaultValue: isEn
-            ? 'This article will be permanently removed.'
-            : 'Цю публікацію буде видалено назавжди.',
-        })}
-        cancelLabel={adminCancelLabel(t, isEn)}
-        confirmLabel={deleteLabels.confirmLabel}
-        loadingLabel={deleteLabels.loadingLabel}
+        title={adminUiText(
+          t,
+          isEn,
+          'adminNewsDeleteTitle',
+          'Видалити публікацію?',
+          'Delete article?'
+        )}
+        message={adminUiText(
+          t,
+          isEn,
+          'adminNewsDeleteMessage',
+          'Цю публікацію буде видалено назавжди.',
+          'This article will be permanently removed.'
+        )}
         isLoading={saving}
-        variant="danger"
         onCancel={() => setDeletingId(null)}
         onConfirm={() => {
           handleDelete().catch(() => {
             // handleDelete already sets error state
           });
         }}
+        t={t}
+        isEn={isEn}
       />
-    </div>
+    </AdminPageShell>
   );
 }

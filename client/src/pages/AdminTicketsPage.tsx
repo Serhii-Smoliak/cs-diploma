@@ -3,14 +3,19 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import ConfirmModal from '../components/common/ConfirmModal';
 import {
-  AdminErrorPanel,
+  AdminAsyncState,
+  AdminDangerConfirmModal,
+  AdminDetailSection,
   AdminListSection,
-  AdminLoadingPanel,
-  adminCancelLabel,
-  adminDeleteLabels,
-  adminLoadingLabel,
-  localizedDefault,
+  AdminPageShell,
+  AdminTwoColumnGrid,
 } from '../components/admin/adminPageUi';
+import {
+  adminCancelLabel,
+  adminLoadingLabel,
+  adminUiText,
+  toErrorMessage,
+} from '../components/admin/adminPageUiHelpers';
 import { useAuthStore } from '../store/authStore';
 import {
   api,
@@ -33,10 +38,6 @@ function statusClassName(status: SupportTicketSummary['status']): string {
     return 'text-gray-400';
   }
   return 'text-cyber-primary';
-}
-
-function toErrorMessage(err: unknown, fallback: string): string {
-  return err instanceof Error ? err.message : fallback;
 }
 
 function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: string | undefined) {
@@ -240,6 +241,31 @@ function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: string | un
     setCloseReasonText('');
   };
 
+  const handleReasonChange = (reason: SupportTicketCloseReason) => {
+    setCloseReason(reason);
+    if (reason !== 'CUSTOM') {
+      setCloseReasonText('');
+    }
+  };
+
+  const handleSelectTicket = (ticketId: string) => {
+    void loadTicketDetail(ticketId);
+  };
+
+  const handleCloseModalCancel = () => {
+    if (!closing) {
+      resetCloseModal();
+    }
+  };
+
+  const handleCloseConfirm = () => {
+    void handleCloseTicket();
+  };
+
+  const handleDeleteConfirm = () => {
+    void handleDeleteMessage();
+  };
+
   return {
     tickets,
     selectedTicket,
@@ -273,6 +299,11 @@ function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: string | un
     handleDeleteMessage,
     canManageMessage,
     resetCloseModal,
+    handleReasonChange,
+    handleSelectTicket,
+    handleCloseModalCancel,
+    handleCloseConfirm,
+    handleDeleteConfirm,
   };
 }
 
@@ -697,67 +728,57 @@ function AdminTicketsPageContent({
   onDeleteMessage: (messageId: string) => void;
   onEditingBodyChange: (value: string) => void;
 }>) {
-  if (loading) {
-    return <AdminLoadingPanel label={adminLoadingLabel(t, isEn)} />;
-  }
-
-  if (error) {
-    return <AdminErrorPanel message={error} />;
-  }
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <AdminListSection
-        title={t('adminTicketsList', {
-          ns: 'ui',
-          defaultValue: localizedDefault(isEn, 'Усі звернення', 'All requests'),
-        })}
-      >
-        <AdminTicketsList
-          tickets={tickets}
-          selectedTicketId={selectedTicket?.id ?? null}
-          isEn={isEn}
-          t={t}
-          onSelect={onSelectTicket}
-        />
-      </AdminListSection>
-
-      <section className="cyber-panel border border-cyber-border rounded-lg p-4 sm:p-6 min-h-[20rem]">
-        {selectedTicket ? (
-          <AdminTicketDetailPanel
-            ticket={selectedTicket}
-            selectedCloseReasonLabel={selectedCloseReasonLabel}
-            replyBody={replyBody}
-            replying={replying}
-            editingMessageId={editingMessageId}
-            editingBody={editingBody}
-            savingEdit={savingEdit}
+    <AdminAsyncState loading={loading} error={error} loadingLabel={adminLoadingLabel(t, isEn)}>
+      <AdminTwoColumnGrid>
+        <AdminListSection
+          title={adminUiText(t, isEn, 'adminTicketsList', 'Усі звернення', 'All requests')}
+        >
+          <AdminTicketsList
+            tickets={tickets}
+            selectedTicketId={selectedTicket?.id ?? null}
             isEn={isEn}
             t={t}
-            canManageMessage={canManageMessage}
-            onReplyBodyChange={onReplyBodyChange}
-            onReplySubmit={onReplySubmit}
-            onOpenCloseModal={onOpenCloseModal}
-            onStartEdit={onStartEdit}
-            onCancelEdit={onCancelEdit}
-            onSaveEdit={onSaveEdit}
-            onDeleteMessage={onDeleteMessage}
-            onEditingBodyChange={onEditingBodyChange}
+            onSelect={onSelectTicket}
           />
-        ) : (
-          <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-            {t('adminTicketsSelect', {
-              ns: 'ui',
-              defaultValue: localizedDefault(
+        </AdminListSection>
+
+        <AdminDetailSection>
+          {selectedTicket ? (
+            <AdminTicketDetailPanel
+              ticket={selectedTicket}
+              selectedCloseReasonLabel={selectedCloseReasonLabel}
+              replyBody={replyBody}
+              replying={replying}
+              editingMessageId={editingMessageId}
+              editingBody={editingBody}
+              savingEdit={savingEdit}
+              isEn={isEn}
+              t={t}
+              canManageMessage={canManageMessage}
+              onReplyBodyChange={onReplyBodyChange}
+              onReplySubmit={onReplySubmit}
+              onOpenCloseModal={onOpenCloseModal}
+              onStartEdit={onStartEdit}
+              onCancelEdit={onCancelEdit}
+              onSaveEdit={onSaveEdit}
+              onDeleteMessage={onDeleteMessage}
+              onEditingBodyChange={onEditingBodyChange}
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center text-gray-500 text-sm">
+              {adminUiText(
+                t,
                 isEn,
+                'adminTicketsSelect',
                 'Оберіть звернення.',
                 'Select a ticket to view details.'
-              ),
-            })}
-          </div>
-        )}
-      </section>
-    </div>
+              )}
+            </div>
+          )}
+        </AdminDetailSection>
+      </AdminTwoColumnGrid>
+    </AdminAsyncState>
   );
 }
 
@@ -792,35 +813,34 @@ function AdminTicketsModals({
   onDeleteCancel: () => void;
   onDeleteConfirm: () => void;
 }>) {
-  const cancelLabel = adminCancelLabel(t, isEn);
-  const deleteLabels = adminDeleteLabels(t, isEn);
-
   return (
     <>
       <ConfirmModal
         isOpen={isCloseModalOpen}
         titleId="admin-ticket-close-title"
-        title={t('adminTicketsCloseTitle', {
-          ns: 'ui',
-          defaultValue: localizedDefault(isEn, 'Закрити звернення?', 'Close ticket?'),
-        })}
-        message={t('adminTicketsCloseMessage', {
-          ns: 'ui',
-          defaultValue: localizedDefault(
-            isEn,
-            'Звернення буде закрито, і на нього більше не можна буде відповісти.',
-            'The ticket will be closed and no further replies can be sent.'
-          ),
-        })}
-        cancelLabel={cancelLabel}
-        confirmLabel={t('adminTicketsCloseSubmit', {
-          ns: 'ui',
-          defaultValue: localizedDefault(isEn, 'Закрити звернення', 'Close ticket'),
-        })}
-        loadingLabel={t('adminTicketsCloseClosing', {
-          ns: 'ui',
-          defaultValue: localizedDefault(isEn, 'Закриття...', 'Closing...'),
-        })}
+        title={adminUiText(
+          t,
+          isEn,
+          'adminTicketsCloseTitle',
+          'Закрити звернення?',
+          'Close ticket?'
+        )}
+        message={adminUiText(
+          t,
+          isEn,
+          'adminTicketsCloseMessage',
+          'Звернення буде закрито, і на нього більше не можна буде відповісти.',
+          'The ticket will be closed and no further replies can be sent.'
+        )}
+        cancelLabel={adminCancelLabel(t, isEn)}
+        confirmLabel={adminUiText(
+          t,
+          isEn,
+          'adminTicketsCloseSubmit',
+          'Закрити звернення',
+          'Close ticket'
+        )}
+        loadingLabel={adminUiText(t, isEn, 'adminTicketsCloseClosing', 'Закриття...', 'Closing...')}
         isLoading={closing}
         onCancel={onCloseModalCancel}
         onConfirm={onCloseConfirm}
@@ -836,28 +856,28 @@ function AdminTicketsModals({
         />
       </ConfirmModal>
 
-      <ConfirmModal
+      <AdminDangerConfirmModal
         isOpen={deletingMessageId !== null}
         titleId="admin-ticket-delete-title"
-        title={t('adminTicketsDeleteTitle', {
-          ns: 'ui',
-          defaultValue: localizedDefault(isEn, 'Видалити відповідь?', 'Delete reply?'),
-        })}
-        message={t('adminTicketsDeleteMessage', {
-          ns: 'ui',
-          defaultValue: localizedDefault(
-            isEn,
-            'Цю відповідь буде видалено зі звернення.',
-            'This reply will be removed from the ticket.'
-          ),
-        })}
-        cancelLabel={cancelLabel}
-        confirmLabel={deleteLabels.confirmLabel}
-        loadingLabel={deleteLabels.loadingLabel}
+        title={adminUiText(
+          t,
+          isEn,
+          'adminTicketsDeleteTitle',
+          'Видалити відповідь?',
+          'Delete reply?'
+        )}
+        message={adminUiText(
+          t,
+          isEn,
+          'adminTicketsDeleteMessage',
+          'Цю відповідь буде видалено зі звернення.',
+          'This reply will be removed from the ticket.'
+        )}
         isLoading={deleting}
-        variant="danger"
         onCancel={onDeleteCancel}
         onConfirm={onDeleteConfirm}
+        t={t}
+        isEn={isEn}
       />
     </>
   );
@@ -884,81 +904,49 @@ export default function AdminTicketsPage() {
     isCloseModalOpen,
     setIsCloseModalOpen,
     closeReason,
-    setCloseReason,
     closeReasonText,
     setCloseReasonText,
     closing,
     error,
     selectedCloseReasonLabel,
-    loadTicketDetail,
     handleReply,
     startEditingMessage,
     cancelEditingMessage,
     handleSaveEdit,
-    handleCloseTicket,
-    handleDeleteMessage,
     canManageMessage,
-    resetCloseModal,
+    handleReasonChange,
+    handleSelectTicket,
+    handleCloseModalCancel,
+    handleCloseConfirm,
+    handleDeleteConfirm,
   } = useAdminTickets(t, isEn, currentUserId);
 
-  const handleReasonChange = (reason: SupportTicketCloseReason) => {
-    setCloseReason(reason);
-    if (reason !== 'CUSTOM') {
-      setCloseReasonText('');
-    }
-  };
-
-  const handleSelectTicket = (ticketId: string) => {
-    void loadTicketDetail(ticketId);
-  };
-
-  const handleCloseModalCancel = () => {
-    if (!closing) resetCloseModal();
-  };
-
-  const handleCloseConfirm = () => {
-    void handleCloseTicket();
-  };
-
-  const handleDeleteConfirm = () => {
-    void handleDeleteMessage();
-  };
-
   return (
-    <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary">
-          {t('adminTickets', {
-            ns: 'ui',
-            defaultValue: isEn ? 'Support tickets' : 'Звернення',
-          })}
-        </h1>
-
-        <AdminTicketsPageContent
-          loading={loading}
-          error={error}
-          isEn={isEn}
-          t={t}
-          tickets={tickets}
-          selectedTicket={selectedTicket}
-          selectedCloseReasonLabel={selectedCloseReasonLabel}
-          replyBody={replyBody}
-          replying={replying}
-          editingMessageId={editingMessageId}
-          editingBody={editingBody}
-          savingEdit={savingEdit}
-          canManageMessage={canManageMessage}
-          onSelectTicket={handleSelectTicket}
-          onReplyBodyChange={setReplyBody}
-          onReplySubmit={handleReply}
-          onOpenCloseModal={() => setIsCloseModalOpen(true)}
-          onStartEdit={startEditingMessage}
-          onCancelEdit={cancelEditingMessage}
-          onSaveEdit={handleSaveEdit}
-          onDeleteMessage={setDeletingMessageId}
-          onEditingBodyChange={setEditingBody}
-        />
-      </div>
+    <AdminPageShell title={adminUiText(t, isEn, 'adminTickets', 'Звернення', 'Support tickets')}>
+      <AdminTicketsPageContent
+        loading={loading}
+        error={error}
+        isEn={isEn}
+        t={t}
+        tickets={tickets}
+        selectedTicket={selectedTicket}
+        selectedCloseReasonLabel={selectedCloseReasonLabel}
+        replyBody={replyBody}
+        replying={replying}
+        editingMessageId={editingMessageId}
+        editingBody={editingBody}
+        savingEdit={savingEdit}
+        canManageMessage={canManageMessage}
+        onSelectTicket={handleSelectTicket}
+        onReplyBodyChange={setReplyBody}
+        onReplySubmit={handleReply}
+        onOpenCloseModal={() => setIsCloseModalOpen(true)}
+        onStartEdit={startEditingMessage}
+        onCancelEdit={cancelEditingMessage}
+        onSaveEdit={handleSaveEdit}
+        onDeleteMessage={setDeletingMessageId}
+        onEditingBodyChange={setEditingBody}
+      />
 
       <AdminTicketsModals
         isEn={isEn}
@@ -976,6 +964,6 @@ export default function AdminTicketsPage() {
         onDeleteCancel={() => setDeletingMessageId(null)}
         onDeleteConfirm={handleDeleteConfirm}
       />
-    </div>
+    </AdminPageShell>
   );
 }
