@@ -34,6 +34,20 @@ import { api } from '../services/api';
 import AdminTicketsPage from './AdminTicketsPage';
 import { useAdminTickets } from './useAdminTickets';
 
+async function waitForTicketsLoaded(result: { current: ReturnType<typeof useAdminTickets> }) {
+  await waitFor(() => expect(result.current.loading).toBe(false));
+}
+
+async function selectTicketInHook(
+  result: { current: ReturnType<typeof useAdminTickets> },
+  ticketId = 'ticket-1'
+) {
+  await act(async () => {
+    await result.current.handleSelectTicket(ticketId);
+  });
+  await waitFor(() => expect(result.current.selectedTicket).not.toBeNull());
+}
+
 describe('AdminTicketsPage', () => {
   beforeEach(() => {
     i18n.resolvedLanguage = 'uk';
@@ -341,12 +355,8 @@ describe('AdminTicketsPage', () => {
 
   it('ignores empty edit submission', async () => {
     const { result } = renderHook(() => useAdminTickets(t as TFunction, false, 'admin-1'));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    await act(async () => {
-      result.current.handleSelectTicket('ticket-1');
-    });
-    await waitFor(() => expect(result.current.selectedTicket).not.toBeNull());
+    await waitForTicketsLoaded(result);
+    await selectTicketInHook(result);
 
     act(() => {
       result.current.startEditingMessage('msg-2', 'We are checking');
@@ -363,12 +373,8 @@ describe('AdminTicketsPage', () => {
   it('ignores close modal cancel while closing', async () => {
     vi.mocked(api.closeAdminSupportTicket).mockImplementation(() => new Promise(() => undefined));
     const { result } = renderHook(() => useAdminTickets(t as TFunction, false, 'admin-1'));
-    await waitFor(() => expect(result.current.loading).toBe(false));
-
-    await act(async () => {
-      result.current.handleSelectTicket('ticket-1');
-    });
-    await waitFor(() => expect(result.current.selectedTicket).not.toBeNull());
+    await waitForTicketsLoaded(result);
+    await selectTicketInHook(result);
 
     act(() => {
       result.current.setIsCloseModalOpen(true);
@@ -499,7 +505,7 @@ describe('AdminTicketsPage', () => {
 
   it('ignores delete confirm when message id is missing', async () => {
     const { result } = renderHook(() => useAdminTickets(t as TFunction, false, 'admin-1'));
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    await waitForTicketsLoaded(result);
 
     await act(async () => {
       await result.current.handleDeleteConfirm();
