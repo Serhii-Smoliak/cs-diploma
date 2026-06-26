@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { bindConfirmDialogDismissHandlers, syncConfirmDialogOpenState } from './confirmModalDialog';
 
 export type ConfirmModalVariant = 'primary' | 'danger';
 
@@ -53,51 +54,16 @@ export default function ConfirmModal({
   const styles = variantStyles[variant];
 
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) {
-      return;
-    }
-
-    if (isOpen) {
-      if (!dialog.open) {
-        dialog.showModal();
-      }
-      return;
-    }
-
-    if (dialog.open) {
-      closingProgrammaticallyRef.current = true;
-      dialog.close();
-      closingProgrammaticallyRef.current = false;
-    }
+    syncConfirmDialogOpenState(dialogRef.current, isOpen, closingProgrammaticallyRef);
   }, [isOpen]);
 
   useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) {
-      return;
-    }
-
-    const handleClose = () => {
-      if (closingProgrammaticallyRef.current || isLoading) {
-        return;
-      }
-      onCancel();
-    };
-
-    const handleCancel = (event: Event) => {
-      event.preventDefault();
-      if (!isLoading) {
-        onCancel();
-      }
-    };
-
-    dialog.addEventListener('close', handleClose);
-    dialog.addEventListener('cancel', handleCancel);
-    return () => {
-      dialog.removeEventListener('close', handleClose);
-      dialog.removeEventListener('cancel', handleCancel);
-    };
+    return bindConfirmDialogDismissHandlers(
+      dialogRef.current,
+      isLoading,
+      closingProgrammaticallyRef,
+      onCancel
+    );
   }, [isLoading, onCancel]);
 
   return (

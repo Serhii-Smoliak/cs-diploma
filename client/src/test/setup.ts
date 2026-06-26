@@ -8,24 +8,20 @@ function polyfillHTMLDialogElement() {
     return;
   }
 
-  if (!HTMLDialogElement.prototype.showModal) {
-    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
-      if (this.hasAttribute('open')) {
-        return;
-      }
-      this.setAttribute('open', '');
-    };
-  }
+  HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+    if (this.hasAttribute('open')) {
+      return;
+    }
+    this.setAttribute('open', '');
+  };
 
-  if (!HTMLDialogElement.prototype.close) {
-    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
-      if (!this.hasAttribute('open')) {
-        return;
-      }
-      this.removeAttribute('open');
-      this.dispatchEvent(new Event('close', { bubbles: false, cancelable: false }));
-    };
-  }
+  HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+    if (!this.hasAttribute('open')) {
+      return;
+    }
+    this.removeAttribute('open');
+    this.dispatchEvent(new Event('close', { bubbles: false, cancelable: false }));
+  };
 
   Object.defineProperty(HTMLDialogElement.prototype, 'open', {
     configurable: true,
