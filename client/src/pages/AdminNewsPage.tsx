@@ -12,7 +12,6 @@ import {
   adminErrorText,
   adminLoadingLabel,
   adminUiText,
-  localizedDefault,
 } from '../components/admin/adminPageUiHelpers';
 import { api, type NewsPost } from '../services/api';
 
@@ -203,14 +202,8 @@ function AdminNewsPostList({
               <div className="font-medium text-gray-100 truncate">{post.titleUk}</div>
               <div className="text-xs text-gray-500 mt-1">
                 {post.isPublished
-                  ? t('adminNewsPublished', {
-                      ns: 'ui',
-                      defaultValue: isEn ? 'Published' : 'Опубліковано',
-                    })
-                  : t('adminNewsDraft', {
-                      ns: 'ui',
-                      defaultValue: isEn ? 'Draft' : 'Чернетка',
-                    })}
+                  ? adminUiText(t, isEn, 'adminNewsPublished', 'Опубліковано', 'Published')
+                  : adminUiText(t, isEn, 'adminNewsDraft', 'Чернетка', 'Draft')}
               </div>
             </button>
             <button
@@ -218,7 +211,7 @@ function AdminNewsPostList({
               onClick={() => onDelete(post.id)}
               className="text-xs text-red-400 hover:underline shrink-0"
             >
-              {t('delete', { ns: 'ui', defaultValue: isEn ? 'Delete' : 'Видалити' })}
+              {adminUiText(t, isEn, 'delete', 'Видалити', 'Delete')}
             </button>
           </div>
         </div>
@@ -227,140 +220,48 @@ function AdminNewsPostList({
   );
 }
 
-function AdminNewsFormFields({
-  form,
-  isEditing,
-  isEn,
-  saving,
-  t,
+function AdminNewsLocalizedField({
+  label,
+  value,
   onChange,
-  onSubmit,
-  onCancel,
-  editorTitle,
-  saveButtonText,
+  maxLength,
+  rows,
 }: Readonly<{
-  form: NewsFormState;
-  isEditing: boolean;
-  isEn: boolean;
-  saving: boolean;
-  t: TFunction;
-  onChange: (next: NewsFormState) => void;
-  onSubmit: (event: FormEvent) => void;
-  onCancel: () => void;
-  editorTitle: string;
-  saveButtonText: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  maxLength: number;
+  rows?: number;
 }>) {
+  const className =
+    'w-full rounded border border-cyber-border bg-cyber-panel/80 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-cyber-primary';
+
   return (
-    <>
-      <h2 className="font-heading text-lg text-cyber-primary mb-4">{editorTitle}</h2>
-
-      <form onSubmit={onSubmit} className="space-y-4">
-        <label className="block">
-          <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
-            {t('adminNewsTitleUk', {
-              ns: 'ui',
-              defaultValue: localizedDefault(isEn, 'Заголовок (UK)', 'Title (UK)'),
-            })}
-          </span>
-          <input
-            value={form.titleUk}
-            onChange={(event) => onChange({ ...form, titleUk: event.target.value })}
-            maxLength={200}
-            required
-            className="w-full rounded border border-cyber-border bg-cyber-panel/80 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-cyber-primary"
-          />
-        </label>
-
-        <label className="block">
-          <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
-            {t('adminNewsTitleEn', {
-              ns: 'ui',
-              defaultValue: localizedDefault(isEn, 'Заголовок (EN)', 'Title (EN)'),
-            })}
-          </span>
-          <input
-            value={form.titleEn}
-            onChange={(event) => onChange({ ...form, titleEn: event.target.value })}
-            maxLength={200}
-            required
-            className="w-full rounded border border-cyber-border bg-cyber-panel/80 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-cyber-primary"
-          />
-        </label>
-
-        <label className="block">
-          <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
-            {t('adminNewsBodyUk', {
-              ns: 'ui',
-              defaultValue: localizedDefault(isEn, 'Текст (UK)', 'Text (UK)'),
-            })}
-          </span>
-          <textarea
-            value={form.bodyUk}
-            onChange={(event) => onChange({ ...form, bodyUk: event.target.value })}
-            rows={5}
-            maxLength={10000}
-            required
-            className="w-full rounded border border-cyber-border bg-cyber-panel/80 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-cyber-primary resize-none"
-          />
-        </label>
-
-        <label className="block">
-          <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">
-            {t('adminNewsBodyEn', {
-              ns: 'ui',
-              defaultValue: localizedDefault(isEn, 'Текст (EN)', 'Text (EN)'),
-            })}
-          </span>
-          <textarea
-            value={form.bodyEn}
-            onChange={(event) => onChange({ ...form, bodyEn: event.target.value })}
-            rows={5}
-            maxLength={10000}
-            required
-            className="w-full rounded border border-cyber-border bg-cyber-panel/80 px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-cyber-primary resize-none"
-          />
-        </label>
-
-        <label className="flex items-center gap-2 text-sm text-gray-300">
-          <input
-            type="checkbox"
-            checked={form.isPublished}
-            onChange={(event) => onChange({ ...form, isPublished: event.target.checked })}
-          />
-          {t('adminNewsPublish', {
-            ns: 'ui',
-            defaultValue: localizedDefault(isEn, 'Опублікувати', 'Publish'),
-          })}
-        </label>
-
-        <div className="flex items-center gap-2 pt-2">
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 rounded border border-cyber-primary text-cyber-primary text-sm hover:bg-cyber-primary/10 transition-colors disabled:opacity-50"
-          >
-            {saveButtonText}
-          </button>
-          {isEditing && (
-            <button
-              type="button"
-              disabled={saving}
-              onClick={onCancel}
-              className="px-4 py-2 rounded border border-cyber-border text-gray-400 text-sm hover:text-gray-200 transition-colors disabled:opacity-50"
-            >
-              {t('cancel', {
-                ns: 'ui',
-                defaultValue: localizedDefault(isEn, 'Скасувати', 'Cancel'),
-              })}
-            </button>
-          )}
-        </div>
-      </form>
-    </>
+    <label className="block">
+      <span className="block text-xs uppercase tracking-wide text-gray-500 mb-2">{label}</span>
+      {rows ? (
+        <textarea
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          rows={rows}
+          maxLength={maxLength}
+          required
+          className={`${className} resize-none`}
+        />
+      ) : (
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          maxLength={maxLength}
+          required
+          className={className}
+        />
+      )}
+    </label>
   );
 }
 
-function AdminNewsEditorForm({
+function AdminNewsFormFields({
   form,
   isEditing,
   isEn,
@@ -380,32 +281,74 @@ function AdminNewsEditorForm({
   onCancel: () => void;
 }>) {
   const editorTitle = isEditing
-    ? t('adminNewsEdit', {
-        ns: 'ui',
-        defaultValue: localizedDefault(isEn, 'Редагування', 'Edit article'),
-      })
-    : t('adminNewsCreate', {
-        ns: 'ui',
-        defaultValue: localizedDefault(isEn, 'Нова публікація', 'New article'),
-      });
-
+    ? adminUiText(t, isEn, 'adminNewsEdit', 'Редагування', 'Edit article')
+    : adminUiText(t, isEn, 'adminNewsCreate', 'Нова публікація', 'New article');
   const saveButtonText = saving
-    ? t('saving', { ns: 'ui', defaultValue: localizedDefault(isEn, 'Збереження...', 'Saving...') })
-    : t('save', { ns: 'ui', defaultValue: localizedDefault(isEn, 'Зберегти', 'Save') });
+    ? adminUiText(t, isEn, 'saving', 'Збереження...', 'Saving...')
+    : adminUiText(t, isEn, 'save', 'Зберегти', 'Save');
 
   return (
-    <AdminNewsFormFields
-      form={form}
-      isEditing={isEditing}
-      isEn={isEn}
-      saving={saving}
-      t={t}
-      onChange={onChange}
-      onSubmit={onSubmit}
-      onCancel={onCancel}
-      editorTitle={editorTitle}
-      saveButtonText={saveButtonText}
-    />
+    <>
+      <h2 className="font-heading text-lg text-cyber-primary mb-4">{editorTitle}</h2>
+
+      <form onSubmit={onSubmit} className="space-y-4">
+        <AdminNewsLocalizedField
+          label={adminUiText(t, isEn, 'adminNewsTitleUk', 'Заголовок (UK)', 'Title (UK)')}
+          value={form.titleUk}
+          onChange={(value) => onChange({ ...form, titleUk: value })}
+          maxLength={200}
+        />
+        <AdminNewsLocalizedField
+          label={adminUiText(t, isEn, 'adminNewsTitleEn', 'Заголовок (EN)', 'Title (EN)')}
+          value={form.titleEn}
+          onChange={(value) => onChange({ ...form, titleEn: value })}
+          maxLength={200}
+        />
+        <AdminNewsLocalizedField
+          label={adminUiText(t, isEn, 'adminNewsBodyUk', 'Текст (UK)', 'Text (UK)')}
+          value={form.bodyUk}
+          onChange={(value) => onChange({ ...form, bodyUk: value })}
+          maxLength={10000}
+          rows={5}
+        />
+        <AdminNewsLocalizedField
+          label={adminUiText(t, isEn, 'adminNewsBodyEn', 'Текст (EN)', 'Text (EN)')}
+          value={form.bodyEn}
+          onChange={(value) => onChange({ ...form, bodyEn: value })}
+          maxLength={10000}
+          rows={5}
+        />
+
+        <label className="flex items-center gap-2 text-sm text-gray-300">
+          <input
+            type="checkbox"
+            checked={form.isPublished}
+            onChange={(event) => onChange({ ...form, isPublished: event.target.checked })}
+          />
+          {adminUiText(t, isEn, 'adminNewsPublish', 'Опублікувати', 'Publish')}
+        </label>
+
+        <div className="flex items-center gap-2 pt-2">
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-2 rounded border border-cyber-primary text-cyber-primary text-sm hover:bg-cyber-primary/10 transition-colors disabled:opacity-50"
+          >
+            {saveButtonText}
+          </button>
+          {isEditing && (
+            <button
+              type="button"
+              disabled={saving}
+              onClick={onCancel}
+              className="px-4 py-2 rounded border border-cyber-border text-gray-400 text-sm hover:text-gray-200 transition-colors disabled:opacity-50"
+            >
+              {adminUiText(t, isEn, 'cancel', 'Скасувати', 'Cancel')}
+            </button>
+          )}
+        </div>
+      </form>
+    </>
   );
 }
 
@@ -461,7 +404,7 @@ export default function AdminNewsPage() {
           />
         }
         detail={
-          <AdminNewsEditorForm
+          <AdminNewsFormFields
             form={form}
             isEditing={isEditing}
             isEn={isEn}

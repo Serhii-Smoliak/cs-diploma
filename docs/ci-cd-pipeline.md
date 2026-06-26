@@ -1,7 +1,5 @@
 # CI/CD Security Pipeline — CyberTactics
 
-Тиждень 5: автоматизовані перевірки безпеки перед деплоєм на Railway.
-
 ## Схема
 
 ```
@@ -118,11 +116,3 @@ docker build -t cybertactics-server -f server/Dockerfile .
 ## Dependabot
 
 `.github/dependabot.yml` — щотижневі PR на оновлення залежностей у `shared`, `server`, `client` та GitHub Actions.
-
-## Артефакти для звіту
-
-- `.github/workflows/security-ci.yml`
-- `sonar-project.properties`
-- посилання на успішний GitHub Actions run
-- SonarCloud dashboard / скриншот Quality Gate
-- лог dependency audit / Snyk / Trivy у CI

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 const { t, i18n } = vi.hoisted(() => ({
@@ -18,10 +18,6 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t, i18n }),
 }));
 
-vi.mock('../i18n/config', () => ({
-  loadMultipleNamespaces: vi.fn().mockResolvedValue(undefined),
-}));
-
 vi.mock('../store/authStore', () => ({
   useAuthStore: (selector: (state: { user: { xp: number } | null }) => unknown) =>
     selector({ user: { xp: 150 } }),
@@ -30,24 +26,20 @@ vi.mock('../store/authStore', () => ({
 import RanksPage from './RanksPage';
 
 describe('RanksPage', () => {
-  it('renders rank tiers for current user xp', async () => {
+  it('renders rank tiers for current user xp', () => {
     render(<RanksPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Script Kiddie')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Script Kiddie')).toBeInTheDocument();
 
     expect(screen.getByText('Novice Hacker')).toBeInTheDocument();
     expect(screen.getByText('0–499 XP')).toBeInTheDocument();
     expect(screen.getByText('Your rank')).toBeInTheDocument();
   });
 
-  it('centers page content', async () => {
+  it('centers page content', () => {
     const { container } = render(<RanksPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Career Ranks')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Career Ranks')).toBeInTheDocument();
 
     const centeredWrapper = container.querySelector('.max-w-lg.mx-auto.text-center');
     expect(centeredWrapper).toBeInTheDocument();

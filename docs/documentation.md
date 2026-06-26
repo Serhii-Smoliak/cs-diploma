@@ -983,7 +983,7 @@ cd client && npm run dev
 
 | Етап | Інструмент | Що перевіряє |
 |------|------------|--------------|
-| CI/CD | **GitHub Actions** | build, lint, security gates перед merge/deploy (див. [ci-cd-pipeline.md](./diploma-docs/ci-cd-pipeline.md)) |
+| CI/CD | **GitHub Actions** | build, lint, security gates перед merge/deploy (див. [ci-cd-pipeline.md](./ci-cd-pipeline.md)) |
 | SAST | **SonarCloud** / SonarQube | вихідний код (client, server, shared): вразливості, secrets, smells |
 | DAST | **OWASP ZAP** | запущений застосунок: заголовки, auth, API, OWASP Top 10 |
 | SCA | **npm audit** | вразливості в залежностях |

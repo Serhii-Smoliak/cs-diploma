@@ -206,9 +206,14 @@ describe('AdminNewsPage', () => {
 
     await screen.findByText('Новина UA');
     await user.click(screen.getByRole('button', { name: 'Видалити' }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('open');
+    expect(screen.getByText('Видалити публікацію?')).toBeInTheDocument();
+
     await user.click(screen.getByRole('button', { name: 'Скасувати' }));
 
-    expect(screen.queryByText('Видалити публікацію?')).not.toBeInTheDocument();
+    expect(dialog).not.toHaveAttribute('open');
     expect(api.deleteAdminNewsPost).not.toHaveBeenCalled();
   });
 
