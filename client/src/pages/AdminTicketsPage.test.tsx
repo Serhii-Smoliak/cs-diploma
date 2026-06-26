@@ -335,6 +335,12 @@ describe('AdminTicketsPage', () => {
     expect(screen.getByText('Select a ticket to view details.')).toBeInTheDocument();
   });
 
+  it('renders master-detail list heading', async () => {
+    render(<AdminTicketsPage />);
+
+    expect(await screen.findByRole('heading', { name: 'Усі звернення' })).toBeInTheDocument();
+  });
+
   it('shows closed ticket closure reason in detail panel', async () => {
     vi.mocked(api.getAdminSupportTickets).mockResolvedValue([
       {

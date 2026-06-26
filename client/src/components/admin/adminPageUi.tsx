@@ -88,6 +88,90 @@ export function AdminDetailSection({ children }: Readonly<{ children: ReactNode 
   );
 }
 
+export function AdminEmptyListNotice({ message }: Readonly<{ message: string }>) {
+  return <div className="p-6 text-center text-gray-400 text-sm">{message}</div>;
+}
+
+export function AdminScrollableList({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <div className="divide-y divide-cyber-border/60 max-h-[32rem] overflow-y-auto">{children}</div>
+  );
+}
+
+export function AdminDetailPlaceholder({ message }: Readonly<{ message: string }>) {
+  return (
+    <div className="h-full flex items-center justify-center text-gray-500 text-sm">{message}</div>
+  );
+}
+
+export function AdminMasterDetailLayout({
+  loading,
+  error,
+  loadingLabel,
+  listTitle,
+  list,
+  detail,
+}: Readonly<{
+  loading: boolean;
+  error: string | null;
+  loadingLabel: string;
+  listTitle: string;
+  list: ReactNode;
+  detail: ReactNode;
+}>) {
+  return (
+    <AdminAsyncState loading={loading} error={error} loadingLabel={loadingLabel}>
+      <AdminTwoColumnGrid>
+        <AdminListSection title={listTitle}>{list}</AdminListSection>
+        <AdminDetailSection>{detail}</AdminDetailSection>
+      </AdminTwoColumnGrid>
+    </AdminAsyncState>
+  );
+}
+
+export function AdminConfirmModal({
+  isOpen,
+  titleId,
+  title,
+  message,
+  confirmLabel,
+  loadingLabel,
+  isLoading,
+  onCancel,
+  onConfirm,
+  children,
+  t,
+  isEn,
+}: Readonly<
+  Pick<
+    ConfirmModalProps,
+    'isOpen' | 'titleId' | 'title' | 'message' | 'isLoading' | 'onCancel' | 'onConfirm'
+  > & {
+    confirmLabel: string;
+    loadingLabel: string;
+    children?: ReactNode;
+    t: TFunction;
+    isEn: boolean;
+  }
+>) {
+  return (
+    <ConfirmModal
+      isOpen={isOpen}
+      titleId={titleId}
+      title={title}
+      message={message}
+      cancelLabel={adminCancelLabel(t, isEn)}
+      confirmLabel={confirmLabel}
+      loadingLabel={loadingLabel}
+      isLoading={isLoading}
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    >
+      {children}
+    </ConfirmModal>
+  );
+}
+
 export function AdminDangerConfirmModal({
   isOpen,
   titleId,

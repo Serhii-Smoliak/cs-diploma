@@ -278,4 +278,11 @@ describe('AdminNewsPage', () => {
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
+
+  it('renders master-detail sections after load', async () => {
+    render(<AdminNewsPage />);
+
+    expect(await screen.findByRole('heading', { name: 'Усі публікації' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Нова публікація' })).toBeInTheDocument();
+  });
 });

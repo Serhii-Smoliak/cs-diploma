@@ -2,17 +2,17 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import {
-  AdminAsyncState,
   AdminDangerConfirmModal,
-  AdminDetailSection,
-  AdminListSection,
+  AdminMasterDetailLayout,
   AdminPageShell,
-  AdminTwoColumnGrid,
+  AdminEmptyListNotice,
+  AdminScrollableList,
 } from '../components/admin/adminPageUi';
 import {
+  adminErrorText,
+  adminLoadingLabel,
   adminUiText,
   localizedDefault,
-  toErrorMessage,
 } from '../components/admin/adminPageUiHelpers';
 import { api, type NewsPost } from '../services/api';
 
@@ -43,12 +43,13 @@ function useAdminNews(t: TFunction, isEn: boolean) {
       setPosts(data);
     } catch (err) {
       setError(
-        toErrorMessage(
-          err,
-          t('adminNewsLoadError', {
-            ns: 'ui',
-            defaultValue: isEn ? 'Failed to load news.' : 'Не вдалося завантажити новини.',
-          })
+        adminErrorText(
+          t,
+          isEn,
+          'adminNewsLoadError',
+          'Не вдалося завантажити новини.',
+          'Failed to load news.',
+          err
         )
       );
     } finally {
@@ -98,12 +99,13 @@ function useAdminNews(t: TFunction, isEn: boolean) {
       await loadPosts();
     } catch (err) {
       setError(
-        toErrorMessage(
-          err,
-          t('adminNewsSaveError', {
-            ns: 'ui',
-            defaultValue: isEn ? 'Failed to save news.' : 'Не вдалося зберегти новину.',
-          })
+        adminErrorText(
+          t,
+          isEn,
+          'adminNewsSaveError',
+          'Не вдалося зберегти новину.',
+          'Failed to save news.',
+          err
         )
       );
     } finally {
@@ -127,12 +129,13 @@ function useAdminNews(t: TFunction, isEn: boolean) {
       await loadPosts();
     } catch (err) {
       setError(
-        toErrorMessage(
-          err,
-          t('adminNewsDeleteError', {
-            ns: 'ui',
-            defaultValue: isEn ? 'Failed to delete news.' : 'Не вдалося видалити новину.',
-          })
+        adminErrorText(
+          t,
+          isEn,
+          'adminNewsDeleteError',
+          'Не вдалося видалити новину.',
+          'Failed to delete news.',
+          err
         )
       );
     } finally {
@@ -176,17 +179,20 @@ function AdminNewsPostList({
 }>) {
   if (posts.length === 0) {
     return (
-      <div className="p-6 text-center text-gray-400 text-sm">
-        {t('adminNewsEmpty', {
-          ns: 'ui',
-          defaultValue: isEn ? 'No articles yet.' : 'Публікацій поки немає.',
-        })}
-      </div>
+      <AdminEmptyListNotice
+        message={adminUiText(
+          t,
+          isEn,
+          'adminNewsEmpty',
+          'Публікацій поки немає.',
+          'No articles yet.'
+        )}
+      />
     );
   }
 
   return (
-    <div className="divide-y divide-cyber-border/60 max-h-[32rem] overflow-y-auto">
+    <AdminScrollableList>
       {posts.map((post) => (
         <div
           key={post.id}
@@ -217,7 +223,7 @@ function AdminNewsPostList({
           </div>
         </div>
       ))}
-    </div>
+    </AdminScrollableList>
   );
 }
 
@@ -439,39 +445,34 @@ export default function AdminNewsPage() {
       title={adminUiText(t, isEn, 'adminNews', 'Керування новинами', 'News management')}
       headerAction={createButton}
     >
-      <AdminAsyncState
+      <AdminMasterDetailLayout
         loading={loading}
         error={error}
-        loadingLabel={adminUiText(t, isEn, 'loading', 'Завантаження...', 'Loading...')}
-      >
-        <AdminTwoColumnGrid>
-          <AdminListSection
-            title={adminUiText(t, isEn, 'adminNewsList', 'Усі публікації', 'All articles')}
-          >
-            <AdminNewsPostList
-              posts={posts}
-              selectedId={selectedId}
-              isEn={isEn}
-              t={t}
-              onEdit={startEdit}
-              onDelete={setDeletingId}
-            />
-          </AdminListSection>
-
-          <AdminDetailSection>
-            <AdminNewsEditorForm
-              form={form}
-              isEditing={isEditing}
-              isEn={isEn}
-              saving={saving}
-              t={t}
-              onChange={setForm}
-              onSubmit={handleSubmit}
-              onCancel={resetForm}
-            />
-          </AdminDetailSection>
-        </AdminTwoColumnGrid>
-      </AdminAsyncState>
+        loadingLabel={adminLoadingLabel(t, isEn)}
+        listTitle={adminUiText(t, isEn, 'adminNewsList', 'Усі публікації', 'All articles')}
+        list={
+          <AdminNewsPostList
+            posts={posts}
+            selectedId={selectedId}
+            isEn={isEn}
+            t={t}
+            onEdit={startEdit}
+            onDelete={setDeletingId}
+          />
+        }
+        detail={
+          <AdminNewsEditorForm
+            form={form}
+            isEditing={isEditing}
+            isEn={isEn}
+            saving={saving}
+            t={t}
+            onChange={setForm}
+            onSubmit={handleSubmit}
+            onCancel={resetForm}
+          />
+        }
+      />
 
       <AdminDangerConfirmModal
         isOpen={deletingId !== null}

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   adminCancelLabel,
   adminDeleteLabels,
+  adminErrorText,
   adminLoadingLabel,
   adminUiText,
   localizedDefault,
@@ -35,5 +36,11 @@ describe('adminPageUiHelpers', () => {
   it('extracts error message from Error or fallback', () => {
     expect(toErrorMessage(new Error('boom'), 'fallback')).toBe('boom');
     expect(toErrorMessage('x', 'fallback')).toBe('fallback');
+    expect(
+      adminErrorText(t, false, 'adminTicketsReplyError', 'Помилка', 'Error', new Error('boom'))
+    ).toBe('boom');
+    expect(adminErrorText(t, false, 'adminTicketsReplyError', 'Помилка', 'Error', 'x')).toBe(
+      'Помилка'
+    );
   });
 });

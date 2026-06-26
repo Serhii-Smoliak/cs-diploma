@@ -32,3 +32,14 @@ export function adminDeleteLabels(t: TFunction, isEn: boolean) {
     loadingLabel: adminUiText(t, isEn, 'deleting', 'Видалення...', 'Deleting...'),
   };
 }
+
+export function adminErrorText(
+  t: TFunction,
+  isEn: boolean,
+  key: string,
+  uk: string,
+  en: string,
+  err: unknown
+): string {
+  return toErrorMessage(err, adminUiText(t, isEn, key, uk, en));
+}
