@@ -199,6 +199,18 @@ cd client && npm run build && cd ..
 
 Повна документація — [documentation.md](docs/documentation.md) (API, БД, Stealth, підтримка, сповіщення, threat model).
 
+## Документація проєкту
+
+| Документ | Опис |
+|----------|------|
+| [docs/README.md](docs/README.md) | Індекс усіх файлів у `docs/` |
+| [docs/documentation.md](docs/documentation.md) | Технічна документація MVP |
+| [docs/security-requirements.md](docs/security-requirements.md) | Вимоги безпеки та acceptance criteria |
+| [docs/ci-cd-pipeline.md](docs/ci-cd-pipeline.md) | CI/CD і security gates |
+| [docs/weekly-report.md](docs/weekly-report.md) | Щотижневий звіт виконання (8 тижнів) |
+| [docs/ui-overview.md](docs/ui-overview.md) | Огляд інтерфейсу зі скріншотами |
+| [docs/owasp-zap-report.md](docs/owasp-zap-report.md) | Звіт OWASP ZAP (DAST backend API) |
+
 ## Особливості
 
 - Браузерний симулятор без окремого інсталювання клієнта
