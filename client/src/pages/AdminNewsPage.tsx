@@ -2,6 +2,15 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import ConfirmModal from '../components/common/ConfirmModal';
+import {
+  AdminErrorPanel,
+  AdminListSection,
+  AdminLoadingPanel,
+  adminCancelLabel,
+  adminDeleteLabels,
+  adminLoadingLabel,
+  localizedDefault,
+} from '../components/admin/adminPageUi';
 import { api, type NewsPost } from '../services/api';
 
 const emptyForm = {
@@ -13,10 +22,6 @@ const emptyForm = {
 };
 
 type NewsFormState = typeof emptyForm;
-
-function localizedDefault(isEn: boolean, uk: string, en: string): string {
-  return isEn ? en : uk;
-}
 
 function toErrorMessage(err: unknown, fallback: string): string {
   return err instanceof Error ? err.message : fallback;
@@ -419,6 +424,7 @@ export default function AdminNewsPage() {
     handleSubmit,
     handleDelete,
   } = useAdminNews(t, isEn);
+  const deleteLabels = adminDeleteLabels(t, isEn);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
@@ -442,29 +448,18 @@ export default function AdminNewsPage() {
           </button>
         </div>
 
-        {loading && (
-          <div className="cyber-panel p-6 text-center text-gray-400 text-sm">
-            {t('loading', { ns: 'ui', defaultValue: isEn ? 'Loading...' : 'Завантаження...' })}
-          </div>
-        )}
+        {loading && <AdminLoadingPanel label={adminLoadingLabel(t, isEn)} />}
 
-        {!loading && error && (
-          <div className="cyber-panel p-4 border border-red-500/40 text-red-400 text-sm">
-            {error}
-          </div>
-        )}
+        {!loading && error && <AdminErrorPanel message={error} />}
 
         {!loading && !error && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <section className="cyber-panel border border-cyber-border rounded-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-cyber-border bg-cyber-panel/80">
-                <h2 className="font-heading text-lg text-cyber-primary">
-                  {t('adminNewsList', {
-                    ns: 'ui',
-                    defaultValue: isEn ? 'All articles' : 'Усі публікації',
-                  })}
-                </h2>
-              </div>
+            <AdminListSection
+              title={t('adminNewsList', {
+                ns: 'ui',
+                defaultValue: localizedDefault(isEn, 'Усі публікації', 'All articles'),
+              })}
+            >
               <AdminNewsPostList
                 posts={posts}
                 selectedId={selectedId}
@@ -473,7 +468,7 @@ export default function AdminNewsPage() {
                 onEdit={startEdit}
                 onDelete={setDeletingId}
               />
-            </section>
+            </AdminListSection>
 
             <section className="cyber-panel border border-cyber-border rounded-lg p-4 sm:p-6">
               <AdminNewsEditorForm
@@ -504,12 +499,9 @@ export default function AdminNewsPage() {
             ? 'This article will be permanently removed.'
             : 'Цю публікацію буде видалено назавжди.',
         })}
-        cancelLabel={t('cancel', { ns: 'ui', defaultValue: isEn ? 'Cancel' : 'Скасувати' })}
-        confirmLabel={t('delete', { ns: 'ui', defaultValue: isEn ? 'Delete' : 'Видалити' })}
-        loadingLabel={t('deleting', {
-          ns: 'ui',
-          defaultValue: isEn ? 'Deleting...' : 'Видалення...',
-        })}
+        cancelLabel={adminCancelLabel(t, isEn)}
+        confirmLabel={deleteLabels.confirmLabel}
+        loadingLabel={deleteLabels.loadingLabel}
         isLoading={saving}
         variant="danger"
         onCancel={() => setDeletingId(null)}

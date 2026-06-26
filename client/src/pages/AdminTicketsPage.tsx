@@ -2,6 +2,15 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import ConfirmModal from '../components/common/ConfirmModal';
+import {
+  AdminErrorPanel,
+  AdminListSection,
+  AdminLoadingPanel,
+  adminCancelLabel,
+  adminDeleteLabels,
+  adminLoadingLabel,
+  localizedDefault,
+} from '../components/admin/adminPageUi';
 import { useAuthStore } from '../store/authStore';
 import {
   api,
@@ -689,30 +698,21 @@ function AdminTicketsPageContent({
   onEditingBodyChange: (value: string) => void;
 }>) {
   if (loading) {
-    return (
-      <div className="cyber-panel p-6 text-center text-gray-400 text-sm">
-        {t('loading', { ns: 'ui', defaultValue: isEn ? 'Loading...' : 'Завантаження...' })}
-      </div>
-    );
+    return <AdminLoadingPanel label={adminLoadingLabel(t, isEn)} />;
   }
 
   if (error) {
-    return (
-      <div className="cyber-panel p-4 border border-red-500/40 text-red-400 text-sm">{error}</div>
-    );
+    return <AdminErrorPanel message={error} />;
   }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <section className="cyber-panel border border-cyber-border rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-cyber-border bg-cyber-panel/80">
-          <h2 className="font-heading text-lg text-cyber-primary">
-            {t('adminTicketsList', {
-              ns: 'ui',
-              defaultValue: isEn ? 'All requests' : 'Усі звернення',
-            })}
-          </h2>
-        </div>
+      <AdminListSection
+        title={t('adminTicketsList', {
+          ns: 'ui',
+          defaultValue: localizedDefault(isEn, 'Усі звернення', 'All requests'),
+        })}
+      >
         <AdminTicketsList
           tickets={tickets}
           selectedTicketId={selectedTicket?.id ?? null}
@@ -720,7 +720,7 @@ function AdminTicketsPageContent({
           t={t}
           onSelect={onSelectTicket}
         />
-      </section>
+      </AdminListSection>
 
       <section className="cyber-panel border border-cyber-border rounded-lg p-4 sm:p-6 min-h-[20rem]">
         {selectedTicket ? (
@@ -748,7 +748,11 @@ function AdminTicketsPageContent({
           <div className="h-full flex items-center justify-center text-gray-500 text-sm">
             {t('adminTicketsSelect', {
               ns: 'ui',
-              defaultValue: isEn ? 'Select a ticket to view details.' : 'Оберіть звернення.',
+              defaultValue: localizedDefault(
+                isEn,
+                'Оберіть звернення.',
+                'Select a ticket to view details.'
+              ),
             })}
           </div>
         )}
@@ -788,6 +792,9 @@ function AdminTicketsModals({
   onDeleteCancel: () => void;
   onDeleteConfirm: () => void;
 }>) {
+  const cancelLabel = adminCancelLabel(t, isEn);
+  const deleteLabels = adminDeleteLabels(t, isEn);
+
   return (
     <>
       <ConfirmModal
@@ -795,22 +802,24 @@ function AdminTicketsModals({
         titleId="admin-ticket-close-title"
         title={t('adminTicketsCloseTitle', {
           ns: 'ui',
-          defaultValue: isEn ? 'Close ticket?' : 'Закрити звернення?',
+          defaultValue: localizedDefault(isEn, 'Закрити звернення?', 'Close ticket?'),
         })}
         message={t('adminTicketsCloseMessage', {
           ns: 'ui',
-          defaultValue: isEn
-            ? 'The ticket will be closed and no further replies can be sent.'
-            : 'Звернення буде закрито, і на нього більше не можна буде відповісти.',
+          defaultValue: localizedDefault(
+            isEn,
+            'Звернення буде закрито, і на нього більше не можна буде відповісти.',
+            'The ticket will be closed and no further replies can be sent.'
+          ),
         })}
-        cancelLabel={t('cancel', { ns: 'ui', defaultValue: isEn ? 'Cancel' : 'Скасувати' })}
+        cancelLabel={cancelLabel}
         confirmLabel={t('adminTicketsCloseSubmit', {
           ns: 'ui',
-          defaultValue: isEn ? 'Close ticket' : 'Закрити звернення',
+          defaultValue: localizedDefault(isEn, 'Закрити звернення', 'Close ticket'),
         })}
         loadingLabel={t('adminTicketsCloseClosing', {
           ns: 'ui',
-          defaultValue: isEn ? 'Closing...' : 'Закриття...',
+          defaultValue: localizedDefault(isEn, 'Закриття...', 'Closing...'),
         })}
         isLoading={closing}
         onCancel={onCloseModalCancel}
@@ -832,20 +841,19 @@ function AdminTicketsModals({
         titleId="admin-ticket-delete-title"
         title={t('adminTicketsDeleteTitle', {
           ns: 'ui',
-          defaultValue: isEn ? 'Delete reply?' : 'Видалити відповідь?',
+          defaultValue: localizedDefault(isEn, 'Видалити відповідь?', 'Delete reply?'),
         })}
         message={t('adminTicketsDeleteMessage', {
           ns: 'ui',
-          defaultValue: isEn
-            ? 'This reply will be removed from the ticket.'
-            : 'Цю відповідь буде видалено зі звернення.',
+          defaultValue: localizedDefault(
+            isEn,
+            'Цю відповідь буде видалено зі звернення.',
+            'This reply will be removed from the ticket.'
+          ),
         })}
-        cancelLabel={t('cancel', { ns: 'ui', defaultValue: isEn ? 'Cancel' : 'Скасувати' })}
-        confirmLabel={t('delete', { ns: 'ui', defaultValue: isEn ? 'Delete' : 'Видалити' })}
-        loadingLabel={t('deleting', {
-          ns: 'ui',
-          defaultValue: isEn ? 'Deleting...' : 'Видалення...',
-        })}
+        cancelLabel={cancelLabel}
+        confirmLabel={deleteLabels.confirmLabel}
+        loadingLabel={deleteLabels.loadingLabel}
         isLoading={deleting}
         variant="danger"
         onCancel={onDeleteCancel}
