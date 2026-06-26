@@ -40,7 +40,7 @@ function validateRegex(answer: string, pattern: string, testString: string): boo
       return false;
     }
 
-    const normalizedAnswer = answer.replace(/\\\\/g, '\\');
+    const normalizedAnswer = answer.replaceAll('\\\\', '\\');
     const regex = new RegExp(normalizedAnswer);
     const result = regex.test(testString);
     console.log('Regex validation:', { answer, normalizedAnswer, testString, result });
