@@ -3,6 +3,33 @@ import { cleanup } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, vi } from 'vitest';
 
+function polyfillHTMLDialogElement() {
+  if (typeof HTMLDialogElement === 'undefined') {
+    return;
+  }
+
+  if (!HTMLDialogElement.prototype.showModal) {
+    HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
+      if (this.hasAttribute('open')) {
+        return;
+      }
+      this.setAttribute('open', '');
+    };
+  }
+
+  if (!HTMLDialogElement.prototype.close) {
+    HTMLDialogElement.prototype.close = function close(this: HTMLDialogElement) {
+      if (!this.hasAttribute('open')) {
+        return;
+      }
+      this.removeAttribute('open');
+      this.dispatchEvent(new Event('close', { bubbles: false, cancelable: false }));
+    };
+  }
+}
+
+polyfillHTMLDialogElement();
+
 vi.mock('framer-motion', () => {
   const motionPropKeys = new Set([
     'whileHover',

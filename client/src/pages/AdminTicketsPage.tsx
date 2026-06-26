@@ -271,22 +271,54 @@ function useAdminTickets(t: TFunction, isEn: boolean, currentUserId: string | un
   };
 }
 
-export default function AdminTicketsPage() {
-  const { t, i18n: i18nInstance } = useTranslation(['ui']);
-  const isEn = i18nInstance.resolvedLanguage?.startsWith('en') ?? false;
-  const currentUserId = useAuthStore((state) => state.user?.id);
-  const state = useAdminTickets(t, isEn, currentUserId);
-  const selectedCloseReasonLabel = state.selectedTicket
-    ? getSupportCloseReasonLabel(
-        state.selectedTicket.closeReason,
-        state.selectedTicket.closeReasonText,
+type AdminTicketsState = ReturnType<typeof useAdminTickets>;
+
+function AdminTicketsPageBody({
+  state,
+  isEn,
+  t,
+  selectedCloseReasonLabel,
+}: Readonly<{
+  state: AdminTicketsState;
+  isEn: boolean;
+  t: TFunction;
+  selectedCloseReasonLabel: string | null;
+}>) {
+  const detail = state.selectedTicket ? (
+    <AdminTicketDetailPanel
+      ticket={state.selectedTicket}
+      selectedCloseReasonLabel={selectedCloseReasonLabel}
+      replyBody={state.replyBody}
+      replying={state.replying}
+      editingMessageId={state.editingMessageId}
+      editingBody={state.editingBody}
+      savingEdit={state.savingEdit}
+      isEn={isEn}
+      t={t}
+      canManageMessage={state.canManageMessage}
+      onReplyBodyChange={state.setReplyBody}
+      onReplySubmit={state.handleReply}
+      onOpenCloseModal={() => state.setIsCloseModalOpen(true)}
+      onStartEdit={state.startEditingMessage}
+      onCancelEdit={state.cancelEditingMessage}
+      onSaveEdit={state.handleSaveEdit}
+      onDeleteMessage={state.setDeletingMessageId}
+      onEditingBodyChange={state.setEditingBody}
+    />
+  ) : (
+    <AdminDetailPlaceholder
+      message={adminUiText(
         t,
-        isEn
-      )
-    : null;
+        isEn,
+        'adminTicketsSelect',
+        'Оберіть звернення.',
+        'Select a ticket to view details.'
+      )}
+    />
+  );
 
   return (
-    <AdminPageShell title={adminUiText(t, isEn, 'adminTickets', 'Звернення', 'Support tickets')}>
+    <>
       <AdminMasterDetailLayout
         loading={state.loading}
         error={state.error}
@@ -301,40 +333,7 @@ export default function AdminTicketsPage() {
             onSelect={state.handleSelectTicket}
           />
         }
-        detail={
-          state.selectedTicket ? (
-            <AdminTicketDetailPanel
-              ticket={state.selectedTicket}
-              selectedCloseReasonLabel={selectedCloseReasonLabel}
-              replyBody={state.replyBody}
-              replying={state.replying}
-              editingMessageId={state.editingMessageId}
-              editingBody={state.editingBody}
-              savingEdit={state.savingEdit}
-              isEn={isEn}
-              t={t}
-              canManageMessage={state.canManageMessage}
-              onReplyBodyChange={state.setReplyBody}
-              onReplySubmit={state.handleReply}
-              onOpenCloseModal={() => state.setIsCloseModalOpen(true)}
-              onStartEdit={state.startEditingMessage}
-              onCancelEdit={state.cancelEditingMessage}
-              onSaveEdit={state.handleSaveEdit}
-              onDeleteMessage={state.setDeletingMessageId}
-              onEditingBodyChange={state.setEditingBody}
-            />
-          ) : (
-            <AdminDetailPlaceholder
-              message={adminUiText(
-                t,
-                isEn,
-                'adminTicketsSelect',
-                'Оберіть звернення.',
-                'Select a ticket to view details.'
-              )}
-            />
-          )
-        }
+        detail={detail}
       />
 
       <AdminTicketsModals
@@ -352,6 +351,32 @@ export default function AdminTicketsPage() {
         onReasonTextChange={state.setCloseReasonText}
         onDeleteCancel={() => state.setDeletingMessageId(null)}
         onDeleteConfirm={state.handleDeleteConfirm}
+      />
+    </>
+  );
+}
+
+export default function AdminTicketsPage() {
+  const { t, i18n: i18nInstance } = useTranslation(['ui']);
+  const isEn = i18nInstance.resolvedLanguage?.startsWith('en') ?? false;
+  const currentUserId = useAuthStore((state) => state.user?.id);
+  const state = useAdminTickets(t, isEn, currentUserId);
+  const selectedCloseReasonLabel = state.selectedTicket
+    ? getSupportCloseReasonLabel(
+        state.selectedTicket.closeReason,
+        state.selectedTicket.closeReasonText,
+        t,
+        isEn
+      )
+    : null;
+
+  return (
+    <AdminPageShell title={adminUiText(t, isEn, 'adminTickets', 'Звернення', 'Support tickets')}>
+      <AdminTicketsPageBody
+        state={state}
+        isEn={isEn}
+        t={t}
+        selectedCloseReasonLabel={selectedCloseReasonLabel}
       />
     </AdminPageShell>
   );

@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import ConfirmModal from './ConfirmModal';
 
 describe('ConfirmModal', () => {
-  it('renders nothing when closed', () => {
-    const { container } = render(
+  it('keeps dialog closed when isOpen is false', () => {
+    render(
       <ConfirmModal
         isOpen={false}
         titleId="test-title"
@@ -16,7 +16,25 @@ describe('ConfirmModal', () => {
       />
     );
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByRole('dialog', { hidden: true })).not.toHaveAttribute('open');
+  });
+
+  it('opens native dialog when isOpen is true', () => {
+    render(
+      <ConfirmModal
+        isOpen
+        titleId="test-title"
+        title="Sync MITRE?"
+        message="Continue?"
+        cancelLabel="Cancel"
+        confirmLabel="Yes"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('dialog')).toHaveAttribute('open');
+    expect(screen.getByText('Sync MITRE?')).toBeInTheDocument();
   });
 
   it('calls handlers from action buttons', () => {
