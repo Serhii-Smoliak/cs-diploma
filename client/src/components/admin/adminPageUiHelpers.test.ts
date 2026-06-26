@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
+import type { TFunction } from 'i18next';
+import { describe, expect, it } from 'vitest';
 import {
   adminCancelLabel,
   adminDeleteLabels,
@@ -9,7 +10,8 @@ import {
   toErrorMessage,
 } from './adminPageUiHelpers';
 
-const t = vi.fn((key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key);
+const t = ((key: string, options?: { defaultValue?: string }) =>
+  options?.defaultValue ?? key) as TFunction;
 
 describe('adminPageUiHelpers', () => {
   it('returns localized default by locale', () => {

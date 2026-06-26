@@ -1,8 +1,10 @@
+import type { TFunction } from 'i18next';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 const { t, i18n } = vi.hoisted(() => ({
-  t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key,
+  t: ((key: string, options?: { defaultValue?: string }) =>
+    options?.defaultValue ?? key) as TFunction,
   i18n: { resolvedLanguage: 'uk' as string },
 }));
 
