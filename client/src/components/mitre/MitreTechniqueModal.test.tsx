@@ -181,4 +181,33 @@ describe('MitreTechniqueModal', () => {
     fireEvent.click(stageLabel!.parentElement!);
     fireEvent.click(stageLabel!.parentElement!);
   });
+
+  it('closes modal on Escape key', async () => {
+    const onClose = vi.fn();
+    getMitreTechnique.mockResolvedValue({ ...technique, relatedMissions: [] });
+
+    render(
+      <MemoryRouter>
+        <MitreTechniqueModal technique={technique} isOpen isCompleted={false} onClose={onClose} />
+      </MemoryRouter>
+    );
+
+    const dialog = screen.getByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('renders accessible dialog attributes', async () => {
+    getMitreTechnique.mockResolvedValue({ ...technique, relatedMissions: [] });
+
+    render(
+      <MemoryRouter>
+        <MitreTechniqueModal technique={technique} isOpen isCompleted={false} onClose={vi.fn()} />
+      </MemoryRouter>
+    );
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveAttribute('aria-label', 'MITRE technique details');
+  });
 });

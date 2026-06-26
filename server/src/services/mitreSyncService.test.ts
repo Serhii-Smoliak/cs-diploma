@@ -167,4 +167,26 @@ describe('syncMitreTechniques', () => {
       expect.arrayContaining(['Використовуйте багатофакторну автентифікацію'])
     );
   });
+
+  it('extracts examples from description with MITRE links and filters technique IDs', async () => {
+    fetchMock.mockResolvedValue(
+      createBundle([
+        createTechnique({
+          external_references: [{ source_name: 'mitre-attack', external_id: 'T1598' }],
+          description:
+            'Attackers can use [search engines](https://attack.mitre.org/techniques/T1593/001/) or [social media](https://attack.mitre.org/techniques/T1593/002/). Also see [T1234](https://attack.mitre.org/techniques/T1234/) and [unclosed bracket text',
+        }),
+      ])
+    );
+
+    const result = await syncMitreTechniques();
+
+    expect(result.synced).toBe(1);
+    const examples = prismaMock.mitreTechnique.upsert.mock.calls[0]?.[0]?.create
+      ?.examples as string[];
+    expect(examples).toContain('search engines');
+    expect(examples).toContain('social media');
+    expect(examples).not.toContain('T1234');
+    expect(examples).not.toContain('unclosed bracket text');
+  });
 });
