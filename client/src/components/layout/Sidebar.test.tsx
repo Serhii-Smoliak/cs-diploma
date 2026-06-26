@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
@@ -9,6 +9,10 @@ const sidebarState = vi.hoisted(() => ({
   isMobileOpen: true,
   toggle: vi.fn(),
   closeMobile: vi.fn(),
+}));
+
+const authState = vi.hoisted(() => ({
+  role: 'ADMIN' as 'USER' | 'ADMIN',
 }));
 
 vi.mock('react-i18next', () => ({
@@ -20,7 +24,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('../../store/authStore', () => ({
   useAuthStore: (selector?: (state: { user: { role: 'USER' | 'ADMIN' } | null }) => unknown) => {
-    const state = { user: { role: 'ADMIN' as const } };
+    const state = { user: { role: authState.role } };
     return selector ? selector(state) : state;
   },
 }));
@@ -38,6 +42,14 @@ vi.mock('../../store/sidebarStore', () => ({
 }));
 
 describe('Sidebar', () => {
+  beforeEach(() => {
+    authState.role = 'ADMIN';
+    sidebarState.isCollapsed = false;
+    sidebarState.isMobileOpen = true;
+    sidebarState.toggle.mockClear();
+    sidebarState.closeMobile.mockClear();
+  });
+
   it('renders navigation links and toggles collapse', async () => {
     const user = userEvent.setup();
 
@@ -56,5 +68,45 @@ describe('Sidebar', () => {
 
     await user.click(screen.getByTitle('collapseMenu'));
     expect(sidebarState.toggle).toHaveBeenCalled();
+  });
+
+  it('shows icon-only links when collapsed on desktop', () => {
+    sidebarState.isCollapsed = true;
+    sidebarState.isMobileOpen = false;
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Sidebar />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByText('CyberTactics')).not.toBeInTheDocument();
+    expect(screen.getByTitle('Місії')).toHaveAttribute('href', '/missions');
+    expect(screen.getByTitle('Звернення')).toHaveAttribute('href', '/admin/tickets');
+  });
+
+  it('closes mobile menu when a navigation link is clicked', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/missions']}>
+        <Sidebar />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('link', { name: /Місії/i }));
+    expect(sidebarState.closeMobile).toHaveBeenCalled();
+  });
+
+  it('hides admin links for regular users', () => {
+    authState.role = 'USER';
+
+    render(
+      <MemoryRouter initialEntries={['/missions']}>
+        <Sidebar />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByRole('link', { name: /Звернення/i })).not.toBeInTheDocument();
   });
 });

@@ -115,4 +115,61 @@ describe('NotificationsBell', () => {
       expect(api.markAllNotificationsRead).toHaveBeenCalled();
     });
   });
+
+  it('shows loading state while refreshing notifications', async () => {
+    vi.mocked(api.getNotifications).mockImplementation(() => new Promise(() => undefined));
+
+    render(
+      <MemoryRouter>
+        <NotificationsBell />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(await screen.findByLabelText('Відкрити сповіщення'));
+    expect(screen.getByText('Завантаження...')).toBeInTheDocument();
+  });
+
+  it('shows empty state when there are no notifications', async () => {
+    vi.mocked(api.getNotifications).mockResolvedValue([]);
+    vi.mocked(api.getNotificationUnreadCount).mockResolvedValue({ count: 0 });
+
+    render(
+      <MemoryRouter>
+        <NotificationsBell />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(await screen.findByLabelText('Відкрити сповіщення'));
+    expect(await screen.findByText('Сповіщень поки немає.')).toBeInTheDocument();
+  });
+
+  it('does not mark already read notification as read again', async () => {
+    vi.mocked(api.getNotifications).mockResolvedValue([
+      {
+        id: 'notif-2',
+        type: 'SUPPORT_REPLY',
+        title: 'notification.supportReply.title',
+        body: 'msg-2',
+        link: '/support',
+        isRead: true,
+        createdAt: '2026-06-23T10:00:00.000Z',
+        supportSubject: 'Resolved issue',
+      },
+    ]);
+    vi.mocked(api.getNotificationUnreadCount).mockResolvedValue({ count: 0 });
+
+    render(
+      <MemoryRouter>
+        <NotificationsBell />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(await screen.findByLabelText('Відкрити сповіщення'));
+    fireEvent.click(await screen.findByText('Відповідь підтримки'));
+
+    await waitFor(() => {
+      expect(navigate).toHaveBeenCalledWith('/support');
+    });
+    expect(api.markNotificationRead).not.toHaveBeenCalled();
+  });
 });

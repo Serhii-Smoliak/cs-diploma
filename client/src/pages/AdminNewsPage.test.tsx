@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { t, i18n } = vi.hoisted(() => ({
   t: (key: string, options?: { defaultValue?: string }) => options?.defaultValue ?? key,
-  i18n: { resolvedLanguage: 'uk' },
+  i18n: { resolvedLanguage: 'uk' as string },
 }));
 
 vi.mock('react-i18next', () => ({
@@ -46,6 +46,7 @@ function clickConfirmDelete(user: ReturnType<typeof userEvent.setup>) {
 
 describe('AdminNewsPage', () => {
   beforeEach(() => {
+    i18n.resolvedLanguage = 'uk';
     vi.clearAllMocks();
     vi.mocked(api.getAdminNewsPosts).mockResolvedValue([samplePost]);
     vi.mocked(api.createAdminNewsPost).mockResolvedValue(samplePost);
@@ -241,5 +242,47 @@ describe('AdminNewsPage', () => {
     await user.click(screen.getByRole('button', { name: 'Зберегти' }));
 
     expect(await screen.findByText('Create failed')).toBeInTheDocument();
+  });
+
+  it('renders english editor labels when locale is en', async () => {
+    i18n.resolvedLanguage = 'en';
+    const user = userEvent.setup();
+    render(<AdminNewsPage />);
+
+    expect(await screen.findByRole('heading', { name: 'News management' })).toBeInTheDocument();
+    expect(screen.getByText('All articles')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'New article' }));
+    expect(screen.getByRole('heading', { name: 'New article' })).toBeInTheDocument();
+    expect(screen.getByText('Title (UK)')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+
+    await user.click(await screen.findByText('Новина UA'));
+    expect(screen.getByRole('heading', { name: 'Edit article' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  });
+
+  it('shows loading state while posts are fetched', () => {
+    vi.mocked(api.getAdminNewsPosts).mockImplementation(() => new Promise(() => undefined));
+
+    render(<AdminNewsPage />);
+
+    expect(screen.getByText('Завантаження...')).toBeInTheDocument();
+  });
+
+  it('shows english loading label when locale is en', () => {
+    i18n.resolvedLanguage = 'en';
+    vi.mocked(api.getAdminNewsPosts).mockImplementation(() => new Promise(() => undefined));
+
+    render(<AdminNewsPage />);
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
+
+  it('renders master-detail sections after load', async () => {
+    render(<AdminNewsPage />);
+
+    expect(await screen.findByRole('heading', { name: 'Усі публікації' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Нова публікація' })).toBeInTheDocument();
   });
 });
