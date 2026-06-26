@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { useAuthStore } from '../store/authStore';
 import { RANK_TIERS, getRankFromXp, getRankXpRange } from '../constants/ranks';
 import { getRankLabel } from '../utils/rank';
-import { loadMultipleNamespaces } from '../i18n/config';
 
 const RANK_DESCRIPTIONS = {
   en: {
@@ -35,20 +33,10 @@ const RANK_DESCRIPTIONS = {
 export default function RanksPage() {
   const { t, i18n } = useTranslation(['ui']);
   const user = useAuthStore((state) => state.user);
-  const [translationsRevision, setTranslationsRevision] = useState(0);
   const xp = user?.xp ?? 0;
   const currentRankId = getRankFromXp(xp);
   const isEn = i18n.resolvedLanguage?.startsWith('en') ?? false;
   const locale = isEn ? 'en' : 'uk';
-
-  useEffect(() => {
-    const code = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'uk';
-    loadMultipleNamespaces(code, ['ui'])
-      .then(() => setTranslationsRevision((revision) => revision + 1))
-      .catch((error) => {
-        console.error('Failed to load ranks translations:', error);
-      });
-  }, [i18n.resolvedLanguage, i18n.language]);
 
   const formatXpRange = (from: number, to: number | null): string => {
     if (to === null) {
@@ -78,7 +66,7 @@ export default function RanksPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto" key={translationsRevision}>
+    <div className="p-4 sm:p-6 lg:p-8 h-full overflow-y-auto">
       <div className="max-w-lg mx-auto w-full text-center">
         <h1 className="font-heading font-bold text-2xl sm:text-3xl text-cyber-primary mb-2">
           {t('ranks', {
